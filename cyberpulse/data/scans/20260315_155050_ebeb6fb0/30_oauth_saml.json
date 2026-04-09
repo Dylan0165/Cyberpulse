@@ -1,0 +1,58 @@
+{
+  "findings": [
+    {
+      "type": "saml_endpoint",
+      "path": "/saml",
+      "detail": "SAML endpoint found: /saml",
+      "severity": "info"
+    },
+    {
+      "type": "saml_endpoint",
+      "path": "/saml/sso",
+      "detail": "SAML endpoint found: /saml/sso",
+      "severity": "info"
+    },
+    {
+      "type": "saml_endpoint",
+      "path": "/saml2",
+      "detail": "SAML endpoint found: /saml2",
+      "severity": "info"
+    },
+    {
+      "type": "saml_endpoint",
+      "path": "/adfs/ls",
+      "detail": "SAML endpoint found: /adfs/ls",
+      "severity": "info"
+    },
+    {
+      "type": "saml_endpoint",
+      "path": "/auth/saml",
+      "detail": "SAML endpoint found: /auth/saml",
+      "severity": "info"
+    },
+    {
+      "type": "saml_endpoint",
+      "path": "/sso",
+      "detail": "SAML endpoint found: /sso",
+      "severity": "info"
+    },
+    {
+      "type": "saml_endpoint",
+      "path": "/simplesaml",
+      "detail": "SAML endpoint found: /simplesaml",
+      "severity": "info"
+    },
+    {
+      "type": "saml_endpoint",
+      "path": "/saml/metadata",
+      "detail": "SAML endpoint found: /saml/metadata",
+      "severity": "info"
+    },
+    {
+      "type": "saml_endpoint",
+      "path": "/FederationMetadata",
+      "detail": "SAML endpoint found: /FederationMetadata",
+      "severity": "info"
+    }
+  ]
+}

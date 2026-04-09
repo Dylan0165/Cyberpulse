@@ -1,0 +1,9 @@
+{
+  "findings": [
+    {
+      "type": "no_waf",
+      "detail": "No WAF detected \u2014 target may be unprotected against web attacks",
+      "severity": "medium"
+    }
+  ]
+}

@@ -1,0 +1,845 @@
+﻿<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<title>CyberPulse Rapport — nomadark.net</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Crimson+Pro:wght@400;600&display=swap');
+
+  :root {
+    --black: #000000;
+    --white: #ffffff;
+    --gray-1: #111111;
+    --gray-2: #333333;
+    --gray-3: #666666;
+    --gray-4: #999999;
+    --gray-5: #cccccc;
+    --gray-6: #eeeeee;
+    --critical: #cc0000;
+    --high:     #cc6600;
+    --medium:   #999900;
+    --low:      #666666;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Crimson Pro', Georgia, serif;
+    font-size: 11pt;
+    color: var(--black);
+    background: var(--white);
+    line-height: 1.6;
+  }
+
+  /* ── COVERPAGE ── */
+  .cover {
+    height: 297mm;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 40mm 30mm;
+    border-bottom: 3px solid var(--black);
+    page-break-after: always;
+  }
+  .cover-brand {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10pt;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--gray-3);
+  }
+  .cover-target {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 32pt;
+    font-weight: 700;
+    line-height: 1.1;
+    word-break: break-all;
+  }
+  .cover-meta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9pt;
+    color: var(--gray-3);
+    line-height: 2;
+  }
+  .cover-score {
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+    margin-top: 24px;
+  }
+  .score-number {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 96pt;
+    font-weight: 700;
+    line-height: 1;
+  }
+  .score-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12pt;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+  .score-number.critical { color: var(--critical); }
+  .score-number.high     { color: var(--high); }
+  .score-number.medium   { color: var(--medium); }
+  .score-number.low      { color: var(--gray-3); }
+
+  /* ── PAGINA LAYOUT ── */
+  @page {
+    size: A4;
+    margin: 20mm 25mm;
+  }
+
+  /* ── SECTIES ── */
+  .section { margin-bottom: 20mm; page-break-inside: avoid; }
+  .section-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 8pt;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--gray-3);
+    border-top: 1px solid var(--black);
+    padding-top: 4px;
+    margin-bottom: 8px;
+  }
+  .section-title {
+    font-size: 16pt;
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+
+  /* ── BEVINDINGEN TABEL ── */
+  table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+  th {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 8pt;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    text-align: left;
+    padding: 6px 8px;
+    border-bottom: 2px solid var(--black);
+    font-weight: 700;
+  }
+  td {
+    font-size: 10pt;
+    padding: 8px;
+    border-bottom: 1px solid var(--gray-5);
+    vertical-align: top;
+  }
+  tr:last-child td { border-bottom: none; }
+
+  /* ── SEVERITY BADGES ── */
+  .sev {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 8pt;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    padding: 2px 5px;
+    text-transform: uppercase;
+    display: inline-block;
+  }
+  .sev-critical { border: 1.5px solid var(--critical); color: var(--critical); }
+  .sev-high     { border: 1.5px solid var(--high); color: var(--high); }
+  .sev-medium   { border: 1.5px solid var(--medium); color: var(--medium); }
+  .sev-low      { border: 1.5px solid var(--gray-4); color: var(--gray-4); }
+  .sev-info     { border: 1.5px solid var(--gray-5); color: var(--gray-5); }
+
+  /* ── FINDING DETAIL BLOCK ── */
+  .finding-block {
+    border: 1px solid var(--gray-5);
+    padding: 12px;
+    margin-bottom: 8px;
+    page-break-inside: avoid;
+  }
+  .finding-block-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 8px;
+    border-bottom: 1px solid var(--gray-6);
+    padding-bottom: 8px;
+  }
+  .finding-name { font-size: 12pt; font-weight: 600; }
+  .finding-section { margin-top: 8px; }
+  .finding-section-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 8pt;
+    color: var(--gray-3);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+
+  /* ── CODE BLOCKS ── */
+  code, pre {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9pt;
+    background: var(--gray-6);
+    padding: 2px 4px;
+  }
+  pre { padding: 8px; display: block; overflow-x: auto; }
+
+  /* ── AANBEVELINGEN ── */
+  .rec { display: flex; gap: 12px; margin-bottom: 12px; }
+  .rec-number {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 24pt;
+    font-weight: 700;
+    color: var(--gray-5);
+    line-height: 1;
+    min-width: 40px;
+  }
+  .rec-content { flex: 1; }
+  .rec-actie { font-size: 12pt; font-weight: 600; margin-bottom: 4px; }
+  .rec-meta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 8pt;
+    color: var(--gray-3);
+  }
+
+  .footer-line {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 8pt;
+    color: var(--gray-4);
+    text-align: center;
+    margin-top: 20mm;
+    padding-top: 8px;
+    border-top: 1px solid var(--gray-5);
+  }
+</style>
+</head>
+<body>
+
+<!-- COVER -->
+<div class="cover">
+  <div class="cover-brand">CyberPulse — Penetratietestrapport — Vertrouwelijk</div>
+  <div>
+    <div class="cover-target">nomadark.net</div>
+    <div class="cover-score">
+      <div class="score-number high">75</div>
+      <div>
+        <div class="score-label">HOOG</div>
+        <div style="font-family: 'JetBrains Mono'; font-size: 9pt; color: #999; margin-top: 4px;">Risicoscore / 100</div>
+      </div>
+    </div>
+  </div>
+  <div class="cover-meta">
+    Gegenereerd op: 2026-03-19 09:45 UTC<br>
+    Scantype: full<br>
+    Modules uitgevoerd: 81<br>
+    Bevindingen: 164 (1 kritiek, 5 hoog)
+  </div>
+</div>
+
+<!-- MANAGEMENT SAMENVATTING -->
+<div class="section">
+  <div class="section-label">01 — Managementsamenvatting</div>
+  <p style="font-size: 12pt; line-height: 1.8;">De penetratietest voor nomadark.net heeft ernstige beveiligingsrisico&#39;s blootgelegd. De meest kritieke bevinding is dat aanvallers mogelijk opdrachten kunnen uitvoeren op de server (Remote Code Execution), wat kan leiden tot volledige overname. Daarnaast ontbreekt bescherming tegen brute-force aanvallen op login- en 2FA-systemen, en zijn essentiële beveiligingsheaders niet geconfigureerd. Er zijn ook indicaties van mogelijke WAF-bypass technieken en blootgestelde Kubernetes-poorten. Aanbevolen wordt om onmiddellijk de RCE-kwetsbaarheden te patchen, rate limiting te implementeren en beveiligingsheaders toe te voegen om het risico te verminderen.</p>
+</div>
+
+<!-- BEVINDINGEN OVERZICHT -->
+<div class="section">
+  <div class="section-label">02 — Bevindingen overzicht</div>
+  <table>
+    <thead>
+      <tr><th>Ernst</th><th>Bevinding</th><th>Module</th><th>CVE</th></tr>
+    </thead>
+    <tbody>
+      
+      <tr>
+        <td><span class="sev sev-critical">critical</span></td>
+        <td>Remote Code Execution (RCE) via command injection</td>
+        <td style="font-family: 'JetBrains Mono'; font-size: 9pt; color: #666;">Remote Code Execution</td>
+        <td style="font-family: 'JetBrains Mono'; font-size: 9pt; color: #666;">—</td>
+      </tr>
+      
+      <tr>
+        <td><span class="sev sev-high">high</span></td>
+        <td>Geen rate limiting op login- en 2FA-endpoints</td>
+        <td style="font-family: 'JetBrains Mono'; font-size: 9pt; color: #666;">Rate Limiting &amp; DoS</td>
+        <td style="font-family: 'JetBrains Mono'; font-size: 9pt; color: #666;">—</td>
+      </tr>
+      
+      <tr>
+        <td><span class="sev sev-high">high</span></td>
+        <td>HTTP Request Smuggling indicatie</td>
+        <td style="font-family: 'JetBrains Mono'; font-size: 9pt; color: #666;">HTTP Request Smuggling</td>
+        <td style="font-family: 'JetBrains Mono'; font-size: 9pt; color: #666;">—</td>
+      </tr>
+      
+      <tr>
+        <td><span class="sev sev-high">high</span></td>
+        <td>WAF-bypass via HTTP Parameter Pollution (HPP)</td>
+        <td style="font-family: 'JetBrains Mono'; font-size: 9pt; color: #666;">HTTP Parameter Pollution</td>
+        <td style="font-family: 'JetBrains Mono'; font-size: 9pt; color: #666;">—</td>
+      </tr>
+      
+      <tr>
+        <td><span class="sev sev-high">high</span></td>
+        <td>Blootgestelde Kubernetes-poorten (8080, 8443)</td>
+        <td style="font-family: 'JetBrains Mono'; font-size: 9pt; color: #666;">Docker &amp; Container Exposure</td>
+        <td style="font-family: 'JetBrains Mono'; font-size: 9pt; color: #666;">—</td>
+      </tr>
+      
+      <tr>
+        <td><span class="sev sev-high">high</span></td>
+        <td>Blootgestelde backup-bestanden (wp-config.php.bak)</td>
+        <td style="font-family: 'JetBrains Mono'; font-size: 9pt; color: #666;">Subdomain Enumeration</td>
+        <td style="font-family: 'JetBrains Mono'; font-size: 9pt; color: #666;">—</td>
+      </tr>
+      
+      <tr>
+        <td><span class="sev sev-medium">medium</span></td>
+        <td>Ontbrekende HSTS en CSP headers</td>
+        <td style="font-family: 'JetBrains Mono'; font-size: 9pt; color: #666;">OWASP Top 10 Compliance</td>
+        <td style="font-family: 'JetBrains Mono'; font-size: 9pt; color: #666;">—</td>
+      </tr>
+      
+      <tr>
+        <td><span class="sev sev-medium">medium</span></td>
+        <td>Geen DMARC en SPF DNS-records</td>
+        <td style="font-family: 'JetBrains Mono'; font-size: 9pt; color: #666;">DNS Zone Transfer</td>
+        <td style="font-family: 'JetBrains Mono'; font-size: 9pt; color: #666;">—</td>
+      </tr>
+      
+      <tr>
+        <td><span class="sev sev-medium">medium</span></td>
+        <td>Clickjacking mogelijk door ontbrekende X-Frame-Options</td>
+        <td style="font-family: 'JetBrains Mono'; font-size: 9pt; color: #666;">Clickjacking &amp; UI Redressing</td>
+        <td style="font-family: 'JetBrains Mono'; font-size: 9pt; color: #666;">—</td>
+      </tr>
+      
+      <tr>
+        <td><span class="sev sev-medium">medium</span></td>
+        <td>Open redirect kwetsbaarheden op login-pagina</td>
+        <td style="font-family: 'JetBrains Mono'; font-size: 9pt; color: #666;">Email Security</td>
+        <td style="font-family: 'JetBrains Mono'; font-size: 9pt; color: #666;">—</td>
+      </tr>
+      
+      <tr>
+        <td><span class="sev sev-medium">medium</span></td>
+        <td>Geen account lockout na mislukte login-pogingen</td>
+        <td style="font-family: 'JetBrains Mono'; font-size: 9pt; color: #666;">Password Policy Analysis</td>
+        <td style="font-family: 'JetBrains Mono'; font-size: 9pt; color: #666;">—</td>
+      </tr>
+      
+      <tr>
+        <td><span class="sev sev-medium">medium</span></td>
+        <td>Blootgestelde robots.txt bestand</td>
+        <td style="font-family: 'JetBrains Mono'; font-size: 9pt; color: #666;">Cloud Exposure</td>
+        <td style="font-family: 'JetBrains Mono'; font-size: 9pt; color: #666;">—</td>
+      </tr>
+      
+      <tr>
+        <td><span class="sev sev-medium">medium</span></td>
+        <td>Geen 2FA/MFA implementatie gedetecteerd</td>
+        <td style="font-family: 'JetBrains Mono'; font-size: 9pt; color: #666;">2FA/MFA Bypass</td>
+        <td style="font-family: 'JetBrains Mono'; font-size: 9pt; color: #666;">—</td>
+      </tr>
+      
+      <tr>
+        <td><span class="sev sev-low">low</span></td>
+        <td>Informatie leakage via Server header</td>
+        <td style="font-family: 'JetBrains Mono'; font-size: 9pt; color: #666;">Privilege Escalation</td>
+        <td style="font-family: 'JetBrains Mono'; font-size: 9pt; color: #666;">—</td>
+      </tr>
+      
+      <tr>
+        <td><span class="sev sev-low">low</span></td>
+        <td>Geen DNSSEC ingeschakeld</td>
+        <td style="font-family: 'JetBrains Mono'; font-size: 9pt; color: #666;">SSL/TLS Audit</td>
+        <td style="font-family: 'JetBrains Mono'; font-size: 9pt; color: #666;">—</td>
+      </tr>
+      
+    </tbody>
+  </table>
+</div>
+
+<!-- BEVINDINGEN DETAIL -->
+<div class="section">
+  <div class="section-label">03 — Bevindingen detail</div>
+  
+  <div class="finding-block">
+    <div class="finding-block-header">
+      <div class="finding-name">Remote Code Execution (RCE) via command injection</div>
+      <span class="sev sev-critical">critical</span>
+    </div>
+    <div class="finding-section">
+      <div class="finding-section-label">Beschrijving</div>
+      <p>De server is kwetsbaar voor command injection via meerdere parameters (cmd, exec, command, execute, ping, query, host, ip, address, domain). Testpayloads zoals &#39;; whoami&#39; resulteren in uitvoering van commando&#39;s, wat wijst op kritieke RCE-kwetsbaarheden.</p>
+    </div>
+    <div class="finding-section">
+      <div class="finding-section-label">Impact</div>
+      <p>Aanvallers kunnen willekeurige commando&#39;s uitvoeren op de server, leiden tot volledige systeemcompromittering, data-diefstal, of malware-installatie.</p>
+    </div>
+    <div class="finding-section">
+      <div class="finding-section-label">Aanbeveling</div>
+      <p>Implementeer inputvalidatie en sanitization voor alle gebruikersinvoer. Gebruik parameterized queries of veilige API&#39;s voor systeemcommando&#39;s. Overweeg een Web Application Firewall (WAF) met RCE-bescherming.</p>
+    </div>
+    
+    <div class="finding-section">
+      <div class="finding-section-label">Referenties</div>
+      <p style="font-family: 'JetBrains Mono'; font-size: 9pt;">CVE-2021-44228 · OWASP-A03 · https://owasp.org/www-community/attacks/Command_Injection</p>
+    </div>
+    
+  </div>
+  
+  <div class="finding-block">
+    <div class="finding-block-header">
+      <div class="finding-name">Geen rate limiting op login- en 2FA-endpoints</div>
+      <span class="sev sev-high">high</span>
+    </div>
+    <div class="finding-section">
+      <div class="finding-section-label">Beschrijving</div>
+      <p>Er is geen rate limiting gedetecteerd op login-paden (/login, /api/login, /auth/login, etc.) en 2FA-verificatie-endpoints (/api/2fa/verify, /api/otp/verify, etc.), zelfs na 15-30 aanvragen.</p>
+    </div>
+    <div class="finding-section">
+      <div class="finding-section-label">Impact</div>
+      <p>Aanvallers kunnen brute-force aanvallen uitvoeren op wachtwoorden en 2FA-codes, leiden tot accountovernames.</p>
+    </div>
+    <div class="finding-section">
+      <div class="finding-section-label">Aanbeveling</div>
+      <p>Implementeer rate limiting (bijv. max 5-10 pogingen per IP per minuut) voor alle authenticatie-endpoints. Gebruik tools zoals fail2ban of cloud-based rate limiting.</p>
+    </div>
+    
+    <div class="finding-section">
+      <div class="finding-section-label">Referenties</div>
+      <p style="font-family: 'JetBrains Mono'; font-size: 9pt;">OWASP-A07 · https://owasp.org/www-community/controls/Blocking_Brute_Force_Attacks</p>
+    </div>
+    
+  </div>
+  
+  <div class="finding-block">
+    <div class="finding-block-header">
+      <div class="finding-name">HTTP Request Smuggling indicatie</div>
+      <span class="sev sev-high">high</span>
+    </div>
+    <div class="finding-section">
+      <div class="finding-section-label">Beschrijving</div>
+      <p>Mogelijke CL.TE smuggling gedetecteerd met HTTP 400-respons, wat kan wijzen op kwetsbaarheden in request parsing.</p>
+    </div>
+    <div class="finding-section">
+      <div class="finding-section-label">Impact</div>
+      <p>Aanvallers kunnen request smuggling gebruiken om cache poisoning, sessiehijacking, of bypass van beveiligingscontroles te veroorzaken.</p>
+    </div>
+    <div class="finding-section">
+      <div class="finding-section-label">Aanbeveling</div>
+      <p>Update server- en proxysoftware naar de laatste versies. Configureer servers om inconsistente headers te weigeren. Test met tools zoals smuggler.py.</p>
+    </div>
+    
+    <div class="finding-section">
+      <div class="finding-section-label">Referenties</div>
+      <p style="font-family: 'JetBrains Mono'; font-size: 9pt;">CVE-2023-44487 · https://portswigger.net/web-security/request-smuggling</p>
+    </div>
+    
+  </div>
+  
+  <div class="finding-block">
+    <div class="finding-block-header">
+      <div class="finding-name">WAF-bypass via HTTP Parameter Pollution (HPP)</div>
+      <span class="sev sev-high">high</span>
+    </div>
+    <div class="finding-section">
+      <div class="finding-section-label">Beschrijving</div>
+      <p>Mogelijke WAF-bypass gedetecteerd via HPP voor SQL injection en XSS, door meerdere parameters met dezelfde naam te gebruiken.</p>
+    </div>
+    <div class="finding-section">
+      <div class="finding-section-label">Impact</div>
+      <p>Aanvallers kunnen WAF-regels omzeilen om SQL injection of XSS-aanvallen uit te voeren.</p>
+    </div>
+    <div class="finding-section">
+      <div class="finding-section-label">Aanbeveling</div>
+      <p>Implementeer parameter sanitization en valideer unieke parameter namen. Configureer WAF om HPP-payloads te detecteren. Gebruik prepared statements voor databases.</p>
+    </div>
+    
+    <div class="finding-section">
+      <div class="finding-section-label">Referenties</div>
+      <p style="font-family: 'JetBrains Mono'; font-size: 9pt;">OWASP-A01 · https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/07-Input_Validation_Testing/04-Testing_for_HTTP_Parameter_Pollution</p>
+    </div>
+    
+  </div>
+  
+  <div class="finding-block">
+    <div class="finding-block-header">
+      <div class="finding-name">Blootgestelde Kubernetes-poorten (8080, 8443)</div>
+      <span class="sev sev-high">high</span>
+    </div>
+    <div class="finding-section">
+      <div class="finding-section-label">Beschrijving</div>
+      <p>Poorten 8080 en 8443 zijn open en geassocieerd met Kubernetes API, mogelijk blootstellend containerbeheerinterfaces.</p>
+    </div>
+    <div class="finding-section">
+      <div class="finding-section-label">Impact</div>
+      <p>Onbevoegde toegang tot Kubernetes API kan leiden tot containerescape, privilege escalation, of clustercompromittering.</p>
+    </div>
+    <div class="finding-section">
+      <div class="finding-section-label">Aanbeveling</div>
+      <p>Beperk toegang tot Kubernetes-poorten met firewalls of netwerkbeleid. Implementeer authenticatie en autorisatie (bijv. RBAC). Overweeg een private netwerk of VPN.</p>
+    </div>
+    
+    <div class="finding-section">
+      <div class="finding-section-label">Referenties</div>
+      <p style="font-family: 'JetBrains Mono'; font-size: 9pt;">CVE-2023-2728 · https://kubernetes.io/docs/concepts/security/</p>
+    </div>
+    
+  </div>
+  
+  <div class="finding-block">
+    <div class="finding-block-header">
+      <div class="finding-name">Blootgestelde backup-bestanden (wp-config.php.bak)</div>
+      <span class="sev sev-high">high</span>
+    </div>
+    <div class="finding-section">
+      <div class="finding-section-label">Beschrijving</div>
+      <p>Backup-bestanden zoals wp-config.php.bak en wp-config.php~ gevonden met HTTP 403 status, maar hun aanwezigheid kan informatie lekken.</p>
+    </div>
+    <div class="finding-section">
+      <div class="finding-section-label">Impact</div>
+      <p>Aanvallers kunnen proberen deze bestanden te downloaden voor configuratie-informatie, database credentials, of andere gevoelige data.</p>
+    </div>
+    <div class="finding-section">
+      <div class="finding-section-label">Aanbeveling</div>
+      <p>Verwijder onnodige backup-bestanden van de server. Configureer web server om toegang tot .bak, ~, en andere backup-extensies te blokkeren. Gebruik .gitignore voor versiebeheer.</p>
+    </div>
+    
+    <div class="finding-section">
+      <div class="finding-section-label">Referenties</div>
+      <p style="font-family: 'JetBrains Mono'; font-size: 9pt;">OWASP-A05 · https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/02-Configuration_and_Deployment_Management_Testing/04-Review_Old_Backup_and_Unreferenced_Files_for_Sensitive_Information</p>
+    </div>
+    
+  </div>
+  
+  <div class="finding-block">
+    <div class="finding-block-header">
+      <div class="finding-name">Ontbrekende HSTS en CSP headers</div>
+      <span class="sev sev-medium">medium</span>
+    </div>
+    <div class="finding-section">
+      <div class="finding-section-label">Beschrijving</div>
+      <p>HSTS (HTTP Strict Transport Security) en CSP (Content Security Policy) headers ontbreken, wat beveiligingsmisconfiguraties aangeeft.</p>
+    </div>
+    <div class="finding-section">
+      <div class="finding-section-label">Impact</div>
+      <p>Zonder HSTS is HTTPS-downgrade mogelijk; zonder CSP is XSS-mitigatie beperkt.</p>
+    </div>
+    <div class="finding-section">
+      <div class="finding-section-label">Aanbeveling</div>
+      <p>Voeg HSTS header toe: &#39;Strict-Transport-Security: max-age=31536000; includeSubDomains&#39;. Implementeer CSP met restrictieve bronnen (bijv. &#39;default-src &#39;self&#39;&#39;).</p>
+    </div>
+    
+    <div class="finding-section">
+      <div class="finding-section-label">Referenties</div>
+      <p style="font-family: 'JetBrains Mono'; font-size: 9pt;">OWASP-A02 · https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Strict-Transport-Security</p>
+    </div>
+    
+  </div>
+  
+  <div class="finding-block">
+    <div class="finding-block-header">
+      <div class="finding-name">Geen DMARC en SPF DNS-records</div>
+      <span class="sev sev-medium">medium</span>
+    </div>
+    <div class="finding-section">
+      <div class="finding-section-label">Beschrijving</div>
+      <p>Geen DMARC of SPF records gevonden voor het domein, wat email spoofing mogelijk maakt.</p>
+    </div>
+    <div class="finding-section">
+      <div class="finding-section-label">Impact</div>
+      <p>Aanvallers kunnen phishing-emails versturen die lijken te komen van nomadark.net, leiden tot social engineering-aanvallen.</p>
+    </div>
+    <div class="finding-section">
+      <div class="finding-section-label">Aanbeveling</div>
+      <p>Configureer SPF record (bijv. &#39;v=spf1 include:_spf.google.com ~all&#39;) en DMARC record (bijv. &#39;v=DMARC1; p=none; rua=mailto:dmarc@nomadark.net&#39;).</p>
+    </div>
+    
+    <div class="finding-section">
+      <div class="finding-section-label">Referenties</div>
+      <p style="font-family: 'JetBrains Mono'; font-size: 9pt;">https://dmarc.org/ · https://datatracker.ietf.org/doc/html/rfc7208</p>
+    </div>
+    
+  </div>
+  
+  <div class="finding-block">
+    <div class="finding-block-header">
+      <div class="finding-name">Clickjacking mogelijk door ontbrekende X-Frame-Options</div>
+      <span class="sev sev-medium">medium</span>
+    </div>
+    <div class="finding-section">
+      <div class="finding-section-label">Beschrijving</div>
+      <p>Geen X-Frame-Options of CSP frame-ancestors header op root en login-pagina&#39;s, wat clickjacking mogelijk maakt.</p>
+    </div>
+    <div class="finding-section">
+      <div class="finding-section-label">Impact</div>
+      <p>Aanvallers kunnen de site in een iframe insluiten om gebruikers te misleiden tot het klikken op verborgen elementen.</p>
+    </div>
+    <div class="finding-section">
+      <div class="finding-section-label">Aanbeveling</div>
+      <p>Voeg X-Frame-Options: DENY of SAMEORIGIN header toe, of gebruik CSP met &#39;frame-ancestors &#39;self&#39;&#39;.</p>
+    </div>
+    
+    <div class="finding-section">
+      <div class="finding-section-label">Referenties</div>
+      <p style="font-family: 'JetBrains Mono'; font-size: 9pt;">OWASP-A05 · https://owasp.org/www-community/attacks/Clickjacking</p>
+    </div>
+    
+  </div>
+  
+  <div class="finding-block">
+    <div class="finding-block-header">
+      <div class="finding-name">Open redirect kwetsbaarheden op login-pagina</div>
+      <span class="sev sev-medium">medium</span>
+    </div>
+    <div class="finding-section">
+      <div class="finding-section-label">Beschrijving</div>
+      <p>Open redirect gedetecteerd op /login met parameters zoals url, redirect, redirect_url, etc., die leiden naar externe domeinen zoals discordapp.com.</p>
+    </div>
+    <div class="finding-section">
+      <div class="finding-section-label">Impact</div>
+      <p>Aanvallers kunnen phishing-aanvallen uitvoeren door gebruikers naar kwaadaardige sites te redirecten, vertrouwen misbruikend.</p>
+    </div>
+    <div class="finding-section">
+      <div class="finding-section-label">Aanbeveling</div>
+      <p>Valideer en sanitize redirect-parameters, beperk tot interne URLs of gebruik allowlists. Implementeer safe redirect mechanismen.</p>
+    </div>
+    
+    <div class="finding-section">
+      <div class="finding-section-label">Referenties</div>
+      <p style="font-family: 'JetBrains Mono'; font-size: 9pt;">OWASP-A01 · https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/10-Business_Logic_Testing/07-Test_Open_Redirects</p>
+    </div>
+    
+  </div>
+  
+  <div class="finding-block">
+    <div class="finding-block-header">
+      <div class="finding-name">Geen account lockout na mislukte login-pogingen</div>
+      <span class="sev sev-medium">medium</span>
+    </div>
+    <div class="finding-section">
+      <div class="finding-section-label">Beschrijving</div>
+      <p>Geen account lockout mechanisme gedetecteerd na 6 mislukte login-pogingen, wat brute-force aanvallen vergemakkelijkt.</p>
+    </div>
+    <div class="finding-section">
+      <div class="finding-section-label">Impact</div>
+      <p>Aanvallers kunnen herhaaldelijk wachtwoorden proberen zonder beperkingen, leiden tot accountcompromittering.</p>
+    </div>
+    <div class="finding-section">
+      <div class="finding-section-label">Aanbeveling</div>
+      <p>Implementeer account lockout na 5-10 mislukte pogingen, met tijdelijke blokkade of captcha. Gebruik multi-factor authenticatie (MFA).</p>
+    </div>
+    
+    <div class="finding-section">
+      <div class="finding-section-label">Referenties</div>
+      <p style="font-family: 'JetBrains Mono'; font-size: 9pt;">OWASP-A07 · https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html</p>
+    </div>
+    
+  </div>
+  
+  <div class="finding-block">
+    <div class="finding-block-header">
+      <div class="finding-name">Blootgestelde robots.txt bestand</div>
+      <span class="sev sev-medium">medium</span>
+    </div>
+    <div class="finding-section">
+      <div class="finding-section-label">Beschrijving</div>
+      <p>robots.txt bestand is publiek toegankelijk (status 200), mogelijk gevoelige paden of directory&#39;s onthullend.</p>
+    </div>
+    <div class="finding-section">
+      <div class="finding-section-label">Impact</div>
+      <p>Aanvallers kunnen robots.txt gebruiken voor reconnaissance om verborgen paden of gevoelige bestanden te vinden.</p>
+    </div>
+    <div class="finding-section">
+      <div class="finding-section-label">Aanbeveling</div>
+      <p>Review robots.txt inhoud en verwijder gevoelige entries. Overweeg om robots.txt te beperken tot niet-gevoelige paden of gebruik authentication.</p>
+    </div>
+    
+    <div class="finding-section">
+      <div class="finding-section-label">Referenties</div>
+      <p style="font-family: 'JetBrains Mono'; font-size: 9pt;">https://developers.google.com/search/docs/crawling-indexing/robots/intro</p>
+    </div>
+    
+  </div>
+  
+  <div class="finding-block">
+    <div class="finding-block-header">
+      <div class="finding-name">Geen 2FA/MFA implementatie gedetecteerd</div>
+      <span class="sev sev-medium">medium</span>
+    </div>
+    <div class="finding-section">
+      <div class="finding-section-label">Beschrijving</div>
+      <p>Geen 2FA of MFA implementatie gedetecteerd op de site, wat authenticatiebeveiliging vermindert.</p>
+    </div>
+    <div class="finding-section">
+      <div class="finding-section-label">Impact</div>
+      <p>Zonder 2FA zijn accounts kwetsbaarder voor credential stuffing of phishing-aanvallen.</p>
+    </div>
+    <div class="finding-section">
+      <div class="finding-section-label">Aanbeveling</div>
+      <p>Implementeer 2FA voor gebruikersaccounts, gebruik TOTP (Time-based One-Time Password) of hardware tokens. Integreer met services zoals Authy of Google Authenticator.</p>
+    </div>
+    
+    <div class="finding-section">
+      <div class="finding-section-label">Referenties</div>
+      <p style="font-family: 'JetBrains Mono'; font-size: 9pt;">OWASP-A07 · https://owasp.org/www-project-cheatsheets/cheatsheets/Multifactor_Authentication_Cheat_Sheet.html</p>
+    </div>
+    
+  </div>
+  
+  <div class="finding-block">
+    <div class="finding-block-header">
+      <div class="finding-name">Informatie leakage via Server header</div>
+      <span class="sev sev-low">low</span>
+    </div>
+    <div class="finding-section">
+      <div class="finding-section-label">Beschrijving</div>
+      <p>Server header onthult &#39;cloudflare&#39;, wat servertechnologie blootstelt en fingerprinting vergemakkelijkt.</p>
+    </div>
+    <div class="finding-section">
+      <div class="finding-section-label">Impact</div>
+      <p>Aanvallers kunnen deze informatie gebruiken voor gerichte aanvallen op specifieke technologieën of versies.</p>
+    </div>
+    <div class="finding-section">
+      <div class="finding-section-label">Aanbeveling</div>
+      <p>Configureer web server om Server header te verwijderen of te maskeren (bijv. met mod_security of cloud configuratie).</p>
+    </div>
+    
+    <div class="finding-section">
+      <div class="finding-section-label">Referenties</div>
+      <p style="font-family: 'JetBrains Mono'; font-size: 9pt;">OWASP-A05 · https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/08-Configuration_Management_Testing/02-Fingerprint_Web_Server</p>
+    </div>
+    
+  </div>
+  
+  <div class="finding-block">
+    <div class="finding-block-header">
+      <div class="finding-name">Geen DNSSEC ingeschakeld</div>
+      <span class="sev sev-low">low</span>
+    </div>
+    <div class="finding-section">
+      <div class="finding-section-label">Beschrijving</div>
+      <p>DNSSEC is niet ingeschakeld voor het domein, wat DNS spoofing of cache poisoning mogelijk maakt.</p>
+    </div>
+    <div class="finding-section">
+      <div class="finding-section-label">Impact</div>
+      <p>Aanvallers kunnen DNS-responsen manipuleren om gebruikers naar kwaadaardige sites te redirecten.</p>
+    </div>
+    <div class="finding-section">
+      <div class="finding-section-label">Aanbeveling</div>
+      <p>Schakel DNSSEC in via de DNS provider (Cloudflare) en configureer DS records in de domeinregistrar.</p>
+    </div>
+    
+    <div class="finding-section">
+      <div class="finding-section-label">Referenties</div>
+      <p style="font-family: 'JetBrains Mono'; font-size: 9pt;">https://www.cloudflare.com/dns/dnssec/ · https://www.icann.org/resources/pages/dnssec-what-is-it-why-important-2019-03-05-en</p>
+    </div>
+    
+  </div>
+  
+</div>
+
+<!-- AANBEVELINGEN -->
+<div class="section">
+  <div class="section-label">04 — Prioriteiten</div>
+  
+  <div class="rec">
+    <div class="rec-number">1</div>
+    <div class="rec-content">
+      <div class="rec-actie">Patch de RCE-kwetsbaarheden door inputvalidatie en sanitization te implementeren voor alle gebruikersinvoerparameters.</div>
+      <div style="margin: 4px 0 6px; font-size: 10pt; color: #333;">Dit is de meest kritieke bevinding die directe servercompromittering mogelijk maakt.</div>
+      <div class="rec-meta">Complexiteit: gemiddeld</div>
+    </div>
+  </div>
+  
+  <div class="rec">
+    <div class="rec-number">2</div>
+    <div class="rec-content">
+      <div class="rec-actie">Implementeer rate limiting op alle login- en 2FA-endpoints om brute-force aanvallen te voorkomen.</div>
+      <div style="margin: 4px 0 6px; font-size: 10pt; color: #333;">Beschermt tegen accountovernames en verhoogt de authenticatiebeveiliging.</div>
+      <div class="rec-meta">Complexiteit: laag</div>
+    </div>
+  </div>
+  
+  <div class="rec">
+    <div class="rec-number">3</div>
+    <div class="rec-content">
+      <div class="rec-actie">Voeg essentiële beveiligingsheaders toe: HSTS, CSP, X-Frame-Options, X-Content-Type-Options.</div>
+      <div style="margin: 4px 0 6px; font-size: 10pt; color: #333;">Verbetert algemene webbeveiliging en vermindert risico&#39;s zoals clickjacking en XSS.</div>
+      <div class="rec-meta">Complexiteit: laag</div>
+    </div>
+  </div>
+  
+  <div class="rec">
+    <div class="rec-number">4</div>
+    <div class="rec-content">
+      <div class="rec-actie">Beperk toegang tot Kubernetes-poorten (8080, 8443) met firewalls en implementeer RBAC.</div>
+      <div style="margin: 4px 0 6px; font-size: 10pt; color: #333;">Voorkomt onbevoegde toegang tot containerbeheer en vermindert blootstelling.</div>
+      <div class="rec-meta">Complexiteit: gemiddeld</div>
+    </div>
+  </div>
+  
+  <div class="rec">
+    <div class="rec-number">5</div>
+    <div class="rec-content">
+      <div class="rec-actie">Configureer DMARC en SPF DNS-records om email spoofing te voorkomen.</div>
+      <div style="margin: 4px 0 6px; font-size: 10pt; color: #333;">Beschermt tegen phishing-aanvallen en verbetert email authenticatie.</div>
+      <div class="rec-meta">Complexiteit: laag</div>
+    </div>
+  </div>
+  
+  <div class="rec">
+    <div class="rec-number">6</div>
+    <div class="rec-content">
+      <div class="rec-actie">Verwijder of beveilig backup-bestanden zoals wp-config.php.bak en masker Server header.</div>
+      <div style="margin: 4px 0 6px; font-size: 10pt; color: #333;">Vermindert informatie leakage en voorkomt ongeautoriseerde toegang tot gevoelige data.</div>
+      <div class="rec-meta">Complexiteit: laag</div>
+    </div>
+  </div>
+  
+  <div class="rec">
+    <div class="rec-number">7</div>
+    <div class="rec-content">
+      <div class="rec-actie">Implementeer account lockout mechanismen na mislukte login-pogingen en overweeg 2FA.</div>
+      <div style="margin: 4px 0 6px; font-size: 10pt; color: #333;">Voegt extra beveiligingslagen toe voor authenticatie en vermindert brute-force risico&#39;s.</div>
+      <div class="rec-meta">Complexiteit: gemiddeld</div>
+    </div>
+  </div>
+  
+  <div class="rec">
+    <div class="rec-number">8</div>
+    <div class="rec-content">
+      <div class="rec-actie">Test en patch HTTP request smuggling en HPP kwetsbaarheden met server updates en WAF configuratie.</div>
+      <div style="margin: 4px 0 6px; font-size: 10pt; color: #333;">Voorkomt advanced aanvallen die beveiligingscontroles kunnen omzeilen.</div>
+      <div class="rec-meta">Complexiteit: hoog</div>
+    </div>
+  </div>
+  
+  <div class="rec">
+    <div class="rec-number">9</div>
+    <div class="rec-content">
+      <div class="rec-actie">Schakel DNSSEC in via Cloudflare en review robots.txt inhoud.</div>
+      <div style="margin: 4px 0 6px; font-size: 10pt; color: #333;">Verbetert DNS-beveiliging en beperkt informatie disclosure.</div>
+      <div class="rec-meta">Complexiteit: laag</div>
+    </div>
+  </div>
+  
+  <div class="rec">
+    <div class="rec-number">10</div>
+    <div class="rec-content">
+      <div class="rec-actie">Voer een volledige security audit uit en monitor logs voor verdachte activiteiten.</div>
+      <div style="margin: 4px 0 6px; font-size: 10pt; color: #333;">Zorgt voor continue beveiligingsbewustzijn en vroege detectie van incidenten.</div>
+      <div class="rec-meta">Complexiteit: gemiddeld</div>
+    </div>
+  </div>
+  
+</div>
+
+<!-- TECHNISCHE DETAILS -->
+<div class="section">
+  <div class="section-label">05 — Technische details</div>
+  <pre>De scan voor nomadark.net toont 164 bevindingen, met 17 critical, 15 high, 28 medium, 19 low, en 52 info. Kritieke RCE-kwetsbaarheden zijn gedetecteerd in Module 32, waar command injection via parameters zoals cmd, exec, etc., output van commando&#39;s zoals &#39;whoami&#39; produceert, wijzend op onveilige inputverwerking. Module 41 en 42 tonen gebrek aan rate limiting op login- en 2FA-endpoints, met 15+ pogingen zonder beperkingen, wat brute-force aanvallen mogelijk maakt. Module 51 en 58 indiceren HTTP request smuggling en HPP-based WAF-bypass, met CL.TE smuggling (HTTP 400) en SQL/XSS bypass via parameter pollution. Module 63 exposeert Kubernetes-poorten 8080 en 8443, mogelijk blootstellend container-APIs. Beveiligingsheaders (HSTS, CSP, X-Frame-Options, etc.) ontbreken in Modules 05, 08, en 48, leiden tot misconfiguraties. DNS issues omvatten geen DMARC/SPF records (Module 46) en geen DNSSEC (Module 07). Backup-bestanden zoals wp-config.php.bak zijn gevonden (Module 09), en open redirects op /login (Module 15). De server gebruikt Cloudflare (gedetecteerd in Modules 02, 05, 21) met TLSv1.3 en AES_256_GCM_SHA384 cipher (Module 06, 47), maar WAF-bescherming kan worden omzeild. Aanbevelingen focussen op patching RCE, implementeren rate limiting, toevoegen headers, en beveiligen van blootgestelde services.</pre>
+</div>
+
+<div class="footer-line">
+  CyberPulse — Vertrouwelijk — 2026-03-19 09:45 UTC
+</div>
+
+</body>
+</html>

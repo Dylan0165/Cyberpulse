@@ -1,0 +1,5 @@
+{
+  "stdout": "{\"Results\":[{\"Target\":\"dir:///app\",\"Vulnerabilities\":[{\"VulnerabilityID\":\"CVE-2023-44487\",\"PkgName\":\"golang.org/x/net\",\"Severity\":\"HIGH\",\"Description\":\"HTTP/2 rapid reset attack\",\"FixedVersion\":\"0.17.0\"},{\"VulnerabilityID\":\"CVE-2023-39325\",\"PkgName\":\"golang.org/x/net\",\"Severity\":\"CRITICAL\",\"Description\":\"HTTP/2 stream cancellation can cause excessive CPU\",\"FixedVersion\":\"0.17.0\"}]}]}",
+  "stderr": "",
+  "return_code": 0
+}

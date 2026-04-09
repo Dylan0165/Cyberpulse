@@ -1,0 +1,127 @@
+{
+  "findings": [
+    {
+      "type": "api_docs_exposed",
+      "url": "https://d-esign.nl/swagger.json",
+      "detail": "API documentation publicly accessible at /swagger.json",
+      "severity": "medium"
+    },
+    {
+      "type": "api_docs_exposed",
+      "url": "https://d-esign.nl/openapi.json",
+      "detail": "API documentation publicly accessible at /openapi.json",
+      "severity": "medium"
+    },
+    {
+      "type": "api_docs_exposed",
+      "url": "https://d-esign.nl/api-docs",
+      "detail": "API documentation publicly accessible at /api-docs",
+      "severity": "medium"
+    },
+    {
+      "type": "api_docs_exposed",
+      "url": "https://d-esign.nl/swagger-ui",
+      "detail": "API documentation publicly accessible at /swagger-ui",
+      "severity": "medium"
+    },
+    {
+      "type": "api_docs_exposed",
+      "url": "https://d-esign.nl/swagger-ui.html",
+      "detail": "API documentation publicly accessible at /swagger-ui.html",
+      "severity": "medium"
+    },
+    {
+      "type": "api_docs_exposed",
+      "url": "https://d-esign.nl/redoc",
+      "detail": "API documentation publicly accessible at /redoc",
+      "severity": "medium"
+    },
+    {
+      "type": "no_rate_limiting",
+      "detail": "No rate limiting detected on API endpoints",
+      "severity": "medium"
+    }
+  ],
+  "discovered_endpoints": [
+    {
+      "url": "https://d-esign.nl/rest",
+      "status": 200,
+      "content_type": "text/html"
+    },
+    {
+      "url": "https://d-esign.nl/rest/v1",
+      "status": 200,
+      "content_type": "text/html"
+    },
+    {
+      "url": "https://d-esign.nl/graphql",
+      "status": 200,
+      "content_type": "text/html"
+    },
+    {
+      "url": "https://d-esign.nl/graphiql",
+      "status": 200,
+      "content_type": "text/html"
+    },
+    {
+      "url": "https://d-esign.nl/swagger.json",
+      "status": 200,
+      "content_type": "text/html"
+    },
+    {
+      "url": "https://d-esign.nl/swagger/v1/swagger.json",
+      "status": 200,
+      "content_type": "text/html"
+    },
+    {
+      "url": "https://d-esign.nl/openapi.json",
+      "status": 200,
+      "content_type": "text/html"
+    },
+    {
+      "url": "https://d-esign.nl/api-docs",
+      "status": 200,
+      "content_type": "text/html"
+    },
+    {
+      "url": "https://d-esign.nl/swagger-ui",
+      "status": 200,
+      "content_type": "text/html"
+    },
+    {
+      "url": "https://d-esign.nl/swagger-ui.html",
+      "status": 200,
+      "content_type": "text/html"
+    },
+    {
+      "url": "https://d-esign.nl/redoc",
+      "status": 200,
+      "content_type": "text/html"
+    },
+    {
+      "url": "https://d-esign.nl/.well-known/openid-configuration",
+      "status": 200,
+      "content_type": "text/html"
+    },
+    {
+      "url": "https://d-esign.nl/oauth/token",
+      "status": 200,
+      "content_type": "text/html"
+    },
+    {
+      "url": "https://d-esign.nl/oauth2/token",
+      "status": 200,
+      "content_type": "text/html"
+    },
+    {
+      "url": "https://d-esign.nl/wp-json/wp/v2",
+      "status": 200,
+      "content_type": "text/html"
+    },
+    {
+      "url": "https://d-esign.nl/wp-json",
+      "status": 200,
+      "content_type": "text/html"
+    }
+  ]
+}

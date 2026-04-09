@@ -1,0 +1,660 @@
+﻿<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CyberPulse â€” Penetration Testing Platform</title>
+    <link rel="stylesheet" href="{{ request.url_for('static', path='style.css') }}">
+</head>
+<body>
+<div class="app-shell">
+
+    <!-- â•â• Sidebar â•â• -->
+    <aside class="sidebar" id="sidebar">
+        <a href="/" class="sidebar-brand">
+            <div class="brand-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            </div>
+            <div>
+                <span class="brand-name">CyberPulse</span>
+                <span class="brand-tagline">v3.0 Â· 70 modules</span>
+            </div>
+        </a>
+
+        <nav class="sidebar-nav">
+            <div class="nav-group">
+                <span class="nav-group-label">Platform</span>
+                <a href="/" class="nav-item" style="color:var(--text-muted);font-size:.8rem;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+                    Terug naar website
+                </a>
+                <a href="/app" class="nav-item active">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                    Dashboard
+                </a>
+            </div>
+            <div class="nav-group">
+                <span class="nav-group-label">Scanning</span>
+                <a href="/app" class="nav-item">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    Nieuwe Scan
+                </a>
+                <a href="#recent" class="nav-item">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                    Rapporten
+                </a>
+            </div>
+            <div class="nav-group">
+                <span class="nav-group-label">Referentie</span>
+                <a href="#pricing" class="nav-item">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                    Prijzen &amp; Kosten
+                </a>
+                <a href="#modules" class="nav-item">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+                    Alle Modules
+                </a>
+            </div>
+        </nav>
+
+        <div class="sidebar-footer">
+            <div class="status-row">
+                <span class="status-dot"></span>
+                System online
+            </div>
+            <div class="sidebar-meta">70 modules Â· DeepSeek AI Â· v3.0</div>
+        </div>
+    </aside>
+
+    <!-- â•â• Main â•â• -->
+    <div class="main-wrapper" id="main-wrapper">
+        <header class="topbar">
+            <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Toggle sidebar">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+            </button>
+            <span class="topbar-title">Penetration Testing Platform</span>
+            <div class="topbar-spacer"></div>
+            <div class="topbar-chip">
+                <span class="dot"></span>
+                AI Ready
+            </div>
+        </header>
+
+        <main class="page-content">
+
+            <!-- Page Header -->
+            <div class="page-header">
+                <h1>Security Dashboard</h1>
+                <p>Configureer en start een professionele penetratietest. Gebruik alleen op systemen met expliciete toestemming.</p>
+            </div>
+
+            <!-- Stats Grid -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon blue">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+                    </div>
+                    <div>
+                        <div class="stat-value" id="stat-modules">70</div>
+                        <div class="stat-label">Scan modules</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon green">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                    </div>
+                    <div>
+                        <div class="stat-value" id="stat-scans">—</div>
+                        <div class="stat-label">Scans uitgevoerd</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon orange">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                    </div>
+                    <div>
+                        <div class="stat-value" id="stat-findings">—</div>
+                        <div class="stat-label">Totaal bevindingen</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon purple">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                    </div>
+                    <div>
+                        <div class="stat-value">AI</div>
+                        <div class="stat-label">DeepSeek V3.2 analyse</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dashboard Metrics -->
+            <div class="metrics-grid">
+
+                <!-- Risk Score Gauge -->
+                <div class="gauge-panel">
+                    <div class="gauge-title">Gemiddeld Risico</div>
+                    <svg class="gauge-svg" width="160" height="90" viewBox="0 0 160 90">
+                        <!-- Background arc (half-donut) -->
+                        <path d="M 15 80 A 65 65 0 0 1 145 80" fill="none" stroke="#1C1C1A" stroke-width="16" stroke-linecap="round"/>
+                        <!-- Colored zones -->
+                        <path d="M 15 80 A 65 65 0 0 1 145 80" fill="none" stroke="url(#gaugeGrad)" stroke-width="16" stroke-linecap="round"/>
+                        <!-- Needle -->
+                        <line id="gauge-needle" x1="80" y1="80" x2="80" y2="20" stroke="#E8E6DF" stroke-width="2.5" stroke-linecap="round" transform="rotate(0 80 80)"/>
+                        <circle cx="80" cy="80" r="5" fill="#E8E6DF"/>
+                        <defs>
+                            <linearGradient id="gaugeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                                <stop offset="0%"   stop-color="#44AAFF"/>
+                                <stop offset="30%"  stop-color="#00E5A0"/>
+                                <stop offset="55%"  stop-color="#FFD700"/>
+                                <stop offset="75%"  stop-color="#FF8800"/>
+                                <stop offset="100%" stop-color="#FF4444"/>
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                    <div class="gauge-score" id="gauge-score">—</div>
+                    <div class="gauge-label" id="gauge-label">Geen data</div>
+                </div>
+
+                <!-- Severity Bar Chart -->
+                <div class="chart-panel">
+                    <div class="chart-title">Verdeling per Ernst</div>
+                    <div class="bar-chart" id="severity-chart">
+                        <div class="bar-row"><span class="bar-label">Critical</span><div class="bar-track"><div class="bar-fill critical" id="bar-critical" style="width:0%"></div></div><span class="bar-count" id="cnt-critical">0</span></div>
+                        <div class="bar-row"><span class="bar-label">High</span><div class="bar-track"><div class="bar-fill high" id="bar-high" style="width:0%"></div></div><span class="bar-count" id="cnt-high">0</span></div>
+                        <div class="bar-row"><span class="bar-label">Medium</span><div class="bar-track"><div class="bar-fill medium" id="bar-medium" style="width:0%"></div></div><span class="bar-count" id="cnt-medium">0</span></div>
+                        <div class="bar-row"><span class="bar-label">Low</span><div class="bar-track"><div class="bar-fill low" id="bar-low" style="width:0%"></div></div><span class="bar-count" id="cnt-low">0</span></div>
+                        <div class="bar-row"><span class="bar-label">Info</span><div class="bar-track"><div class="bar-fill info" id="bar-info" style="width:0%"></div></div><span class="bar-count" id="cnt-info">0</span></div>
+                    </div>
+                </div>
+
+                <!-- Recent Scans Table -->
+                <div class="recent-scans-panel" style="grid-column:1/-1;">
+                    <div class="recent-scans-title">Laatste 5 scans</div>
+                    <table class="recent-table">
+                        <thead>
+                            <tr>
+                                <th>Doel</th>
+                                <th>Datum</th>
+                                <th>Risicoscore</th>
+                                <th>Bevindingen</th>
+                                <th>Status</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody id="recent-scans-body">
+                            <tr><td colspan="6" style="text-align:center;color:#6B6B68;padding:20px;">Laden…</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+
+            <!-- Scan Form -->
+            <div class="panel">
+                <div class="panel-header">
+                    <div class="panel-title">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                        Scan Configureren
+                    </div>
+                </div>
+                <div class="panel-body">
+                    <div class="alert alert-warning" style="margin-bottom:20px;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:1px;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                        Scan uitsluitend op systemen waarvoor u schriftelijke toestemming heeft.
+                    </div>
+
+                    <form id="scan-form" action="/scan/start" method="POST">
+                        <div class="form-row">
+                            <div>
+                                <label class="field-label">Doelwit (domein of IP-adres)</label>
+                                <div class="input-wrapper">
+                                    <svg class="input-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg>
+                                    <input type="text" name="target" id="target" class="field-input has-icon"
+                                           placeholder="voorbeeld.nl of 192.168.1.1" required
+                                           pattern="[a-zA-Z0-9._\-:]+" title="Voer een geldig domein of IP-adres in">
+                                </div>
+                            </div>
+                            <div class="form-field-sm">
+                                <label class="field-label">Scan type</label>
+                                <select name="scan_type" id="scan_type" class="field-input field-select">
+                                    <option value="quick">Snelle Scan â€” 8 modules (â‚¬49)</option>
+                                    <option value="full">Volledige Scan â€” 70 modules (â‚¬349)</option>
+                                    <option value="custom">Aangepast â€” kies modules</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Scan Mode Selector -->
+                        <div style="margin-bottom:16px;">
+                            <label class="field-label" style="margin-bottom:8px;display:block;">Scan methode</label>
+                            <div id="scan-mode-tabs" style="display:flex;gap:8px;flex-wrap:wrap;">
+                                <label class="scan-mode-tab active" data-mode="blackbox">
+                                    <input type="radio" name="scan_mode" value="blackbox" checked style="display:none;">
+                                    <span style="font-size:1.1rem;">ðŸ”²</span>
+                                    <div>
+                                        <div style="font-weight:700;font-size:.88rem;">Black Box</div>
+                                        <div style="font-size:.74rem;color:#6b7280;">Alleen extern IP/domein â€” geen toegang</div>
+                                    </div>
+                                </label>
+                                <label class="scan-mode-tab" data-mode="graybox">
+                                    <input type="radio" name="scan_mode" value="graybox" style="display:none;">
+                                    <span style="font-size:1.1rem;">ðŸ”³</span>
+                                    <div>
+                                        <div style="font-weight:700;font-size:.88rem;">Gray Box</div>
+                                        <div style="font-size:.74rem;color:#6b7280;">Inloggegevens + API-tokens</div>
+                                    </div>
+                                </label>
+                                <label class="scan-mode-tab" data-mode="whitebox">
+                                    <input type="radio" name="scan_mode" value="whitebox" style="display:none;">
+                                    <span style="font-size:1.1rem;">â¬œ</span>
+                                    <div>
+                                        <div style="font-weight:700;font-size:.88rem;">White Box</div>
+                                        <div style="font-size:.74rem;color:#6b7280;">SSH toegang + broncode + config</div>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Gray Box Credentials Panel -->
+                        <div id="creds-graybox" class="creds-panel" style="display:none;">
+                            <div class="creds-panel-header">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                                Gray Box â€” Inloggegevens
+                                <span style="font-size:.72rem;color:#9ca3af;margin-left:auto;">Versleuteld in geheugen Â· Niet opgeslagen op schijf</span>
+                            </div>
+                            <div class="creds-grid">
+                                <div>
+                                    <label class="field-label">Web login URL</label>
+                                    <input type="url" name="cred_web_login_url" class="field-input" placeholder="https://voorbeeld.nl/login">
+                                </div>
+                                <div>
+                                    <label class="field-label">Gebruikersnaam</label>
+                                    <input type="text" name="cred_web_username" class="field-input" autocomplete="off" placeholder="admin">
+                                </div>
+                                <div>
+                                    <label class="field-label">Wachtwoord</label>
+                                    <input type="password" name="cred_web_password" class="field-input" autocomplete="new-password" placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢">
+                                </div>
+                                <div>
+                                    <label class="field-label">API Token (optioneel)</label>
+                                    <input type="password" name="cred_api_token" class="field-input" autocomplete="new-password" placeholder="Bearer eyJ...">
+                                </div>
+                                <div>
+                                    <label class="field-label">DB host (optioneel)</label>
+                                    <input type="text" name="cred_db_host" class="field-input" placeholder="localhost of 192.168.x.x">
+                                </div>
+                                <div>
+                                    <label class="field-label">DB gebruikersnaam</label>
+                                    <input type="text" name="cred_db_username" class="field-input" autocomplete="off" placeholder="root">
+                                </div>
+                                <div>
+                                    <label class="field-label">DB wachtwoord</label>
+                                    <input type="password" name="cred_db_password" class="field-input" autocomplete="new-password" placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢">
+                                </div>
+                                <div>
+                                    <label class="field-label">Intern netwerkbereik (optioneel)</label>
+                                    <input type="text" name="cred_network_range" class="field-input" placeholder="192.168.1.0/24">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- White Box Credentials Panel -->
+                        <div id="creds-whitebox" class="creds-panel" style="display:none;">
+                            <div class="creds-panel-header">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+                                White Box â€” SSH &amp; Broncode Toegang
+                                <span style="font-size:.72rem;color:#9ca3af;margin-left:auto;">Versleuteld in geheugen Â· Niet opgeslagen op schijf</span>
+                            </div>
+                            <div class="creds-grid">
+                                <div>
+                                    <label class="field-label">SSH Host</label>
+                                    <input type="text" name="cred_ssh_host" class="field-input" placeholder="192.168.1.10 of server.intern">
+                                </div>
+                                <div>
+                                    <label class="field-label">SSH Poort</label>
+                                    <input type="number" name="cred_ssh_port" class="field-input" value="22" min="1" max="65535">
+                                </div>
+                                <div>
+                                    <label class="field-label">SSH Gebruikersnaam</label>
+                                    <input type="text" name="cred_ssh_username" class="field-input" autocomplete="off" placeholder="root of ubuntu">
+                                </div>
+                                <div>
+                                    <label class="field-label">SSH Wachtwoord</label>
+                                    <input type="password" name="cred_ssh_password" class="field-input" autocomplete="new-password" placeholder="(of gebruik private key hieronder)">
+                                </div>
+                                <div style="grid-column:1/-1;">
+                                    <label class="field-label">SSH Private Key (PEM inhoud, optioneel)</label>
+                                    <textarea name="cred_ssh_key" class="field-input" rows="3" placeholder="-----BEGIN RSA PRIVATE KEY-----&#10;...&#10;-----END RSA PRIVATE KEY-----" style="font-family:var(--font-mono);font-size:.78rem;resize:vertical;"></textarea>
+                                </div>
+                                <div style="grid-column:1/-1;">
+                                    <label class="field-label">Pad naar broncode (optioneel â€” lokaal pad op server)</label>
+                                    <input type="text" name="cred_source_path" class="field-input" placeholder="/var/www/html of /opt/app">
+                                </div>
+                            </div>
+                             <!-- Gray Box fields included in White Box too -->
+                            <div class="creds-panel-header" style="margin-top:12px;">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                                Web / API Inloggegevens (optioneel)
+                            </div>
+                            <div class="creds-grid">
+                                <div>
+                                    <label class="field-label">Web login URL</label>
+                                    <input type="url" name="cred_web_login_url" class="field-input" placeholder="https://voorbeeld.nl/login">
+                                </div>
+                                <div>
+                                    <label class="field-label">Gebruikersnaam</label>
+                                    <input type="text" name="cred_web_username" class="field-input" autocomplete="off" placeholder="admin">
+                                </div>
+                                <div>
+                                    <label class="field-label">Wachtwoord</label>
+                                    <input type="password" name="cred_web_password" class="field-input" autocomplete="new-password" placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢">
+                                </div>
+                                <div>
+                                    <label class="field-label">API Token (optioneel)</label>
+                                    <input type="password" name="cred_api_token" class="field-input" autocomplete="new-password" placeholder="Bearer eyJ...">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Custom Module Selector -->
+                        <div id="custom-modules" style="display:none;" class="custom-selector">
+                            <div class="selector-toolbar">
+                                <div class="selector-actions">
+                                    <button type="button" id="select-all-modules" class="btn-ghost btn-sm">Alles selecteren</button>
+                                    <button type="button" id="deselect-all-modules" class="btn-ghost btn-sm">Deselecteren</button>
+                                </div>
+                                <div class="cost-summary">
+                                    Geschatte kosten: <strong id="total-cost">â‚¬0.00</strong>
+                                </div>
+                            </div>
+
+                            <div class="module-grid" id="module-grid">
+                                {% set phase_labels = {"reconnaissance": "Reconnaissance", "scanning": "Scanning & Analysis", "exploitation": "Exploitation", "post": "Post-Exploitation", "reporting": "Reporting"} %}
+                                {% set phase_icons  = {"reconnaissance": "ðŸ”", "scanning": "ðŸ“¡", "exploitation": "ðŸ’¥", "post": "ðŸ“Š", "reporting": "ðŸ“"} %}
+                                {% set ns = namespace(current_phase="") %}
+                                {% for mod_id, mod_info in modules.items() %}
+                                    {% if mod_info.phase != ns.current_phase %}
+                                        {% set ns.current_phase = mod_info.phase %}
+                                        <div class="phase-header">
+                                            <span>{{ phase_icons.get(mod_info.phase, '') }}</span>
+                                            {{ phase_labels.get(mod_info.phase, mod_info.phase) }}
+                                        </div>
+                                    {% endif %}
+                                    <label class="module-card {% if mod_id in quick_modules %}module-quick{% endif %}">
+                                        <input type="checkbox" name="modules" value="{{ mod_id }}"
+                                               data-cost="{{ mod_info.cost|replace('â‚¬','') }}"
+                                               {% if mod_id in quick_modules %}checked{% endif %}>
+                                        <div class="module-info">
+                                            <div class="module-top">
+                                                <span class="module-num">M{{ mod_id }}</span>
+                                                <span class="module-cost">{{ mod_info.cost }}</span>
+                                            </div>
+                                            <div class="module-name">{{ mod_info.name }}</div>
+                                        </div>
+                                        <span class="module-check"></span>
+                                    </label>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <div class="form-footer">
+                            <button type="submit" class="btn-primary" id="submit-btn">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                                Scan Starten
+                            </button>
+                            <span style="font-size:0.8rem;color:var(--text-muted);">Resultaten worden live gestreamd.</span>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Recent Scans -->
+            <div class="panel" id="recent">
+                <div class="panel-header">
+                    <div class="panel-title">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                        Recente Scans
+                    </div>
+                </div>
+                {% if recent_scans %}
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Doelwit</th>
+                            <th>Type</th>
+                            <th>Datum</th>
+                            <th>Bevindingen</th>
+                            <th>Rapport</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for scan in recent_scans %}
+                        <tr>
+                            <td class="cell-mono">{{ scan.target }}</td>
+                            <td><span style="font-size:0.8rem;color:var(--text-secondary);">{{ scan.scan_type }}</span></td>
+                            <td class="cell-muted">{{ scan.started_at[:16] if scan.started_at else 'â€”' }}</td>
+                            <td>
+                                {% if scan.total_findings > 0 %}
+                                <span style="font-weight:600;color:var(--warning);">{{ scan.total_findings }}</span>
+                                {% else %}
+                                <span class="cell-muted">0</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if scan.has_report or scan.has_analysis %}
+                                <a href="/scan/{{ scan.scan_id }}/report" class="btn-secondary btn-sm">Bekijken</a>
+                                {% else %}
+                                <span class="cell-muted">â€”</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <div class="empty-state">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                    <p>Geen recente scans. Start uw eerste scan hierboven.</p>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Pricing Section -->
+            <div id="pricing" style="scroll-margin-top:80px;">
+                <div class="section-heading" style="margin-bottom:20px;">Prijzen &amp; Kostenraming</div>
+
+                <div class="pricing-grid">
+                    <div class="pricing-card">
+                        <div class="pricing-name">Snelle Scan</div>
+                        <div class="pricing-price">â‚¬49</div>
+                        <div class="pricing-desc">8 kernmodules Â· ~10 min</div>
+                        <div class="pricing-modules">8 modules</div>
+                        <ul class="pricing-features">
+                            <li>Port scanning &amp; service enum</li>
+                            <li>Web discovery &amp; SSL audit</li>
+                            <li>DNS recon &amp; headers check</li>
+                            <li>AI-rapport in het Nederlands</li>
+                        </ul>
+                    </div>
+
+                    <div class="pricing-card featured">
+                        <div class="pricing-name">Volledige Scan</div>
+                        <div class="pricing-price">â‚¬349</div>
+                        <div class="pricing-desc">70 modules Â· ~2-4 uur</div>
+                        <div class="pricing-modules">70 modules</div>
+                        <ul class="pricing-features">
+                            <li>Alle 5 test-fasen gedekt</li>
+                            <li>Exploitatie &amp; post-exploitation</li>
+                            <li>Active Directory &amp; cloud checks</li>
+                            <li>OWASP Top 10 compliance</li>
+                            <li>Executive AI-rapport + PDF</li>
+                            <li>Attack Chain Simulation (M70)</li>
+                        </ul>
+                    </div>
+
+                    <div class="pricing-card">
+                        <div class="pricing-name">Handmatige Pentest</div>
+                        <div class="pricing-price">â‚¬5.000+</div>
+                        <div class="pricing-desc">Marktprijs ter vergelijking</div>
+                        <div class="pricing-modules" style="color:var(--text-muted);">Extern bureau</div>
+                        <ul class="pricing-features">
+                            <li>â‚¬750â€“â‚¬1500 / dag typisch</li>
+                            <li>3â€“10 werkdagen doorlooptijd</li>
+                            <li>Rapport na 1â€“3 weken</li>
+                            <li>CyberPulse: 93% goedkoper</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Real cost breakdown -->
+                <div class="section-heading" style="margin-bottom:12px;">Werkelijke AI-kosten per scan</div>
+                <p style="font-size:0.84rem;color:var(--text-muted);margin-bottom:14px;">Gebaseerd op DeepSeek API-tarieven ($0.14/1M input Â· $0.28/1M output tokens). Rekeninfrastructuur niet inbegrepen.</p>
+
+                <div class="cost-breakdown" style="margin-bottom:24px;">
+                    <div class="cost-breakdown-header">
+                        <span>Scan type</span>
+                        <span>Modules</span>
+                        <span>AI tokens (~)</span>
+                        <span>Werkelijke kostprijs</span>
+                    </div>
+                    <div class="cost-breakdown-row">
+                        <span>Snelle scan</span>
+                        <span style="color:var(--blue);font-family:var(--font-mono);">8</span>
+                        <span style="font-family:var(--font-mono);color:var(--text-secondary);">~40K</span>
+                        <span style="color:var(--success);font-family:var(--font-mono);font-weight:600;">~â‚¬0.006</span>
+                    </div>
+                    <div class="cost-breakdown-row">
+                        <span>Volledige scan (70 mod.)</span>
+                        <span style="color:var(--blue);font-family:var(--font-mono);">70</span>
+                        <span style="font-family:var(--font-mono);color:var(--text-secondary);">~350K</span>
+                        <span style="color:var(--success);font-family:var(--font-mono);font-weight:600;">~â‚¬0.05</span>
+                    </div>
+                    <div class="cost-breakdown-row">
+                        <span>Aangepaste scan + PDF</span>
+                        <span style="color:var(--blue);font-family:var(--font-mono);">variabel</span>
+                        <span style="font-family:var(--font-mono);color:var(--text-secondary);">variabel</span>
+                        <span style="color:var(--success);font-family:var(--font-mono);font-weight:600;">&lt;â‚¬0.10</span>
+                    </div>
+                    <div class="cost-breakdown-row" style="background:rgba(74,158,255,0.05);">
+                        <span style="font-weight:600;">Prijzen in de tool (incl. overhead)</span>
+                        <span style="color:var(--blue);font-family:var(--font-mono);">â€”</span>
+                        <span style="font-family:var(--font-mono);color:var(--text-secondary);">â€”</span>
+                        <span style="color:var(--warning);font-family:var(--font-mono);font-weight:600;">â‚¬49 â€“ â‚¬349</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- All Modules Reference -->
+            <div id="modules" style="scroll-margin-top:80px;">
+                <div class="section-heading" style="margin-bottom:16px;">Alle 70 Scan Modules</div>
+                <div class="cost-breakdown">
+                    <div class="cost-breakdown-header" style="grid-template-columns:0.5fr 2fr 1fr 1fr;">
+                        <span>#</span>
+                        <span>Module naam</span>
+                        <span>Fase</span>
+                        <span>Kosten</span>
+                    </div>
+                    {% set phase_colors = {"reconnaissance": "#818cf8", "scanning": "#4a9eff", "exploitation": "#f47067", "post": "#f0a050", "reporting": "#34d399"} %}
+                    {% for mod_id, mod_info in modules.items() %}
+                    <div class="cost-breakdown-row" style="grid-template-columns:0.5fr 2fr 1fr 1fr;">
+                        <span style="font-family:var(--font-mono);font-size:0.75rem;color:var(--text-muted);">M{{ mod_id }}</span>
+                        <span style="font-weight:500;">{{ mod_info.name }}</span>
+                        <span style="font-size:0.75rem;font-weight:600;text-transform:uppercase;letter-spacing:0.3px;color:{{ phase_colors.get(mod_info.phase, '#8090a6') }};">{{ mod_info.phase }}</span>
+                        <span style="font-family:var(--font-mono);font-size:0.82rem;color:var(--success);">{{ mod_info.cost }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="page-footer">
+                <span>CyberPulse Security Platform v3.0</span>
+                <span>Alleen voor geautoriseerd gebruik â€” <strong style="color:var(--danger);">niet voor illegale activiteiten</strong></span>
+            </div>
+
+        </main>
+    </div>
+</div>
+
+<script src="{{ request.url_for('static', path='app.js') }}"></script>
+<script>
+// ── Dashboard Metrics (1C) ──────────────────────────────────────────────────
+(async function loadMetrics() {
+    const severityWeights = { critical: 10, high: 7, medium: 4, low: 2, info: 1 };
+    const riskLabel = (s) => s >= 8 ? 'Kritiek' : s >= 6 ? 'Hoog' : s >= 4 ? 'Gemiddeld' : s >= 2 ? 'Laag' : 'Minimal';
+    const riskColor = (s) => s >= 8 ? '#FF4444' : s >= 6 ? '#FF8800' : s >= 4 ? '#FFD700' : s >= 2 ? '#00E5A0' : '#44AAFF';
+
+    let scans = [];
+    try {
+        const r = await fetch('/api/scans');
+        if (!r.ok) throw new Error('no data');
+        scans = await r.json();
+    } catch (e) { return; }
+
+    // ── Top-bar counters ────────────────────────────────────────────
+    const totalFindings = scans.reduce((s, c) => s + (c.total_findings || 0), 0);
+    const el = (id, v) => { const d = document.getElementById(id); if (d) d.textContent = v; };
+    el('stat-scans',    scans.length);
+    el('stat-findings', totalFindings);
+    el('stat-modules',  (window.MODULE_COUNT || 70));
+
+    // ── Gauge ────────────────────────────────────────────────────────
+    const last5 = scans.slice(0, 5);
+    if (last5.length) {
+        const avg = last5.reduce((s, c) => s + (c.risk_score || 0), 0) / last5.length;
+        el('gauge-score', avg.toFixed(1));
+        el('gauge-label', riskLabel(avg));
+        const needle = document.getElementById('gauge-needle');
+        if (needle) {
+            // Map 0-10 → -90deg to +90deg (left = safe, right = danger)
+            const angle = (avg / 10) * 180 - 90;
+            needle.setAttribute('transform', `rotate(${angle} 80 80)`);
+            document.getElementById('gauge-score').style.color = riskColor(avg);
+        }
+    } else {
+        el('gauge-label', 'Voer eerst een scan uit');
+    }
+
+    // ── Severity bar chart ────────────────────────────────────────────
+    const counts = { critical: 0, high: 0, medium: 0, low: 0, info: 0 };
+    for (const scan of scans) {
+        if (scan.severity_counts) {
+            for (const [k, v] of Object.entries(scan.severity_counts)) {
+                if (k in counts) counts[k] += v;
+            }
+        }
+    }
+    const maxCount = Math.max(...Object.values(counts), 1);
+    for (const [sev, cnt] of Object.entries(counts)) {
+        el('cnt-' + sev, cnt);
+        const bar = document.getElementById('bar-' + sev);
+        if (bar) bar.style.width = Math.round((cnt / maxCount) * 100) + '%';
+    }
+
+    // ── Recent scans table ────────────────────────────────────────────
+    const tbody = document.getElementById('recent-scans-body');
+    if (!tbody) return;
+    if (!scans.length) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#6B6B68;padding:20px;">Nog geen scans</td></tr>';
+        return;
+    }
+    tbody.innerHTML = last5.map(s => {
+        const date = s.started_at ? new Date(s.started_at).toLocaleDateString('nl-NL', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' }) : '—';
+        const score = s.risk_score != null ? s.risk_score.toFixed(1) : '—';
+        const scoreColor = s.risk_score != null ? riskColor(s.risk_score) : '#6B6B68';
+        const chip = s.risk_score != null ? `<span class="risk-chip" style="background:${scoreColor}22;color:${scoreColor};border:1px solid ${scoreColor}44;">${score}</span>` : '<span style="color:#6B6B68">—</span>';
+        const status = s.has_report ? '<span class="badge-success">Rapport</span>' : '<span class="badge-warning">Lopend</span>';
+        const reportLink = s.has_report ? `<a href="/report/${s.scan_id}" style="color:#00E5A0;font-size:0.75rem;">Bekijk →</a>` : '';
+        return `<tr>
+            <td style="font-family:var(--font-mono);font-size:0.8rem;">${s.target || '—'}</td>
+            <td style="color:#9B9990;font-size:0.8rem;">${date}</td>
+            <td>${chip}</td>
+            <td style="font-family:var(--font-mono);">${s.total_findings || 0}</td>
+            <td>${status}</td>
+            <td>${reportLink}</td>
+        </tr>`;
+    }).join('');
+})();
+</script>
+</body>
+</html>

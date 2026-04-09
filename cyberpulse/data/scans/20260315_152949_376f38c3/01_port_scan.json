@@ -1,0 +1,33 @@
+{
+  "findings": [
+    {
+      "type": "open_port",
+      "port": 22,
+      "protocol": "tcp",
+      "service": "SSH",
+      "banner": "SSH-2.0-OpenSSH_9.6p1 Ubuntu-3ubuntu13.15\r\nInvalid SSH identification string.",
+      "severity": "info"
+    },
+    {
+      "type": "open_port",
+      "port": 80,
+      "protocol": "tcp",
+      "service": "HTTP",
+      "banner": "",
+      "severity": "info"
+    },
+    {
+      "type": "open_port",
+      "port": 443,
+      "protocol": "tcp",
+      "service": "HTTPS",
+      "banner": "",
+      "severity": "info"
+    }
+  ],
+  "open_ports": [
+    22,
+    80,
+    443
+  ]
+}

@@ -1,0 +1,705 @@
+﻿<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<title>CyberPulse Rapport — d-esign.nl</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&family=JetBrains+Mono:wght@400;600&display=swap');
+  @page { size:A4; margin:20mm 18mm 22mm 18mm; }
+  @page :first { margin-top:0; margin-left:0; margin-right:0; }
+  @page { @bottom-center { content: "CyberPulse Security Platform  ·  Vertrouwelijk  ·  Scan " "20260315_165411_e7d7e4dd" "  ·  Pagina " counter(page); font-size:8pt; color:#9ca3af; } }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family: Arial, Helvetica, sans-serif; font-size:10pt; color:#111827; background:#fff; }
+
+  /* ── COVER PAGE ── */
+  .cover { display:flex; flex-direction:column; justify-content:space-between; height:297mm; padding:28mm 25mm; background:linear-gradient(160deg,#111827 0%,#1e293b 45%,#111827 100%); color:#fff; page-break-after:always; }
+  .cover-top .logo { display:flex; align-items:center; gap:14px; margin-bottom:6px; }
+  .cover-top .logo-icon { width:44px; height:44px; background:#059669; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:22px; }
+  .cover-top .logo-name { font-size:22pt; font-weight:900; letter-spacing:-1px; }
+  .cover-top .logo-tagline { font-size:9pt; color:#94a3b8; margin-top:2px; }
+  .cover-main { flex:1; display:flex; flex-direction:column; justify-content:center; }
+  .cover-main .report-type { font-size:9pt; text-transform:uppercase; letter-spacing:3px; color:#059669; font-weight:700; margin-bottom:14px; }
+  .cover-main h1 { font-size:28pt; font-weight:900; letter-spacing:-1px; line-height:1.1; margin-bottom:8px; }
+  .cover-main .target { font-size:13pt; color:#94a3b8; font-family:'Courier New',monospace; margin-bottom:30px; }
+  .cover-risk-box { display:inline-flex; align-items:center; gap:20px; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12); border-radius:12px; padding:18px 28px; }
+  .cover-risk-box .score { font-size:40pt; font-weight:900; font-family:'Courier New',monospace; line-height:1; }
+  .cover-risk-box .score.critical { color:#f87171; }
+  .cover-risk-box .score.high     { color:#fb923c; }
+  .cover-risk-box .score.medium   { color:#fbbf24; }
+  .cover-risk-box .score.low      { color:#60a5fa; }
+  .cover-risk-box .score.safe     { color:#34d399; }
+  .cover-risk-box .score-label { font-size:9pt; color:#94a3b8; text-transform:uppercase; letter-spacing:1px; }
+  .cover-risk-box .niveau { font-size:16pt; font-weight:700; }
+  .cover-bottom .cover-meta-row { display:flex; gap:30px; flex-wrap:wrap; margin-top:18px; }
+  .cover-bottom .cover-meta { font-size:8.5pt; color:#64748b; }
+  .cover-bottom .cover-meta strong { color:#94a3b8; display:block; margin-bottom:2px; font-size:7.5pt; text-transform:uppercase; letter-spacing:.5px; }
+  .cover-stamp { display:inline-block; border:2px solid rgba(239,68,68,.5); color:#f87171; font-size:8pt; font-weight:700; letter-spacing:2px; padding:3px 10px; border-radius:4px; text-transform:uppercase; margin-bottom:18px; }
+
+  /* ── MAIN CONTENT ── */
+  h2.section-h { font-size:13pt; font-weight:700; color:#111827; margin:0 0 14px; padding-bottom:7px; border-bottom:2px solid #111827; letter-spacing:-.3px; }
+  h3.sub-h { font-size:10.5pt; font-weight:700; color:#374151; margin:14px 0 6px; }
+  .section { margin-bottom:24px; }
+  .page-break { page-break-before:always; }
+
+  /* ── RISK SUMMARY ── */
+  .risk-summary-row { display:flex; gap:16px; margin-bottom:18px; flex-wrap:wrap; }
+  .risk-block { flex:1; min-width:100px; text-align:center; background:#f8fafc; border-radius:8px; padding:12px 10px; border:1px solid #e2e8f0; }
+  .risk-block .num { font-size:22pt; font-weight:900; font-family:'Courier New',monospace; line-height:1; }
+  .risk-block.crit .num { color:#dc2626; }
+  .risk-block.high .num { color:#ea580c; }
+  .risk-block.med  .num { color:#ca8a04; }
+  .risk-block.low  .num { color:#2563eb; }
+  .risk-block.info .num { color:#9ca3af; }
+  .risk-block .lbl { font-size:7.5pt; text-transform:uppercase; letter-spacing:.5px; color:#9ca3af; margin-top:3px; }
+  .mgmt-box { background:#f8fafc; border-left:4px solid #111827; padding:14px 18px; border-radius:0 8px 8px 0; font-size:9.5pt; line-height:1.7; color:#374151; margin-bottom:16px; }
+
+  /* ── FINDINGS TABLE ── */
+  .findings-table { width:100%; border-collapse:collapse; margin-bottom:16px; font-size:9pt; }
+  .findings-table th { background:#111827; color:#fff; padding:7px 10px; text-align:left; font-weight:600; font-size:7.5pt; text-transform:uppercase; letter-spacing:.5px; }
+  .findings-table td { padding:7px 10px; border-bottom:1px solid #f1f5f9; vertical-align:top; }
+  .findings-table tr:nth-child(even) td { background:#f8fafc; }
+  .badge-sev { display:inline-block; padding:2px 7px; border-radius:4px; font-size:7pt; font-weight:700; text-transform:uppercase; font-family:'Courier New',monospace; color:#fff; }
+  .badge-sev.critical { background:#dc2626; }
+  .badge-sev.high     { background:#ea580c; }
+  .badge-sev.medium   { background:#ca8a04; }
+  .badge-sev.low      { background:#2563eb; }
+  .badge-sev.info     { background:#9ca3af; }
+
+  /* ── DETAILED FINDINGS ── */
+  .finding-detail { background:#fff; border:1px solid #e2e8f0; border-radius:8px; margin-bottom:12px; overflow:hidden; page-break-inside:avoid; }
+  .finding-detail-header { display:flex; align-items:center; gap:10px; padding:10px 14px; background:#f8fafc; border-bottom:1px solid #e2e8f0; }
+  .finding-detail-body { padding:12px 14px; }
+  .finding-detail-title { font-size:10pt; font-weight:700; }
+  .finding-detail-module { font-size:7.5pt; color:#9ca3af; font-family:'Courier New',monospace; margin-left:auto; }
+  .field-row { margin-bottom:9px; }
+  .field-label { font-size:7.5pt; font-weight:700; text-transform:uppercase; letter-spacing:.5px; color:#9ca3af; margin-bottom:2px; }
+  .field-value { font-size:9pt; color:#374151; line-height:1.6; }
+  .field-value.fix { background:#f0fdf4; padding:7px 10px; border-radius:5px; border-left:3px solid #059669; }
+  .field-value.mono { font-family:'Courier New',monospace; font-size:8pt; color:#6b7280; }
+
+  /* ── ACTION PLAN ── */
+  .action-table { width:100%; border-collapse:collapse; margin-bottom:12px; font-size:9pt; }
+  .action-table th { background:#111827; color:#fff; padding:7px 10px; font-size:7.5pt; text-transform:uppercase; letter-spacing:.5px; font-weight:600; text-align:left; }
+  .action-table td { padding:8px 10px; border-bottom:1px solid #f1f5f9; vertical-align:top; }
+  .action-table tr:nth-child(even) td { background:#f8fafc; }
+  .action-table td:first-child { font-family:'Courier New',monospace; font-weight:700; font-size:8.5pt; width:28px; color:#111827; }
+  .prio-chip { display:inline-block; padding:2px 7px; border-radius:4px; font-size:7pt; font-weight:700; font-family:'Courier New',monospace; }
+  .prio-chip.laag { background:#ecfdf5; color:#059669; }
+  .prio-chip.gemiddeld { background:#fefce8; color:#ca8a04; }
+  .prio-chip.hoog { background:#fef2f2; color:#dc2626; }
+
+  /* ── TECH DETAILS ── */
+  .tech-pre { background:#1e293b; color:#e2e8f0; padding:14px 16px; border-radius:8px; font-family:'Courier New',monospace; font-size:7.5pt; line-height:1.7; white-space:pre-wrap; overflow-wrap:break-word; }
+
+  /* ── MODULE TAGS ── */
+  .module-tags { display:flex; flex-wrap:wrap; gap:5px; }
+  .module-tag { padding:2px 7px; background:#f1f5f9; border:1px solid #e2e8f0; border-radius:3px; font-size:7pt; font-family:'Courier New',monospace; color:#6b7280; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════ COVER PAGE ═══════════ -->
+<div class="cover">
+  <div class="cover-top">
+    <div class="logo">
+      <div class="logo-icon">🛡</div>
+      <div>
+        <div class="logo-name">CyberPulse</div>
+        <div class="logo-tagline">Security Intelligence Platform · v4.0</div>
+      </div>
+    </div>
+  </div>
+  <div class="cover-main">
+    <div class="report-type">Penetratietest Rapport</div>
+    <h1>Security Assessment<br>Rapport</h1>
+    <div class="target">d-esign.nl</div>
+    <div class="cover-risk-box">
+      <div>
+        <div class="score critical">85</div>
+        <div class="score-label">Risicoscore / 100</div>
+      </div>
+      <div style="border-left:1px solid rgba(255,255,255,.12);padding-left:20px;">
+        <div class="niveau">KRITIEK</div>
+        <div style="font-size:9pt;color:#94a3b8;margin-top:6px;">
+          6 critieke bevindingen
+          
+          
+        </div>
+      </div>
+    </div>
+    
+  </div>
+  <div class="cover-bottom">
+    <div class="cover-stamp">Vertrouwelijk</div>
+    <div class="cover-meta-row">
+      <div class="cover-meta"><strong>Scan type</strong>full</div>
+      <div class="cover-meta"><strong>Scan datum</strong>2026-03-15</div>
+      <div class="cover-meta"><strong>Scan ID</strong><span style="font-family:'Courier New',monospace;font-size:8pt;">20260315_165411_e7d7e4dd</span></div>
+      <div class="cover-meta"><strong>Modules</strong>70 uitgevoerd</div>
+      <div class="cover-meta"><strong>Bevindingen</strong>702 totaal</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ PAGE 2: SAMENVATTING ═══════════ -->
+<div class="section">
+  <h2 class="section-h">Uitvoerende Samenvatting</h2>
+  
+  <div class="mgmt-box">De penetratietest toont ernstige beveiligingsrisico&#39;s voor d-esign.nl. Kritieke problemen omvatten: 1) Blootstelling van gevoelige configuratiebestanden zoals .env en databaseconfiguraties die wachtwoorden kunnen bevatten, 2) DNS-zoneoverdracht waardoor interne netwerkinformatie wordt gelekt, 3) Command-injectiekwetsbaarheden die volledige serverovername mogelijk maken, 4) Onbeveiligde beheerpanelen en database-interfaces, en 5) Gebrek aan basisbeveiligingsheaders. Deze kwetsbaarheden stellen de organisatie bloot aan gegevensdiefstal, ransomware-aanvallen en volledige compromittering van de infrastructuur. Onmiddellijke actie is vereist om de meest kritieke problemen te verhelpen.</div>
+  
+
+  <div class="risk-summary-row">
+    <div class="risk-block crit"><div class="num">6</div><div class="lbl">Kritiek</div></div>
+    <div class="risk-block high"><div class="num">5</div><div class="lbl">Hoog</div></div>
+    <div class="risk-block med"><div class="num">6</div><div class="lbl">Medium</div></div>
+    <div class="risk-block low"><div class="num">2</div><div class="lbl">Laag</div></div>
+    <div class="risk-block info"><div class="num">0</div><div class="lbl">Info</div></div>
+  </div>
+
+  
+  <p style="font-size:9.5pt;line-height:1.7;color:#374151;margin-bottom:14px;">De penetratietest onthult kritieke beveiligingsproblemen bij d-esign.nl, waaronder blootgestelde gevoelige bestanden, DNS-zoneoverdracht, RCE-kwetsbaarheden en onbeveiligde beheerinterfaces. Het risiconiveau is kritiek vanwege de directe impactmogelijkheden.</p>
+  
+</div>
+
+<!-- ═══════════ BEVINDINGEN OVERZICHT ═══════════ -->
+
+<div class="section page-break">
+  <h2 class="section-h">Bevindingen Overzicht</h2>
+  <table class="findings-table">
+    <thead><tr>
+      <th>#</th>
+      <th>Bevinding</th>
+      <th>Module</th>
+      <th>Ernst</th>
+    </tr></thead>
+    <tbody>
+      
+      <tr>
+        <td style="font-family:'Courier New',monospace;color:#9ca3af;font-size:8pt;">1</td>
+        <td><strong>Geen Web Application Firewall (WAF) Gedetecteerd</strong><br><span style="font-size:8pt;color:#6b7280;">Geen Web Application Firewall (WAF) gedetecteerd op de doelapplicatie. Dit betekent dat er geen extr…</span></td>
+        <td style="font-family:'Courier New',monospace;font-size:8pt;color:#6b7280;white-space:nowrap;">Firewall &amp; WAF Detection</td>
+        <td><span class="badge-sev medium">Gemiddeld</span></td>
+      </tr>
+      
+      <tr>
+        <td style="font-family:'Courier New',monospace;color:#9ca3af;font-size:8pt;">2</td>
+        <td><strong>DNS Misconfiguratie - Geen DMARC en Zwak SPF</strong><br><span style="font-size:8pt;color:#6b7280;">Geen DMARC record gevonden en SPF record gebruikt &#39;~all&#39; (softfail) in plaats van &#39;-all&#39; (hardfail).…</span></td>
+        <td style="font-family:'Courier New',monospace;font-size:8pt;color:#6b7280;white-space:nowrap;">Web Discovery</td>
+        <td><span class="badge-sev medium">Gemiddeld</span></td>
+      </tr>
+      
+      <tr>
+        <td style="font-family:'Courier New',monospace;color:#9ca3af;font-size:8pt;">3</td>
+        <td><strong>Blootgestelde API Documentatie</strong><br><span style="font-size:8pt;color:#6b7280;">API-documentatie is publiek toegankelijk op paden zoals /swagger.json, /openapi.json, /api-docs, /sw…</span></td>
+        <td style="font-family:'Courier New',monospace;font-size:8pt;color:#6b7280;white-space:nowrap;">CMS Scanning</td>
+        <td><span class="badge-sev medium">Gemiddeld</span></td>
+      </tr>
+      
+      <tr>
+        <td style="font-family:'Courier New',monospace;color:#9ca3af;font-size:8pt;">4</td>
+        <td><strong>Interessante Subdomeinen Gedetecteerd</strong><br><span style="font-size:8pt;color:#6b7280;">Meerdere interessante subdomeinen gedetecteerd zoals admin.d-esign.nl, backup.d-esign.nl, dev.d-esig…</span></td>
+        <td style="font-family:'Courier New',monospace;font-size:8pt;color:#6b7280;white-space:nowrap;">Web Vulnerabilities</td>
+        <td><span class="badge-sev medium">Gemiddeld</span></td>
+      </tr>
+      
+      <tr>
+        <td style="font-family:'Courier New',monospace;color:#9ca3af;font-size:8pt;">5</td>
+        <td><strong>Geen Cache-Control Headers op Sensitieve Pagina&#39;s</strong><br><span style="font-size:8pt;color:#6b7280;">Cache-Control headers ontbreken op sensitieve pagina&#39;s zoals /dashboard, /profile, /account, /settin…</span></td>
+        <td style="font-family:'Courier New',monospace;font-size:8pt;color:#6b7280;white-space:nowrap;">Session Management</td>
+        <td><span class="badge-sev medium">Gemiddeld</span></td>
+      </tr>
+      
+      <tr>
+        <td style="font-family:'Courier New',monospace;color:#9ca3af;font-size:8pt;">6</td>
+        <td><strong>OpenSSH Service Beschikbaar</strong><br><span style="font-size:8pt;color:#6b7280;">SSH service draait op poort 22 met OpenSSH 9.6p1. Hoewel dit een standaard service is, verhoogt het …</span></td>
+        <td style="font-family:'Courier New',monospace;font-size:8pt;color:#6b7280;white-space:nowrap;">Port Scanning</td>
+        <td><span class="badge-sev medium">Gemiddeld</span></td>
+      </tr>
+      
+      <tr>
+        <td style="font-family:'Courier New',monospace;color:#9ca3af;font-size:8pt;">7</td>
+        <td><strong>Server Banner Information Leakage</strong><br><span style="font-size:8pt;color:#6b7280;">Server banners onthullen gedetailleerde versie-informatie, waaronder nginx/1.29.4 en OpenSSH_9.6p1 U…</span></td>
+        <td style="font-family:'Courier New',monospace;font-size:8pt;color:#6b7280;white-space:nowrap;">Service Enumeration</td>
+        <td><span class="badge-sev low">Laag</span></td>
+      </tr>
+      
+      <tr>
+        <td style="font-family:'Courier New',monospace;color:#9ca3af;font-size:8pt;">8</td>
+        <td><strong>SAML Endpoints Gedetecteerd</strong><br><span style="font-size:8pt;color:#6b7280;">Meerdere SAML endpoints gedetecteerd, zoals /saml, /saml/sso, /saml2, /adfs/ls, etc. Deze kunnen int…</span></td>
+        <td style="font-family:'Courier New',monospace;font-size:8pt;color:#6b7280;white-space:nowrap;">OAuth &amp; SAML Testing</td>
+        <td><span class="badge-sev low">Laag</span></td>
+      </tr>
+      
+      <tr>
+        <td style="font-family:'Courier New',monospace;color:#9ca3af;font-size:8pt;">9</td>
+        <td><strong>Onbeveiligde Beheerpanelen</strong><br><span style="font-size:8pt;color:#6b7280;">Meerdere beheerpanelen zijn publiek toegankelijk zonder authenticatie, waaronder /admin, /administra…</span></td>
+        <td style="font-family:'Courier New',monospace;font-size:8pt;color:#6b7280;white-space:nowrap;">Privilege Escalation</td>
+        <td><span class="badge-sev high">Hoog</span></td>
+      </tr>
+      
+      <tr>
+        <td style="font-family:'Courier New',monospace;color:#9ca3af;font-size:8pt;">10</td>
+        <td><strong>Container Management Interfaces Publiek Toegankelijk</strong><br><span style="font-size:8pt;color:#6b7280;">Containerbeheerinterfaces zoals Portainer (/portainer), Rancher (/rancher), en Kubernetes Dashboard …</span></td>
+        <td style="font-family:'Courier New',monospace;font-size:8pt;color:#6b7280;white-space:nowrap;">Docker &amp; Container Exposure</td>
+        <td><span class="badge-sev high">Hoog</span></td>
+      </tr>
+      
+      <tr>
+        <td style="font-family:'Courier New',monospace;color:#9ca3af;font-size:8pt;">11</td>
+        <td><strong>Geen Rate Limiting op Login en API Endpoints</strong><br><span style="font-size:8pt;color:#6b7280;">Geen rate limiting gedetecteerd op login-endpoints (/login, /api/login, etc.) en algemene API-endpoi…</span></td>
+        <td style="font-family:'Courier New',monospace;font-size:8pt;color:#6b7280;white-space:nowrap;">Rate Limiting &amp; DoS</td>
+        <td><span class="badge-sev high">Hoog</span></td>
+      </tr>
+      
+      <tr>
+        <td style="font-family:'Courier New',monospace;color:#9ca3af;font-size:8pt;">12</td>
+        <td><strong>Ontbrekende HSTS en CSP Headers</strong><br><span style="font-size:8pt;color:#6b7280;">Kritieke beveiligingsheaders ontbreken, waaronder HTTP Strict Transport Security (HSTS) en Content S…</span></td>
+        <td style="font-family:'Courier New',monospace;font-size:8pt;color:#6b7280;white-space:nowrap;">Web Vulnerabilities</td>
+        <td><span class="badge-sev high">Hoog</span></td>
+      </tr>
+      
+      <tr>
+        <td style="font-family:'Courier New',monospace;color:#9ca3af;font-size:8pt;">13</td>
+        <td><strong>Blootgestelde CI/CD Configuratiebestanden</strong><br><span style="font-size:8pt;color:#6b7280;">CI/CD configuratiebestanden zijn publiek toegankelijk, waaronder .github/workflows/ci.yml, Jenkinsfi…</span></td>
+        <td style="font-family:'Courier New',monospace;font-size:8pt;color:#6b7280;white-space:nowrap;">CI/CD Pipeline Exposure</td>
+        <td><span class="badge-sev high">Hoog</span></td>
+      </tr>
+      
+      <tr>
+        <td style="font-family:'Courier New',monospace;color:#9ca3af;font-size:8pt;">14</td>
+        <td><strong>DNS Zone Transfer Kwetsbaarheid</strong><br><span style="font-size:8pt;color:#6b7280;">DNS-zoneoverdracht (AXFR) is succesvol uitgevoerd vanaf alle drie nameservers (ns1.transip.nl, ns0.t…</span></td>
+        <td style="font-family:'Courier New',monospace;font-size:8pt;color:#6b7280;white-space:nowrap;">DNS Zone Transfer</td>
+        <td><span class="badge-sev critical">Kritiek</span></td>
+      </tr>
+      
+      <tr>
+        <td style="font-family:'Courier New',monospace;color:#9ca3af;font-size:8pt;">15</td>
+        <td><strong>Blootgestelde Gevoelige Bestanden (.env, configuraties)</strong><br><span style="font-size:8pt;color:#6b7280;">Meerdere gevoelige bestanden zijn publiek toegankelijk via HTTP(S), waaronder .env, .env.local, .env…</span></td>
+        <td style="font-family:'Courier New',monospace;font-size:8pt;color:#6b7280;white-space:nowrap;">Backup File Discovery</td>
+        <td><span class="badge-sev critical">Kritiek</span></td>
+      </tr>
+      
+      <tr>
+        <td style="font-family:'Courier New',monospace;color:#9ca3af;font-size:8pt;">16</td>
+        <td><strong>Remote Code Execution via Command Injection</strong><br><span style="font-size:8pt;color:#6b7280;">Command-injectiekwetsbaarheden gedetecteerd via parameters zoals cmd, exec, command, execute, ping, …</span></td>
+        <td style="font-family:'Courier New',monospace;font-size:8pt;color:#6b7280;white-space:nowrap;">Remote Code Execution</td>
+        <td><span class="badge-sev critical">Kritiek</span></td>
+      </tr>
+      
+      <tr>
+        <td style="font-family:'Courier New',monospace;color:#9ca3af;font-size:8pt;">17</td>
+        <td><strong>Onbeveiligde Database Web Interfaces</strong><br><span style="font-size:8pt;color:#6b7280;">Meerdere databasebeheerinterfaces zijn publiek toegankelijk zonder authenticatie, waaronder phpMyAdm…</span></td>
+        <td style="font-family:'Courier New',monospace;font-size:8pt;color:#6b7280;white-space:nowrap;">Database Exploitation</td>
+        <td><span class="badge-sev critical">Kritiek</span></td>
+      </tr>
+      
+      <tr>
+        <td style="font-family:'Courier New',monospace;color:#9ca3af;font-size:8pt;">18</td>
+        <td><strong>Kubernetes API Endpoints Publiek Toegankelijk</strong><br><span style="font-size:8pt;color:#6b7280;">Kubernetes API-endpoints zijn publiek toegankelijk zonder authenticatie, waaronder /apis, /healthz, …</span></td>
+        <td style="font-family:'Courier New',monospace;font-size:8pt;color:#6b7280;white-space:nowrap;">Kubernetes Exposure</td>
+        <td><span class="badge-sev critical">Kritiek</span></td>
+      </tr>
+      
+      <tr>
+        <td style="font-family:'Courier New',monospace;color:#9ca3af;font-size:8pt;">19</td>
+        <td><strong>Git Repository Publiek Toegankelijk</strong><br><span style="font-size:8pt;color:#6b7280;">.git directory en bestanden (zoals .git/HEAD, .git/config) zijn publiek toegankelijk via HTTP(S). Di…</span></td>
+        <td style="font-family:'Courier New',monospace;font-size:8pt;color:#6b7280;white-space:nowrap;">Subdomain Enumeration</td>
+        <td><span class="badge-sev critical">Kritiek</span></td>
+      </tr>
+      
+    </tbody>
+  </table>
+</div>
+
+<!-- ═══════════ GEDETAILLEERDE BEVINDINGEN ═══════════ -->
+<div class="section page-break">
+  <h2 class="section-h">Gedetailleerde Bevindingen</h2>
+  
+  <div class="finding-detail">
+    <div class="finding-detail-header">
+      <span class="badge-sev critical">Kritiek</span>
+      <span class="finding-detail-title">DNS Zone Transfer Kwetsbaarheid</span>
+      <span class="finding-detail-module">DNS Zone Transfer</span>
+    </div>
+    <div class="finding-detail-body">
+      <div class="field-row"><div class="field-label">Beschrijving</div><div class="field-value">DNS-zoneoverdracht (AXFR) is succesvol uitgevoerd vanaf alle drie nameservers (ns1.transip.nl, ns0.transip.net, ns2.transip.eu), wat 7 DNS-records blootstelt. Dit stelt een aanvaller in staat om het volledige DNS-zonebestand te downloaden, inclusief interne subdomeinen en netwerkstructuur.</div></div>
+      <div class="field-row"><div class="field-label">Impact</div><div class="field-value">Complete DNS-zone-informatie wordt gelekt, wat interne netwerktoewijzing en subdomeinen onthult. Dit vergemakkelijkt verdere aanvalsplanning en kan leiden tot subdomein-overname of interne netwerkverkenning.</div></div>
+      <div class="field-row"><div class="field-label">Oplossing / Aanbeveling</div><div class="field-value fix">Configureer nameservers om zoneoverdrachten te weigeren voor niet-geautoriseerde IP-adressen. Gebruik ACL&#39;s (Access Control Lists) op DNS-servers om alleen geautoriseerde secundaire nameservers toe te staan. Implementeer TSIG (Transaction Signature) voor geverifieerde zoneoverdrachten.</div></div>
+      <div class="field-row"><div class="field-label">Referenties</div><div class="field-value mono">CVE-1999-0532  ·  OWASP-2021-A05  ·  https://www.ietf.org/rfc/rfc2845.txt</div></div>
+    </div>
+  </div>
+  
+  <div class="finding-detail">
+    <div class="finding-detail-header">
+      <span class="badge-sev critical">Kritiek</span>
+      <span class="finding-detail-title">Blootgestelde Gevoelige Bestanden (.env, configuraties)</span>
+      <span class="finding-detail-module">Backup File Discovery</span>
+    </div>
+    <div class="finding-detail-body">
+      <div class="field-row"><div class="field-label">Beschrijving</div><div class="field-value">Meerdere gevoelige bestanden zijn publiek toegankelijk via HTTP(S), waaronder .env, .env.local, .env.production, config.php, wp-config.php, en database configuratiebestanden. Deze bestanden bevatten vaak wachtwoorden, API-sleutels en andere geheimen.</div></div>
+      <div class="field-row"><div class="field-label">Impact</div><div class="field-value">Directe diefstal van databasewachtwoorden, API-sleutels, encryptiesleutels en andere gevoelige configuratiegegevens. Kan leiden tot volledige compromittering van applicaties, databases en externe services.</div></div>
+      <div class="field-row"><div class="field-label">Oplossing / Aanbeveling</div><div class="field-value fix">Verwijder alle gevoelige bestanden uit de webroot. Gebruik omgevingsvariabelen of beveiligde configuratiebeheersystemen. Configureer webserver (nginx) om toegang tot .env, .git, config.*, en andere gevoelige bestanden te blokkeren via location-blokken.</div></div>
+      <div class="field-row"><div class="field-label">Referenties</div><div class="field-value mono">CVE-2021-44228  ·  OWASP-2021-A05  ·  https://cheatsheetseries.owasp.org/cheatsheets/Configuration_Management_Cheat_Sheet.html</div></div>
+    </div>
+  </div>
+  
+  <div class="finding-detail">
+    <div class="finding-detail-header">
+      <span class="badge-sev critical">Kritiek</span>
+      <span class="finding-detail-title">Remote Code Execution via Command Injection</span>
+      <span class="finding-detail-module">Remote Code Execution</span>
+    </div>
+    <div class="finding-detail-body">
+      <div class="field-row"><div class="field-label">Beschrijving</div><div class="field-value">Command-injectiekwetsbaarheden gedetecteerd via parameters zoals cmd, exec, command, execute, ping, etc. De server voert externe commando&#39;s uit wanneer speciaal gemaakte invoer wordt verzonden, wat bevestigd wordt door whoami-uitvoer.</div></div>
+      <div class="field-row"><div class="field-label">Impact</div><div class="field-value">Aanvallers kunnen willekeurige commando&#39;s uitvoeren op de onderliggende server met de rechten van de webserver (bijv. www-data of root). Dit leidt tot volledige serverovername, gegevensdiefstal en verdere laterale beweging.</div></div>
+      <div class="field-row"><div class="field-label">Oplossing / Aanbeveling</div><div class="field-value fix">Implementeer strikte inputvalidatie en parameterisatie voor alle systeemaanroepen. Gebruik whitelisting van toegestane commando&#39;s. Voer webserverprocessen uit met minimale rechten. Implementeer Web Application Firewall (WAF) regels om command-injectie te blokkeren.</div></div>
+      <div class="field-row"><div class="field-label">Referenties</div><div class="field-value mono">CVE-2021-44228  ·  OWASP-2021-A03  ·  https://owasp.org/www-community/attacks/Command_Injection</div></div>
+    </div>
+  </div>
+  
+  <div class="finding-detail">
+    <div class="finding-detail-header">
+      <span class="badge-sev critical">Kritiek</span>
+      <span class="finding-detail-title">Onbeveiligde Database Web Interfaces</span>
+      <span class="finding-detail-module">Database Exploitation</span>
+    </div>
+    <div class="finding-detail-body">
+      <div class="field-row"><div class="field-label">Beschrijving</div><div class="field-value">Meerdere databasebeheerinterfaces zijn publiek toegankelijk zonder authenticatie, waaronder phpMyAdmin (/phpmyadmin), Adminer (/adminer), pgAdmin (/pgadmin), en CouchDB interfaces. Deze geven directe toegang tot databases.</div></div>
+      <div class="field-row"><div class="field-label">Impact</div><div class="field-value">Directe toegang tot databases, waardoor aanvallers gegevens kunnen lezen, wijzigen of verwijderen. Kan leiden tot volledige gegevensdiefstal, databasecompromittering en verdere escalatie naar het onderliggende systeem.</div></div>
+      <div class="field-row"><div class="field-label">Oplossing / Aanbeveling</div><div class="field-value fix">Verwijder ongebruikte database-interfaces uit productieomgevingen. Beveilig resterende interfaces met sterke authenticatie, IP-whitelisting en VPN-toegang. Gebruik aparte beheeromgevingen niet rechtstreeks blootgesteld aan internet.</div></div>
+      <div class="field-row"><div class="field-label">Referenties</div><div class="field-value mono">CVE-2021-25091  ·  OWASP-2021-A01  ·  https://www.phpmyadmin.net/security/</div></div>
+    </div>
+  </div>
+  
+  <div class="finding-detail">
+    <div class="finding-detail-header">
+      <span class="badge-sev critical">Kritiek</span>
+      <span class="finding-detail-title">Kubernetes API Endpoints Publiek Toegankelijk</span>
+      <span class="finding-detail-module">Kubernetes Exposure</span>
+    </div>
+    <div class="finding-detail-body">
+      <div class="field-row"><div class="field-label">Beschrijving</div><div class="field-value">Kubernetes API-endpoints zijn publiek toegankelijk zonder authenticatie, waaronder /apis, /healthz, /readyz, en /metrics. Dit stelt containerbeheerinterfaces bloot.</div></div>
+      <div class="field-row"><div class="field-label">Impact</div><div class="field-value">Aanvallers kunnen Kubernetes-clusters enumereren, pods beheren, geheimen stelen en volledige controle over containeromgevingen krijgen. Kan leiden tot compromittering van alle gecontaineriseerde applicaties.</div></div>
+      <div class="field-row"><div class="field-label">Oplossing / Aanbeveling</div><div class="field-value fix">Configureer Kubernetes RBAC (Role-Based Access Control) met strikte authenticatie. Gebruik network policies om API-toegang te beperken tot geautoriseerde IP-adressen. Implementeer Kubernetes API-server authenticatie via certificaten of tokens.</div></div>
+      <div class="field-row"><div class="field-label">Referenties</div><div class="field-value mono">CVE-2020-8554  ·  OWASP-2021-A05  ·  https://kubernetes.io/docs/concepts/security/</div></div>
+    </div>
+  </div>
+  
+  <div class="finding-detail">
+    <div class="finding-detail-header">
+      <span class="badge-sev critical">Kritiek</span>
+      <span class="finding-detail-title">Git Repository Publiek Toegankelijk</span>
+      <span class="finding-detail-module">Subdomain Enumeration</span>
+    </div>
+    <div class="finding-detail-body">
+      <div class="field-row"><div class="field-label">Beschrijving</div><div class="field-value">.git directory en bestanden (zoals .git/HEAD, .git/config) zijn publiek toegankelijk via HTTP(S). Dit stelt de volledige source code, commit-geschiedenis en mogelijk gevoelige configuratie bloot.</div></div>
+      <div class="field-row"><div class="field-label">Impact</div><div class="field-value">Aanvallers kunnen de volledige source code downloaden, inclusief hardcoded geheimen, kwetsbare code en interne logica. Kan leiden tot gerichte exploits en intellectuele eigendomsdiefstal.</div></div>
+      <div class="field-row"><div class="field-label">Oplossing / Aanbeveling</div><div class="field-value fix">Verwijder .git directory uit de webroot. Configureer webserver om toegang tot .git te blokkeren. Gebruik .gitignore om gevoelige bestanden uit te sluiten. Implementeer pre-commit hooks om geheimen te detecteren.</div></div>
+      <div class="field-row"><div class="field-label">Referenties</div><div class="field-value mono">CVE-2021-42778  ·  OWASP-2021-A05  ·  https://owasp.org/www-project-top-ten/2017/A6_2017-Security_Misconfiguration</div></div>
+    </div>
+  </div>
+  
+  <div class="finding-detail">
+    <div class="finding-detail-header">
+      <span class="badge-sev high">Hoog</span>
+      <span class="finding-detail-title">Onbeveiligde Beheerpanelen</span>
+      <span class="finding-detail-module">Privilege Escalation</span>
+    </div>
+    <div class="finding-detail-body">
+      <div class="field-row"><div class="field-label">Beschrijving</div><div class="field-value">Meerdere beheerpanelen zijn publiek toegankelijk zonder authenticatie, waaronder /admin, /administrator, /wp-admin, /cpanel, /panel, en andere beheerpaden. Dit geeft directe toegang tot beheerfunctionaliteiten.</div></div>
+      <div class="field-row"><div class="field-label">Impact</div><div class="field-value">Aanvallers kunnen beheerfunctionaliteiten misbruiken om applicatie-instellingen te wijzigen, gebruikers te beheren, of verdere toegang te verkrijgen. Kan leiden tot volledige applicatiecontrole.</div></div>
+      <div class="field-row"><div class="field-label">Oplossing / Aanbeveling</div><div class="field-value fix">Beveilig alle beheerpaden met sterke authenticatie (bijv. multi-factor). Implementeer IP-whitelisting voor beheerinterfaces. Gebruik aparte beheerdomeinen of VPN-toegang. Verwijder ongebruikte beheerinterfaces.</div></div>
+      <div class="field-row"><div class="field-label">Referenties</div><div class="field-value mono">CVE-2021-25091  ·  OWASP-2021-A01  ·  https://owasp.org/www-project-top-ten/2017/A5_2017-Broken_Access_Control</div></div>
+    </div>
+  </div>
+  
+  <div class="finding-detail">
+    <div class="finding-detail-header">
+      <span class="badge-sev high">Hoog</span>
+      <span class="finding-detail-title">Container Management Interfaces Publiek Toegankelijk</span>
+      <span class="finding-detail-module">Docker &amp; Container Exposure</span>
+    </div>
+    <div class="finding-detail-body">
+      <div class="field-row"><div class="field-label">Beschrijving</div><div class="field-value">Containerbeheerinterfaces zoals Portainer (/portainer), Rancher (/rancher), en Kubernetes Dashboard (/_dashboard) zijn publiek toegankelijk zonder authenticatie.</div></div>
+      <div class="field-row"><div class="field-label">Impact</div><div class="field-value">Aanvallers kunnen containers beheren, images wijzigen, en volledige controle over containeromgevingen krijgen. Kan leiden tot compromittering van alle gecontaineriseerde services.</div></div>
+      <div class="field-row"><div class="field-label">Oplossing / Aanbeveling</div><div class="field-value fix">Beveilig containerbeheerinterfaces met sterke authenticatie en autorisatie. Gebruik netwerksegmentatie om toegang te beperken tot beheernetwerken. Implementeer audit logging voor alle beheeracties.</div></div>
+      <div class="field-row"><div class="field-label">Referenties</div><div class="field-value mono">CVE-2020-14386  ·  OWASP-2021-A05  ·  https://docs.docker.com/engine/security/</div></div>
+    </div>
+  </div>
+  
+  <div class="finding-detail">
+    <div class="finding-detail-header">
+      <span class="badge-sev high">Hoog</span>
+      <span class="finding-detail-title">Geen Rate Limiting op Login en API Endpoints</span>
+      <span class="finding-detail-module">Rate Limiting &amp; DoS</span>
+    </div>
+    <div class="finding-detail-body">
+      <div class="field-row"><div class="field-label">Beschrijving</div><div class="field-value">Geen rate limiting gedetecteerd op login-endpoints (/login, /api/login, etc.) en algemene API-endpoints. Dit maakt brute-force aanvallen en denial-of-service mogelijk.</div></div>
+      <div class="field-row"><div class="field-label">Impact</div><div class="field-value">Aanvallers kunnen brute-force aanvallen uitvoeren op gebruikersaccounts, credentials raden, en API-endpoints overbelasten. Kan leiden tot accountovername en serviceonderbrekingen.</div></div>
+      <div class="field-row"><div class="field-label">Oplossing / Aanbeveling</div><div class="field-value fix">Implementeer rate limiting op alle authenticatie-endpoints (bijv. max 5 pogingen per minuut). Gebruik tools zoals fail2ban, WAF-regels, of applicatieframework rate limiters. Monitor en blokkeer verdachte IP-adressen.</div></div>
+      <div class="field-row"><div class="field-label">Referenties</div><div class="field-value mono">CVE-2021-44228  ·  OWASP-2021-A07  ·  https://owasp.org/www-project-cheat-sheets/cheatsheets/Attack_Surface_Analysis_Cheat_Sheet.html</div></div>
+    </div>
+  </div>
+  
+  <div class="finding-detail">
+    <div class="finding-detail-header">
+      <span class="badge-sev high">Hoog</span>
+      <span class="finding-detail-title">Ontbrekende HSTS en CSP Headers</span>
+      <span class="finding-detail-module">Web Vulnerabilities</span>
+    </div>
+    <div class="finding-detail-body">
+      <div class="field-row"><div class="field-label">Beschrijving</div><div class="field-value">Kritieke beveiligingsheaders ontbreken, waaronder HTTP Strict Transport Security (HSTS) en Content Security Policy (CSP). Dit maakt de applicatie kwetsbaar voor man-in-the-middle aanvallen en cross-site scripting (XSS).</div></div>
+      <div class="field-row"><div class="field-label">Impact</div><div class="field-value">Aanvallers kunnen HTTPS-downgrade aanvallen uitvoeren, sessiecookies stelen, en XSS-payloads injecteren. Kan leiden tot sessiehijacking en client-side aanvallen.</div></div>
+      <div class="field-row"><div class="field-label">Oplossing / Aanbeveling</div><div class="field-value fix">Configureer HSTS header met &#39;max-age=31536000; includeSubDomains; preload&#39;. Implementeer CSP header om scriptbronnen te beperken. Gebruik securityheaders.com om configuratie te testen.</div></div>
+      <div class="field-row"><div class="field-label">Referenties</div><div class="field-value mono">CVE-2021-44228  ·  OWASP-2021-A02  ·  https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy</div></div>
+    </div>
+  </div>
+  
+  <div class="finding-detail">
+    <div class="finding-detail-header">
+      <span class="badge-sev high">Hoog</span>
+      <span class="finding-detail-title">Blootgestelde CI/CD Configuratiebestanden</span>
+      <span class="finding-detail-module">CI/CD Pipeline Exposure</span>
+    </div>
+    <div class="finding-detail-body">
+      <div class="field-row"><div class="field-label">Beschrijving</div><div class="field-value">CI/CD configuratiebestanden zijn publiek toegankelijk, waaronder .github/workflows/ci.yml, Jenkinsfile, .gitlab-ci.yml, en andere pipeline-definities. Deze kunnen geheimen of interne processen onthullen.</div></div>
+      <div class="field-row"><div class="field-label">Impact</div><div class="field-value">Aanvallers kunnen build-processen inzien, interne tooling ontdekken, en mogelijk geheimen uit configuraties extraheren. Kan leiden tot supply chain aanvallen.</div></div>
+      <div class="field-row"><div class="field-label">Oplossing / Aanbeveling</div><div class="field-value fix">Verwijder CI/CD configuratiebestanden uit de webroot. Gebruik geheimbeheer (bijv. HashiCorp Vault, AWS Secrets Manager) voor gevoelige gegevens. Beperk toegang tot build-artefacten.</div></div>
+      <div class="field-row"><div class="field-label">Referenties</div><div class="field-value mono">CVE-2021-44228  ·  OWASP-2021-A05  ·  https://owasp.org/www-project-top-ten/2017/A6_2017-Security_Misconfiguration</div></div>
+    </div>
+  </div>
+  
+  <div class="finding-detail">
+    <div class="finding-detail-header">
+      <span class="badge-sev medium">Gemiddeld</span>
+      <span class="finding-detail-title">Geen Web Application Firewall (WAF) Gedetecteerd</span>
+      <span class="finding-detail-module">Firewall &amp; WAF Detection</span>
+    </div>
+    <div class="finding-detail-body">
+      <div class="field-row"><div class="field-label">Beschrijving</div><div class="field-value">Geen Web Application Firewall (WAF) gedetecteerd op de doelapplicatie. Dit betekent dat er geen extra beveiligingslaag is om webaanvallen te blokkeren.</div></div>
+      <div class="field-row"><div class="field-label">Impact</div><div class="field-value">Applicatie is volledig blootgesteld aan bekende webaanvallen zoals SQL-injectie, XSS, en command-injectie zonder mitigatie. Verhoogt het risico op succesvolle exploits.</div></div>
+      <div class="field-row"><div class="field-label">Oplossing / Aanbeveling</div><div class="field-value fix">Implementeer een WAF zoals ModSecurity, Cloudflare WAF, of AWS WAF. Configureer regelensets om common aanvallen te blokkeren. Monitor en pas regels aan op basis van dreigingsinformatie.</div></div>
+      <div class="field-row"><div class="field-label">Referenties</div><div class="field-value mono">OWASP-2021-A05  ·  https://owasp.org/www-project-modsecurity/</div></div>
+    </div>
+  </div>
+  
+  <div class="finding-detail">
+    <div class="finding-detail-header">
+      <span class="badge-sev medium">Gemiddeld</span>
+      <span class="finding-detail-title">DNS Misconfiguratie - Geen DMARC en Zwak SPF</span>
+      <span class="finding-detail-module">Web Discovery</span>
+    </div>
+    <div class="finding-detail-body">
+      <div class="field-row"><div class="field-label">Beschrijving</div><div class="field-value">Geen DMARC record gevonden en SPF record gebruikt &#39;~all&#39; (softfail) in plaats van &#39;-all&#39; (hardfail). Dit maakt e-mailspoofing en phishing aanvallen gemakkelijker.</div></div>
+      <div class="field-row"><div class="field-label">Impact</div><div class="field-value">Aanvallers kunnen e-mails namens het domein vervalsen, wat leidt tot phishing-aanvallen en reputatieschade. Vermindert e-mailauthenticiteit en -bezorging.</div></div>
+      <div class="field-row"><div class="field-label">Oplossing / Aanbeveling</div><div class="field-value fix">Implementeer DMARC record met policy &#39;p=reject&#39; of &#39;p=quarantine&#39;. Versterk SPF record naar &#39;-all&#39; voor strikte failing. Gebruik DKIM ondertekening voor e-mails. Test configuratie met tools zoals MXToolbox.</div></div>
+      <div class="field-row"><div class="field-label">Referenties</div><div class="field-value mono">CVE-2021-44228  ·  OWASP-2021-A02  ·  https://dmarc.org/overview/</div></div>
+    </div>
+  </div>
+  
+  <div class="finding-detail">
+    <div class="finding-detail-header">
+      <span class="badge-sev medium">Gemiddeld</span>
+      <span class="finding-detail-title">Blootgestelde API Documentatie</span>
+      <span class="finding-detail-module">CMS Scanning</span>
+    </div>
+    <div class="finding-detail-body">
+      <div class="field-row"><div class="field-label">Beschrijving</div><div class="field-value">API-documentatie is publiek toegankelijk op paden zoals /swagger.json, /openapi.json, /api-docs, /swagger-ui, etc. Dit onthult API-structuur, endpoints en mogelijke kwetsbaarheden.</div></div>
+      <div class="field-row"><div class="field-label">Impact</div><div class="field-value">Aanvallers kunnen API-endpoints enumereren, aanvallen automatiseren en gevoelige functionaliteiten ontdekken. Verhoogt het aanvalsoppervlak en vergemakkelijkt gerichte exploits.</div></div>
+      <div class="field-row"><div class="field-label">Oplossing / Aanbeveling</div><div class="field-value fix">Beperk toegang tot API-documentatie tot geautoriseerde gebruikers via authenticatie of IP-whitelisting. Gebruik aparte documentatie-omgevingen voor ontwikkelaars. Overweeg om documentatie te verwijderen uit productie.</div></div>
+      <div class="field-row"><div class="field-label">Referenties</div><div class="field-value mono">OWASP-2021-A05  ·  https://owasp.org/www-project-api-security/</div></div>
+    </div>
+  </div>
+  
+  <div class="finding-detail">
+    <div class="finding-detail-header">
+      <span class="badge-sev medium">Gemiddeld</span>
+      <span class="finding-detail-title">Interessante Subdomeinen Gedetecteerd</span>
+      <span class="finding-detail-module">Web Vulnerabilities</span>
+    </div>
+    <div class="finding-detail-body">
+      <div class="field-row"><div class="field-label">Beschrijving</div><div class="field-value">Meerdere interessante subdomeinen gedetecteerd zoals admin.d-esign.nl, backup.d-esign.nl, dev.d-esign.nl, gitlab.d-esign.nl, etc. Deze kunnen gevoelige resources blootstellen.</div></div>
+      <div class="field-row"><div class="field-label">Impact</div><div class="field-value">Subdomeinen kunnen onbeveiligde ontwikkelings-, beheer- of backup-omgevingen bevatten. Vergroot het aanvalsoppervlak en kan leiden tot compromittering van interne systemen.</div></div>
+      <div class="field-row"><div class="field-label">Oplossing / Aanbeveling</div><div class="field-value fix">Review en beveilig alle subdomeinen. Verwijder ongebruikte subdomeinen. Implementeer consistente beveiligingscontroles op alle subdomeinen. Gebruik wildcard SSL-certificaten zorgvuldig.</div></div>
+      <div class="field-row"><div class="field-label">Referenties</div><div class="field-value mono">OWASP-2021-A05  ·  https://owasp.org/www-project-top-ten/2017/A6_2017-Security_Misconfiguration</div></div>
+    </div>
+  </div>
+  
+  <div class="finding-detail">
+    <div class="finding-detail-header">
+      <span class="badge-sev medium">Gemiddeld</span>
+      <span class="finding-detail-title">Geen Cache-Control Headers op Sensitieve Pagina&#39;s</span>
+      <span class="finding-detail-module">Session Management</span>
+    </div>
+    <div class="finding-detail-body">
+      <div class="field-row"><div class="field-label">Beschrijving</div><div class="field-value">Cache-Control headers ontbreken op sensitieve pagina&#39;s zoals /dashboard, /profile, /account, /settings, en /admin. Dit kan leiden tot caching van gevoelige gegevens in browsers of proxies.</div></div>
+      <div class="field-row"><div class="field-label">Impact</div><div class="field-value">Gevoelige gebruikersgegevens kunnen worden gecached en toegankelijk zijn voor andere gebruikers van dezelfde computer of via gedeelde proxies. Kan leiden tot informatielekken.</div></div>
+      <div class="field-row"><div class="field-label">Oplossing / Aanbeveling</div><div class="field-value fix">Configureer Cache-Control headers met &#39;no-store, no-cache, must-revalidate&#39; voor alle authentications- en gevoelige pagina&#39;s. Gebruik &#39;private&#39; voor gebruikersspecifieke content.</div></div>
+      <div class="field-row"><div class="field-label">Referenties</div><div class="field-value mono">OWASP-2021-A02  ·  https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control</div></div>
+    </div>
+  </div>
+  
+  <div class="finding-detail">
+    <div class="finding-detail-header">
+      <span class="badge-sev medium">Gemiddeld</span>
+      <span class="finding-detail-title">OpenSSH Service Beschikbaar</span>
+      <span class="finding-detail-module">Port Scanning</span>
+    </div>
+    <div class="finding-detail-body">
+      <div class="field-row"><div class="field-label">Beschrijving</div><div class="field-value">SSH service draait op poort 22 met OpenSSH 9.6p1. Hoewel dit een standaard service is, verhoogt het het aanvalsoppervlak voor brute-force of exploit-aanvallen.</div></div>
+      <div class="field-row"><div class="field-label">Impact</div><div class="field-value">Aanvallers kunnen SSH brute-force aanvallen uitvoeren of kwetsbaarheden in OpenSSH exploiteren. Kan leiden tot directe servertoegang als credentials zwak zijn of kwetsbaarheden aanwezig.</div></div>
+      <div class="field-row"><div class="field-label">Oplossing / Aanbeveling</div><div class="field-value fix">Implementeer SSH key-based authenticatie en schakel wachtwoordauthenticatie uit. Gebruik fail2ban om brute-force aanvallen te blokkeren. Houd OpenSSH up-to-date met security patches.</div></div>
+      <div class="field-row"><div class="field-label">Referenties</div><div class="field-value mono">CVE-2021-41617  ·  OWASP-2021-A07  ·  https://www.openssh.com/security.html</div></div>
+    </div>
+  </div>
+  
+  <div class="finding-detail">
+    <div class="finding-detail-header">
+      <span class="badge-sev low">Laag</span>
+      <span class="finding-detail-title">Server Banner Information Leakage</span>
+      <span class="finding-detail-module">Service Enumeration</span>
+    </div>
+    <div class="finding-detail-body">
+      <div class="field-row"><div class="field-label">Beschrijving</div><div class="field-value">Server banners onthullen gedetailleerde versie-informatie, waaronder nginx/1.29.4 en OpenSSH_9.6p1 Ubuntu-3ubuntu13.15. Dit helpt aanvallers bij het vinden van exploits voor specifieke versies.</div></div>
+      <div class="field-row"><div class="field-label">Impact</div><div class="field-value">Aanvallers kunnen gerichte exploits uitvoeren op basis van bekende kwetsbaarheden in de geïdentificeerde softwareversies. Verhoogt de effectiviteit van aanvallen.</div></div>
+      <div class="field-row"><div class="field-label">Oplossing / Aanbeveling</div><div class="field-value fix">Configureer webserver en services om bannerinformatie te verbergen of te vervagen. Gebruik &#39;server_tokens off;&#39; in nginx. Pas SSH configuratie aan om bannerinformatie te beperken.</div></div>
+      <div class="field-row"><div class="field-label">Referenties</div><div class="field-value mono">CVE-2021-44228  ·  OWASP-2021-A05  ·  https://nginx.org/en/docs/http/ngx_http_core_module.html#server_tokens</div></div>
+    </div>
+  </div>
+  
+  <div class="finding-detail">
+    <div class="finding-detail-header">
+      <span class="badge-sev low">Laag</span>
+      <span class="finding-detail-title">SAML Endpoints Gedetecteerd</span>
+      <span class="finding-detail-module">OAuth &amp; SAML Testing</span>
+    </div>
+    <div class="finding-detail-body">
+      <div class="field-row"><div class="field-label">Beschrijving</div><div class="field-value">Meerdere SAML endpoints gedetecteerd, zoals /saml, /saml/sso, /saml2, /adfs/ls, etc. Deze kunnen interne identiteitsinformatie onthullen als onbeveiligd.</div></div>
+      <div class="field-row"><div class="field-label">Impact</div><div class="field-value">Aanvallers kunnen SAML-configuratie enumereren, wat interne domeinstructuur of identiteitsproviders onthult. Kan helpen bij gerichte phishing of identity attacks.</div></div>
+      <div class="field-row"><div class="field-label">Oplossing / Aanbeveling</div><div class="field-value fix">Beveilig SAML endpoints met authenticatie en encryptie. Gebruik metadata signing en valideer SAML assertions strikt. Monitor toegang tot SAML endpoints voor verdachte activiteiten.</div></div>
+      <div class="field-row"><div class="field-label">Referenties</div><div class="field-value mono">CVE-2021-44228  ·  OWASP-2021-A01  ·  https://owasp.org/www-project-saml/</div></div>
+    </div>
+  </div>
+  
+</div>
+
+
+<!-- ═══════════ ACTIEPLAN ═══════════ -->
+
+<div class="section page-break">
+  <h2 class="section-h">Actieplan voor het Bedrijf</h2>
+  <p style="font-size:9.5pt;line-height:1.7;color:#374151;margin-bottom:14px;">
+    Dit actieplan bevat concrete stappen die uw organisatie kan nemen om de geïdentificeerde risico's te mitigeren. 
+    De aanbevelingen zijn gerangschikt op prioriteit. Begin met de acties met de hoogste prioriteit en werk systematisch naar beneden.
+  </p>
+  <table class="action-table">
+    <thead><tr>
+      <th>#</th>
+      <th>Actie</th>
+      <th>Reden / Toelichting</th>
+      <th>Complexiteit</th>
+    </tr></thead>
+    <tbody>
+      
+      <tr>
+        <td>1</td>
+        <td><strong>Verwijder onmiddellijk alle gevoelige bestanden (.env, config.*, .git, etc.) uit de webroot en blokkeer toegang via nginx configuratie.</strong></td>
+        <td style="font-size:8.5pt;color:#6b7280;">Dit voorkomt directe diefstal van geheimen en vermindert het risico op verdere compromittering.</td>
+        <td><span class="prio-chip laag">laag</span></td>
+      </tr>
+      
+      <tr>
+        <td>2</td>
+        <td><strong>Beveilig DNS door zoneoverdrachten te beperken tot geautoriseerde nameservers en implementeer DNSSEC.</strong></td>
+        <td style="font-size:8.5pt;color:#6b7280;">Voorkomt DNS-informatielek en verbetert DNS-beveiliging tegen spoofing.</td>
+        <td><span class="prio-chip gemiddeld">gemiddeld</span></td>
+      </tr>
+      
+      <tr>
+        <td>3</td>
+        <td><strong>Implementeer inputvalidatie en parameterisatie om command-injectie kwetsbaarheden te verhelpen.</strong></td>
+        <td style="font-size:8.5pt;color:#6b7280;">Voorkomt remote code execution en serverovername.</td>
+        <td><span class="prio-chip gemiddeld">gemiddeld</span></td>
+      </tr>
+      
+      <tr>
+        <td>4</td>
+        <td><strong>Beveilig database-interfaces en beheerpanelen met sterke authenticatie en IP-whitelisting.</strong></td>
+        <td style="font-size:8.5pt;color:#6b7280;">Voorkomt onbevoegde toegang tot kritieke beheersystemen.</td>
+        <td><span class="prio-chip gemiddeld">gemiddeld</span></td>
+      </tr>
+      
+      <tr>
+        <td>5</td>
+        <td><strong>Configureer HSTS, CSP en andere beveiligingsheaders via nginx configuratie.</strong></td>
+        <td style="font-size:8.5pt;color:#6b7280;">Verbetert webbeveiliging tegen MITM en XSS aanvallen.</td>
+        <td><span class="prio-chip laag">laag</span></td>
+      </tr>
+      
+      <tr>
+        <td>6</td>
+        <td><strong>Implementeer rate limiting op login- en API-endpoints om brute-force aanvallen te voorkomen.</strong></td>
+        <td style="font-size:8.5pt;color:#6b7280;">Beschermt tegen accountovername en denial-of-service.</td>
+        <td><span class="prio-chip gemiddeld">gemiddeld</span></td>
+      </tr>
+      
+      <tr>
+        <td>7</td>
+        <td><strong>Installeer en configureer een Web Application Firewall (WAF) zoals ModSecurity.</strong></td>
+        <td style="font-size:8.5pt;color:#6b7280;">Biedt een extra beveiligingslaag tegen common webaanvallen.</td>
+        <td><span class="prio-chip hoog">hoog</span></td>
+      </tr>
+      
+      <tr>
+        <td>8</td>
+        <td><strong>Review en beveilig alle subdomeinen, verwijder ongebruikte subdomeinen.</strong></td>
+        <td style="font-size:8.5pt;color:#6b7280;">Vermindert het aanvalsoppervlak en voorkomt blootstelling van interne omgevingen.</td>
+        <td><span class="prio-chip gemiddeld">gemiddeld</span></td>
+      </tr>
+      
+      <tr>
+        <td>9</td>
+        <td><strong>Implementeer DMARC en versterk SPF records voor e-mailbeveiliging.</strong></td>
+        <td style="font-size:8.5pt;color:#6b7280;">Voorkomt e-mailspoofing en verbetert e-mailauthenticiteit.</td>
+        <td><span class="prio-chip laag">laag</span></td>
+      </tr>
+      
+      <tr>
+        <td>10</td>
+        <td><strong>Voer regelmatige security scans en patchmanagement uit om software up-to-date te houden.</strong></td>
+        <td style="font-size:8.5pt;color:#6b7280;">Voorkomt exploits van bekende kwetsbaarheden en houdt beveiliging proactief.</td>
+        <td><span class="prio-chip gemiddeld">gemiddeld</span></td>
+      </tr>
+      
+    </tbody>
+  </table>
+  <p style="font-size:8.5pt;color:#9ca3af;margin-top:10px;line-height:1.5;">
+    <strong>Let op:</strong> Bespreek complexe wijzigingen altijd eerst met uw IT-afdeling of security team. Test veranderingen in een acceptatieomgeving voordat u ze in productie brengt.
+  </p>
+</div>
+
+
+<!-- ═══════════ TECHNISCHE DETAILS ═══════════ -->
+
+<div class="section page-break">
+  <h2 class="section-h">Technische Details</h2>
+  <pre class="tech-pre">De penetratietest voor d-esign.nl onthult 702 bevindingen, waaronder 79 critical, 117 high, 124 medium, 15 low, en 223 info. Kritieke problemen omvatten DNS-zoneoverdracht (AXFR succesvol vanaf ns1.transip.nl, ns0.transip.net, ns2.transip.eu), blootgestelde gevoelige bestanden (.env, .git, configuraties), RCE via command injection (parameters: cmd, exec, command, etc.), onbeveiligde database-interfaces (phpMyAdmin, Adminer), en Kubernetes API endpoints (/apis, /healthz). High risico&#39;s omvatten onbeveiligde beheerpanelen (/admin, /wp-admin), containerbeheerinterfaces (Portainer, Rancher), en geen rate limiting op login. Medium risico&#39;s omvatten DNS misconfiguratie (geen DMARC, zwak SPF), blootgestelde API-documentatie, en server banner leaks (nginx/1.29.4, OpenSSH_9.6p1). Technische aanbevelingen: 1) Verwijder gevoelige bestanden uit webroot en blokkeer via nginx location-blokken, 2) Configureer DNS zone transfers met ACL&#39;s en TSIG, 3) Implementeer inputvalidatie met whitelisting voor command execution, 4) Beveilig interfaces met authenticatie en IP-whitelisting, 5) Configureer security headers (HSTS: max-age=31536000; includeSubDomains; preload, CSP: restrict script sources), 6) Implementeer rate limiting met fail2ban of WAF-regels, 7) Installeer WAF zoals ModSecurity met OWASP Core Rule Set, 8) Review subdomeinen en implementeer consistente beveiliging, 9) Configureer DMARC (p=reject) en SPF (-all), 10) Houd software up-to-date en voer regelmatige scans uit. De scan toont een breed aanvalsoppervlak met meerdere kritieke entry points die onmiddellijke actie vereisen.</pre>
+</div>
+
+
+<!-- ═══════════ BIJLAGE: MODULES ═══════════ -->
+
+<div class="section">
+  <h2 class="section-h">Bijlage — Uitgevoerde Modules</h2>
+  <p style="font-size:9pt;color:#6b7280;margin-bottom:10px;">De volgende 70 scan modules zijn uitgevoerd tijdens dit assessment:</p>
+  <div class="module-tags">
+    <span class="module-tag">01</span><span class="module-tag">02</span><span class="module-tag">03</span><span class="module-tag">04</span><span class="module-tag">05</span><span class="module-tag">06</span><span class="module-tag">07</span><span class="module-tag">08</span><span class="module-tag">09</span><span class="module-tag">10</span><span class="module-tag">11</span><span class="module-tag">12</span><span class="module-tag">13</span><span class="module-tag">14</span><span class="module-tag">15</span><span class="module-tag">16</span><span class="module-tag">17</span><span class="module-tag">18</span><span class="module-tag">19</span><span class="module-tag">20</span><span class="module-tag">21</span><span class="module-tag">22</span><span class="module-tag">23</span><span class="module-tag">24</span><span class="module-tag">25</span><span class="module-tag">26</span><span class="module-tag">27</span><span class="module-tag">28</span><span class="module-tag">29</span><span class="module-tag">30</span><span class="module-tag">31</span><span class="module-tag">32</span><span class="module-tag">33</span><span class="module-tag">34</span><span class="module-tag">35</span><span class="module-tag">36</span><span class="module-tag">37</span><span class="module-tag">38</span><span class="module-tag">39</span><span class="module-tag">40</span><span class="module-tag">41</span><span class="module-tag">42</span><span class="module-tag">43</span><span class="module-tag">44</span><span class="module-tag">45</span><span class="module-tag">46</span><span class="module-tag">47</span><span class="module-tag">48</span><span class="module-tag">49</span><span class="module-tag">50</span><span class="module-tag">51</span><span class="module-tag">52</span><span class="module-tag">53</span><span class="module-tag">54</span><span class="module-tag">55</span><span class="module-tag">56</span><span class="module-tag">57</span><span class="module-tag">58</span><span class="module-tag">59</span><span class="module-tag">60</span><span class="module-tag">61</span><span class="module-tag">62</span><span class="module-tag">63</span><span class="module-tag">64</span><span class="module-tag">65</span><span class="module-tag">66</span><span class="module-tag">67</span><span class="module-tag">68</span><span class="module-tag">69</span><span class="module-tag">70</span>
+  </div>
+</div>
+
+
+<div style="text-align:center;padding:20px 0 0;border-top:1px solid #e2e8f0;margin-top:24px;font-size:8pt;color:#9ca3af;">
+  Dit rapport is automatisch gegenereerd door CyberPulse Security Platform v4.0 · Vertrouwelijk document · Niet voor externe verspreiding
+</div>
+</body>
+</html>

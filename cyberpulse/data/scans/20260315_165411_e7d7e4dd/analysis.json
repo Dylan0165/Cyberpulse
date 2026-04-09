@@ -1,0 +1,316 @@
+{
+  "samenvatting": {
+    "risicoscore": 85,
+    "niveau": "kritiek",
+    "korte_beschrijving": "De penetratietest onthult kritieke beveiligingsproblemen bij d-esign.nl, waaronder blootgestelde gevoelige bestanden, DNS-zoneoverdracht, RCE-kwetsbaarheden en onbeveiligde beheerinterfaces. Het risiconiveau is kritiek vanwege de directe impactmogelijkheden."
+  },
+  "management_samenvatting": "De penetratietest toont ernstige beveiligingsrisico's voor d-esign.nl. Kritieke problemen omvatten: 1) Blootstelling van gevoelige configuratiebestanden zoals .env en databaseconfiguraties die wachtwoorden kunnen bevatten, 2) DNS-zoneoverdracht waardoor interne netwerkinformatie wordt gelekt, 3) Command-injectiekwetsbaarheden die volledige serverovername mogelijk maken, 4) Onbeveiligde beheerpanelen en database-interfaces, en 5) Gebrek aan basisbeveiligingsheaders. Deze kwetsbaarheden stellen de organisatie bloot aan gegevensdiefstal, ransomware-aanvallen en volledige compromittering van de infrastructuur. Onmiddellijke actie is vereist om de meest kritieke problemen te verhelpen.",
+  "bevindingen": [
+    {
+      "titel": "DNS Zone Transfer Kwetsbaarheid",
+      "module": "DNS Zone Transfer",
+      "ernst": "critical",
+      "beschrijving": "DNS-zoneoverdracht (AXFR) is succesvol uitgevoerd vanaf alle drie nameservers (ns1.transip.nl, ns0.transip.net, ns2.transip.eu), wat 7 DNS-records blootstelt. Dit stelt een aanvaller in staat om het volledige DNS-zonebestand te downloaden, inclusief interne subdomeinen en netwerkstructuur.",
+      "impact": "Complete DNS-zone-informatie wordt gelekt, wat interne netwerktoewijzing en subdomeinen onthult. Dit vergemakkelijkt verdere aanvalsplanning en kan leiden tot subdomein-overname of interne netwerkverkenning.",
+      "aanbeveling": "Configureer nameservers om zoneoverdrachten te weigeren voor niet-geautoriseerde IP-adressen. Gebruik ACL's (Access Control Lists) op DNS-servers om alleen geautoriseerde secundaire nameservers toe te staan. Implementeer TSIG (Transaction Signature) voor geverifieerde zoneoverdrachten.",
+      "referenties": [
+        "CVE-1999-0532",
+        "OWASP-2021-A05",
+        "https://www.ietf.org/rfc/rfc2845.txt"
+      ]
+    },
+    {
+      "titel": "Blootgestelde Gevoelige Bestanden (.env, configuraties)",
+      "module": "Backup File Discovery",
+      "ernst": "critical",
+      "beschrijving": "Meerdere gevoelige bestanden zijn publiek toegankelijk via HTTP(S), waaronder .env, .env.local, .env.production, config.php, wp-config.php, en database configuratiebestanden. Deze bestanden bevatten vaak wachtwoorden, API-sleutels en andere geheimen.",
+      "impact": "Directe diefstal van databasewachtwoorden, API-sleutels, encryptiesleutels en andere gevoelige configuratiegegevens. Kan leiden tot volledige compromittering van applicaties, databases en externe services.",
+      "aanbeveling": "Verwijder alle gevoelige bestanden uit de webroot. Gebruik omgevingsvariabelen of beveiligde configuratiebeheersystemen. Configureer webserver (nginx) om toegang tot .env, .git, config.*, en andere gevoelige bestanden te blokkeren via location-blokken.",
+      "referenties": [
+        "CVE-2021-44228",
+        "OWASP-2021-A05",
+        "https://cheatsheetseries.owasp.org/cheatsheets/Configuration_Management_Cheat_Sheet.html"
+      ]
+    },
+    {
+      "titel": "Remote Code Execution via Command Injection",
+      "module": "Remote Code Execution",
+      "ernst": "critical",
+      "beschrijving": "Command-injectiekwetsbaarheden gedetecteerd via parameters zoals cmd, exec, command, execute, ping, etc. De server voert externe commando's uit wanneer speciaal gemaakte invoer wordt verzonden, wat bevestigd wordt door whoami-uitvoer.",
+      "impact": "Aanvallers kunnen willekeurige commando's uitvoeren op de onderliggende server met de rechten van de webserver (bijv. www-data of root). Dit leidt tot volledige serverovername, gegevensdiefstal en verdere laterale beweging.",
+      "aanbeveling": "Implementeer strikte inputvalidatie en parameterisatie voor alle systeemaanroepen. Gebruik whitelisting van toegestane commando's. Voer webserverprocessen uit met minimale rechten. Implementeer Web Application Firewall (WAF) regels om command-injectie te blokkeren.",
+      "referenties": [
+        "CVE-2021-44228",
+        "OWASP-2021-A03",
+        "https://owasp.org/www-community/attacks/Command_Injection"
+      ]
+    },
+    {
+      "titel": "Onbeveiligde Database Web Interfaces",
+      "module": "Database Exploitation",
+      "ernst": "critical",
+      "beschrijving": "Meerdere databasebeheerinterfaces zijn publiek toegankelijk zonder authenticatie, waaronder phpMyAdmin (/phpmyadmin), Adminer (/adminer), pgAdmin (/pgadmin), en CouchDB interfaces. Deze geven directe toegang tot databases.",
+      "impact": "Directe toegang tot databases, waardoor aanvallers gegevens kunnen lezen, wijzigen of verwijderen. Kan leiden tot volledige gegevensdiefstal, databasecompromittering en verdere escalatie naar het onderliggende systeem.",
+      "aanbeveling": "Verwijder ongebruikte database-interfaces uit productieomgevingen. Beveilig resterende interfaces met sterke authenticatie, IP-whitelisting en VPN-toegang. Gebruik aparte beheeromgevingen niet rechtstreeks blootgesteld aan internet.",
+      "referenties": [
+        "CVE-2021-25091",
+        "OWASP-2021-A01",
+        "https://www.phpmyadmin.net/security/"
+      ]
+    },
+    {
+      "titel": "Kubernetes API Endpoints Publiek Toegankelijk",
+      "module": "Kubernetes Exposure",
+      "ernst": "critical",
+      "beschrijving": "Kubernetes API-endpoints zijn publiek toegankelijk zonder authenticatie, waaronder /apis, /healthz, /readyz, en /metrics. Dit stelt containerbeheerinterfaces bloot.",
+      "impact": "Aanvallers kunnen Kubernetes-clusters enumereren, pods beheren, geheimen stelen en volledige controle over containeromgevingen krijgen. Kan leiden tot compromittering van alle gecontaineriseerde applicaties.",
+      "aanbeveling": "Configureer Kubernetes RBAC (Role-Based Access Control) met strikte authenticatie. Gebruik network policies om API-toegang te beperken tot geautoriseerde IP-adressen. Implementeer Kubernetes API-server authenticatie via certificaten of tokens.",
+      "referenties": [
+        "CVE-2020-8554",
+        "OWASP-2021-A05",
+        "https://kubernetes.io/docs/concepts/security/"
+      ]
+    },
+    {
+      "titel": "Git Repository Publiek Toegankelijk",
+      "module": "Subdomain Enumeration",
+      "ernst": "critical",
+      "beschrijving": ".git directory en bestanden (zoals .git/HEAD, .git/config) zijn publiek toegankelijk via HTTP(S). Dit stelt de volledige source code, commit-geschiedenis en mogelijk gevoelige configuratie bloot.",
+      "impact": "Aanvallers kunnen de volledige source code downloaden, inclusief hardcoded geheimen, kwetsbare code en interne logica. Kan leiden tot gerichte exploits en intellectuele eigendomsdiefstal.",
+      "aanbeveling": "Verwijder .git directory uit de webroot. Configureer webserver om toegang tot .git te blokkeren. Gebruik .gitignore om gevoelige bestanden uit te sluiten. Implementeer pre-commit hooks om geheimen te detecteren.",
+      "referenties": [
+        "CVE-2021-42778",
+        "OWASP-2021-A05",
+        "https://owasp.org/www-project-top-ten/2017/A6_2017-Security_Misconfiguration"
+      ]
+    },
+    {
+      "titel": "Onbeveiligde Beheerpanelen",
+      "module": "Privilege Escalation",
+      "ernst": "high",
+      "beschrijving": "Meerdere beheerpanelen zijn publiek toegankelijk zonder authenticatie, waaronder /admin, /administrator, /wp-admin, /cpanel, /panel, en andere beheerpaden. Dit geeft directe toegang tot beheerfunctionaliteiten.",
+      "impact": "Aanvallers kunnen beheerfunctionaliteiten misbruiken om applicatie-instellingen te wijzigen, gebruikers te beheren, of verdere toegang te verkrijgen. Kan leiden tot volledige applicatiecontrole.",
+      "aanbeveling": "Beveilig alle beheerpaden met sterke authenticatie (bijv. multi-factor). Implementeer IP-whitelisting voor beheerinterfaces. Gebruik aparte beheerdomeinen of VPN-toegang. Verwijder ongebruikte beheerinterfaces.",
+      "referenties": [
+        "CVE-2021-25091",
+        "OWASP-2021-A01",
+        "https://owasp.org/www-project-top-ten/2017/A5_2017-Broken_Access_Control"
+      ]
+    },
+    {
+      "titel": "Container Management Interfaces Publiek Toegankelijk",
+      "module": "Docker & Container Exposure",
+      "ernst": "high",
+      "beschrijving": "Containerbeheerinterfaces zoals Portainer (/portainer), Rancher (/rancher), en Kubernetes Dashboard (/_dashboard) zijn publiek toegankelijk zonder authenticatie.",
+      "impact": "Aanvallers kunnen containers beheren, images wijzigen, en volledige controle over containeromgevingen krijgen. Kan leiden tot compromittering van alle gecontaineriseerde services.",
+      "aanbeveling": "Beveilig containerbeheerinterfaces met sterke authenticatie en autorisatie. Gebruik netwerksegmentatie om toegang te beperken tot beheernetwerken. Implementeer audit logging voor alle beheeracties.",
+      "referenties": [
+        "CVE-2020-14386",
+        "OWASP-2021-A05",
+        "https://docs.docker.com/engine/security/"
+      ]
+    },
+    {
+      "titel": "Geen Rate Limiting op Login en API Endpoints",
+      "module": "Rate Limiting & DoS",
+      "ernst": "high",
+      "beschrijving": "Geen rate limiting gedetecteerd op login-endpoints (/login, /api/login, etc.) en algemene API-endpoints. Dit maakt brute-force aanvallen en denial-of-service mogelijk.",
+      "impact": "Aanvallers kunnen brute-force aanvallen uitvoeren op gebruikersaccounts, credentials raden, en API-endpoints overbelasten. Kan leiden tot accountovername en serviceonderbrekingen.",
+      "aanbeveling": "Implementeer rate limiting op alle authenticatie-endpoints (bijv. max 5 pogingen per minuut). Gebruik tools zoals fail2ban, WAF-regels, of applicatieframework rate limiters. Monitor en blokkeer verdachte IP-adressen.",
+      "referenties": [
+        "CVE-2021-44228",
+        "OWASP-2021-A07",
+        "https://owasp.org/www-project-cheat-sheets/cheatsheets/Attack_Surface_Analysis_Cheat_Sheet.html"
+      ]
+    },
+    {
+      "titel": "Ontbrekende HSTS en CSP Headers",
+      "module": "Web Vulnerabilities",
+      "ernst": "high",
+      "beschrijving": "Kritieke beveiligingsheaders ontbreken, waaronder HTTP Strict Transport Security (HSTS) en Content Security Policy (CSP). Dit maakt de applicatie kwetsbaar voor man-in-the-middle aanvallen en cross-site scripting (XSS).",
+      "impact": "Aanvallers kunnen HTTPS-downgrade aanvallen uitvoeren, sessiecookies stelen, en XSS-payloads injecteren. Kan leiden tot sessiehijacking en client-side aanvallen.",
+      "aanbeveling": "Configureer HSTS header met 'max-age=31536000; includeSubDomains; preload'. Implementeer CSP header om scriptbronnen te beperken. Gebruik securityheaders.com om configuratie te testen.",
+      "referenties": [
+        "CVE-2021-44228",
+        "OWASP-2021-A02",
+        "https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy"
+      ]
+    },
+    {
+      "titel": "Blootgestelde CI/CD Configuratiebestanden",
+      "module": "CI/CD Pipeline Exposure",
+      "ernst": "high",
+      "beschrijving": "CI/CD configuratiebestanden zijn publiek toegankelijk, waaronder .github/workflows/ci.yml, Jenkinsfile, .gitlab-ci.yml, en andere pipeline-definities. Deze kunnen geheimen of interne processen onthullen.",
+      "impact": "Aanvallers kunnen build-processen inzien, interne tooling ontdekken, en mogelijk geheimen uit configuraties extraheren. Kan leiden tot supply chain aanvallen.",
+      "aanbeveling": "Verwijder CI/CD configuratiebestanden uit de webroot. Gebruik geheimbeheer (bijv. HashiCorp Vault, AWS Secrets Manager) voor gevoelige gegevens. Beperk toegang tot build-artefacten.",
+      "referenties": [
+        "CVE-2021-44228",
+        "OWASP-2021-A05",
+        "https://owasp.org/www-project-top-ten/2017/A6_2017-Security_Misconfiguration"
+      ]
+    },
+    {
+      "titel": "Geen Web Application Firewall (WAF) Gedetecteerd",
+      "module": "Firewall & WAF Detection",
+      "ernst": "medium",
+      "beschrijving": "Geen Web Application Firewall (WAF) gedetecteerd op de doelapplicatie. Dit betekent dat er geen extra beveiligingslaag is om webaanvallen te blokkeren.",
+      "impact": "Applicatie is volledig blootgesteld aan bekende webaanvallen zoals SQL-injectie, XSS, en command-injectie zonder mitigatie. Verhoogt het risico op succesvolle exploits.",
+      "aanbeveling": "Implementeer een WAF zoals ModSecurity, Cloudflare WAF, of AWS WAF. Configureer regelensets om common aanvallen te blokkeren. Monitor en pas regels aan op basis van dreigingsinformatie.",
+      "referenties": [
+        "OWASP-2021-A05",
+        "https://owasp.org/www-project-modsecurity/"
+      ]
+    },
+    {
+      "titel": "DNS Misconfiguratie - Geen DMARC en Zwak SPF",
+      "module": "Web Discovery",
+      "ernst": "medium",
+      "beschrijving": "Geen DMARC record gevonden en SPF record gebruikt '~all' (softfail) in plaats van '-all' (hardfail). Dit maakt e-mailspoofing en phishing aanvallen gemakkelijker.",
+      "impact": "Aanvallers kunnen e-mails namens het domein vervalsen, wat leidt tot phishing-aanvallen en reputatieschade. Vermindert e-mailauthenticiteit en -bezorging.",
+      "aanbeveling": "Implementeer DMARC record met policy 'p=reject' of 'p=quarantine'. Versterk SPF record naar '-all' voor strikte failing. Gebruik DKIM ondertekening voor e-mails. Test configuratie met tools zoals MXToolbox.",
+      "referenties": [
+        "CVE-2021-44228",
+        "OWASP-2021-A02",
+        "https://dmarc.org/overview/"
+      ]
+    },
+    {
+      "titel": "Blootgestelde API Documentatie",
+      "module": "CMS Scanning",
+      "ernst": "medium",
+      "beschrijving": "API-documentatie is publiek toegankelijk op paden zoals /swagger.json, /openapi.json, /api-docs, /swagger-ui, etc. Dit onthult API-structuur, endpoints en mogelijke kwetsbaarheden.",
+      "impact": "Aanvallers kunnen API-endpoints enumereren, aanvallen automatiseren en gevoelige functionaliteiten ontdekken. Verhoogt het aanvalsoppervlak en vergemakkelijkt gerichte exploits.",
+      "aanbeveling": "Beperk toegang tot API-documentatie tot geautoriseerde gebruikers via authenticatie of IP-whitelisting. Gebruik aparte documentatie-omgevingen voor ontwikkelaars. Overweeg om documentatie te verwijderen uit productie.",
+      "referenties": [
+        "OWASP-2021-A05",
+        "https://owasp.org/www-project-api-security/"
+      ]
+    },
+    {
+      "titel": "Server Banner Information Leakage",
+      "module": "Service Enumeration",
+      "ernst": "low",
+      "beschrijving": "Server banners onthullen gedetailleerde versie-informatie, waaronder nginx/1.29.4 en OpenSSH_9.6p1 Ubuntu-3ubuntu13.15. Dit helpt aanvallers bij het vinden van exploits voor specifieke versies.",
+      "impact": "Aanvallers kunnen gerichte exploits uitvoeren op basis van bekende kwetsbaarheden in de geïdentificeerde softwareversies. Verhoogt de effectiviteit van aanvallen.",
+      "aanbeveling": "Configureer webserver en services om bannerinformatie te verbergen of te vervagen. Gebruik 'server_tokens off;' in nginx. Pas SSH configuratie aan om bannerinformatie te beperken.",
+      "referenties": [
+        "CVE-2021-44228",
+        "OWASP-2021-A05",
+        "https://nginx.org/en/docs/http/ngx_http_core_module.html#server_tokens"
+      ]
+    },
+    {
+      "titel": "Interessante Subdomeinen Gedetecteerd",
+      "module": "Web Vulnerabilities",
+      "ernst": "medium",
+      "beschrijving": "Meerdere interessante subdomeinen gedetecteerd zoals admin.d-esign.nl, backup.d-esign.nl, dev.d-esign.nl, gitlab.d-esign.nl, etc. Deze kunnen gevoelige resources blootstellen.",
+      "impact": "Subdomeinen kunnen onbeveiligde ontwikkelings-, beheer- of backup-omgevingen bevatten. Vergroot het aanvalsoppervlak en kan leiden tot compromittering van interne systemen.",
+      "aanbeveling": "Review en beveilig alle subdomeinen. Verwijder ongebruikte subdomeinen. Implementeer consistente beveiligingscontroles op alle subdomeinen. Gebruik wildcard SSL-certificaten zorgvuldig.",
+      "referenties": [
+        "OWASP-2021-A05",
+        "https://owasp.org/www-project-top-ten/2017/A6_2017-Security_Misconfiguration"
+      ]
+    },
+    {
+      "titel": "Geen Cache-Control Headers op Sensitieve Pagina's",
+      "module": "Session Management",
+      "ernst": "medium",
+      "beschrijving": "Cache-Control headers ontbreken op sensitieve pagina's zoals /dashboard, /profile, /account, /settings, en /admin. Dit kan leiden tot caching van gevoelige gegevens in browsers of proxies.",
+      "impact": "Gevoelige gebruikersgegevens kunnen worden gecached en toegankelijk zijn voor andere gebruikers van dezelfde computer of via gedeelde proxies. Kan leiden tot informatielekken.",
+      "aanbeveling": "Configureer Cache-Control headers met 'no-store, no-cache, must-revalidate' voor alle authentications- en gevoelige pagina's. Gebruik 'private' voor gebruikersspecifieke content.",
+      "referenties": [
+        "OWASP-2021-A02",
+        "https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control"
+      ]
+    },
+    {
+      "titel": "OpenSSH Service Beschikbaar",
+      "module": "Port Scanning",
+      "ernst": "medium",
+      "beschrijving": "SSH service draait op poort 22 met OpenSSH 9.6p1. Hoewel dit een standaard service is, verhoogt het het aanvalsoppervlak voor brute-force of exploit-aanvallen.",
+      "impact": "Aanvallers kunnen SSH brute-force aanvallen uitvoeren of kwetsbaarheden in OpenSSH exploiteren. Kan leiden tot directe servertoegang als credentials zwak zijn of kwetsbaarheden aanwezig.",
+      "aanbeveling": "Implementeer SSH key-based authenticatie en schakel wachtwoordauthenticatie uit. Gebruik fail2ban om brute-force aanvallen te blokkeren. Houd OpenSSH up-to-date met security patches.",
+      "referenties": [
+        "CVE-2021-41617",
+        "OWASP-2021-A07",
+        "https://www.openssh.com/security.html"
+      ]
+    },
+    {
+      "titel": "SAML Endpoints Gedetecteerd",
+      "module": "OAuth & SAML Testing",
+      "ernst": "low",
+      "beschrijving": "Meerdere SAML endpoints gedetecteerd, zoals /saml, /saml/sso, /saml2, /adfs/ls, etc. Deze kunnen interne identiteitsinformatie onthullen als onbeveiligd.",
+      "impact": "Aanvallers kunnen SAML-configuratie enumereren, wat interne domeinstructuur of identiteitsproviders onthult. Kan helpen bij gerichte phishing of identity attacks.",
+      "aanbeveling": "Beveilig SAML endpoints met authenticatie en encryptie. Gebruik metadata signing en valideer SAML assertions strikt. Monitor toegang tot SAML endpoints voor verdachte activiteiten.",
+      "referenties": [
+        "CVE-2021-44228",
+        "OWASP-2021-A01",
+        "https://owasp.org/www-project-saml/"
+      ]
+    }
+  ],
+  "aanbevelingen_prioriteit": [
+    {
+      "prioriteit": 1,
+      "actie": "Verwijder onmiddellijk alle gevoelige bestanden (.env, config.*, .git, etc.) uit de webroot en blokkeer toegang via nginx configuratie.",
+      "reden": "Dit voorkomt directe diefstal van geheimen en vermindert het risico op verdere compromittering.",
+      "complexiteit": "laag"
+    },
+    {
+      "prioriteit": 2,
+      "actie": "Beveilig DNS door zoneoverdrachten te beperken tot geautoriseerde nameservers en implementeer DNSSEC.",
+      "reden": "Voorkomt DNS-informatielek en verbetert DNS-beveiliging tegen spoofing.",
+      "complexiteit": "gemiddeld"
+    },
+    {
+      "prioriteit": 3,
+      "actie": "Implementeer inputvalidatie en parameterisatie om command-injectie kwetsbaarheden te verhelpen.",
+      "reden": "Voorkomt remote code execution en serverovername.",
+      "complexiteit": "gemiddeld"
+    },
+    {
+      "prioriteit": 4,
+      "actie": "Beveilig database-interfaces en beheerpanelen met sterke authenticatie en IP-whitelisting.",
+      "reden": "Voorkomt onbevoegde toegang tot kritieke beheersystemen.",
+      "complexiteit": "gemiddeld"
+    },
+    {
+      "prioriteit": 5,
+      "actie": "Configureer HSTS, CSP en andere beveiligingsheaders via nginx configuratie.",
+      "reden": "Verbetert webbeveiliging tegen MITM en XSS aanvallen.",
+      "complexiteit": "laag"
+    },
+    {
+      "prioriteit": 6,
+      "actie": "Implementeer rate limiting op login- en API-endpoints om brute-force aanvallen te voorkomen.",
+      "reden": "Beschermt tegen accountovername en denial-of-service.",
+      "complexiteit": "gemiddeld"
+    },
+    {
+      "prioriteit": 7,
+      "actie": "Installeer en configureer een Web Application Firewall (WAF) zoals ModSecurity.",
+      "reden": "Biedt een extra beveiligingslaag tegen common webaanvallen.",
+      "complexiteit": "hoog"
+    },
+    {
+      "prioriteit": 8,
+      "actie": "Review en beveilig alle subdomeinen, verwijder ongebruikte subdomeinen.",
+      "reden": "Vermindert het aanvalsoppervlak en voorkomt blootstelling van interne omgevingen.",
+      "complexiteit": "gemiddeld"
+    },
+    {
+      "prioriteit": 9,
+      "actie": "Implementeer DMARC en versterk SPF records voor e-mailbeveiliging.",
+      "reden": "Voorkomt e-mailspoofing en verbetert e-mailauthenticiteit.",
+      "complexiteit": "laag"
+    },
+    {
+      "prioriteit": 10,
+      "actie": "Voer regelmatige security scans en patchmanagement uit om software up-to-date te houden.",
+      "reden": "Voorkomt exploits van bekende kwetsbaarheden en houdt beveiliging proactief.",
+      "complexiteit": "gemiddeld"
+    }
+  ],
+  "technische_details": "De penetratietest voor d-esign.nl onthult 702 bevindingen, waaronder 79 critical, 117 high, 124 medium, 15 low, en 223 info. Kritieke problemen omvatten DNS-zoneoverdracht (AXFR succesvol vanaf ns1.transip.nl, ns0.transip.net, ns2.transip.eu), blootgestelde gevoelige bestanden (.env, .git, configuraties), RCE via command injection (parameters: cmd, exec, command, etc.), onbeveiligde database-interfaces (phpMyAdmin, Adminer), en Kubernetes API endpoints (/apis, /healthz). High risico's omvatten onbeveiligde beheerpanelen (/admin, /wp-admin), containerbeheerinterfaces (Portainer, Rancher), en geen rate limiting op login. Medium risico's omvatten DNS misconfiguratie (geen DMARC, zwak SPF), blootgestelde API-documentatie, en server banner leaks (nginx/1.29.4, OpenSSH_9.6p1). Technische aanbevelingen: 1) Verwijder gevoelige bestanden uit webroot en blokkeer via nginx location-blokken, 2) Configureer DNS zone transfers met ACL's en TSIG, 3) Implementeer inputvalidatie met whitelisting voor command execution, 4) Beveilig interfaces met authenticatie en IP-whitelisting, 5) Configureer security headers (HSTS: max-age=31536000; includeSubDomains; preload, CSP: restrict script sources), 6) Implementeer rate limiting met fail2ban of WAF-regels, 7) Installeer WAF zoals ModSecurity met OWASP Core Rule Set, 8) Review subdomeinen en implementeer consistente beveiliging, 9) Configureer DMARC (p=reject) en SPF (-all), 10) Houd software up-to-date en voer regelmatige scans uit. De scan toont een breed aanvalsoppervlak met meerdere kritieke entry points die onmiddellijke actie vereisen."
+}

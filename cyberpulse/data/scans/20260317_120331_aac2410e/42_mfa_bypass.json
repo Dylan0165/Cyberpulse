@@ -1,0 +1,93 @@
+{
+  "findings": [
+    {
+      "type": "mfa_endpoint",
+      "path": "/2fa",
+      "status": 200,
+      "detail": "2FA/MFA endpoint found: /2fa",
+      "severity": "info"
+    },
+    {
+      "type": "mfa_endpoint",
+      "path": "/mfa",
+      "status": 200,
+      "detail": "2FA/MFA endpoint found: /mfa",
+      "severity": "info"
+    },
+    {
+      "type": "mfa_endpoint",
+      "path": "/verify",
+      "status": 200,
+      "detail": "2FA/MFA endpoint found: /verify",
+      "severity": "info"
+    },
+    {
+      "type": "mfa_endpoint",
+      "path": "/otp",
+      "status": 200,
+      "detail": "2FA/MFA endpoint found: /otp",
+      "severity": "info"
+    },
+    {
+      "type": "mfa_endpoint",
+      "path": "/auth/two-factor",
+      "status": 200,
+      "detail": "2FA/MFA endpoint found: /auth/two-factor",
+      "severity": "info"
+    },
+    {
+      "type": "mfa_endpoint",
+      "path": "/login/verify",
+      "status": 200,
+      "detail": "2FA/MFA endpoint found: /login/verify",
+      "severity": "info"
+    },
+    {
+      "type": "otp_no_rate_limit",
+      "endpoint": "/api/2fa/verify",
+      "attempts": 10,
+      "detail": "OTP endpoint /api/2fa/verify not rate-limited (10 attempts)",
+      "severity": "high"
+    },
+    {
+      "type": "otp_no_rate_limit",
+      "endpoint": "/api/otp/verify",
+      "attempts": 10,
+      "detail": "OTP endpoint /api/otp/verify not rate-limited (10 attempts)",
+      "severity": "high"
+    },
+    {
+      "type": "otp_no_rate_limit",
+      "endpoint": "/verify",
+      "attempts": 10,
+      "detail": "OTP endpoint /verify not rate-limited (10 attempts)",
+      "severity": "high"
+    },
+    {
+      "type": "otp_no_rate_limit",
+      "endpoint": "/api/auth/verify",
+      "attempts": 10,
+      "detail": "OTP endpoint /api/auth/verify not rate-limited (10 attempts)",
+      "severity": "high"
+    },
+    {
+      "type": "otp_no_rate_limit",
+      "endpoint": "/login/verify",
+      "attempts": 10,
+      "detail": "OTP endpoint /login/verify not rate-limited (10 attempts)",
+      "severity": "high"
+    },
+    {
+      "type": "mfa_recovery_exposed",
+      "path": "/recovery",
+      "detail": "2FA recovery/backup endpoint accessible: /recovery",
+      "severity": "high"
+    },
+    {
+      "type": "mfa_recovery_exposed",
+      "path": "/backup-code",
+      "detail": "2FA recovery/backup endpoint accessible: /backup-code",
+      "severity": "high"
+    }
+  ]
+}

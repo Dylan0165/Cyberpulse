@@ -1,0 +1,25 @@
+{
+  "name": "autopentest-ai",
+  "version": "1.0.0",
+  "description": "AI-powered automated penetration testing SaaS platform",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently -k -n \"API,TAURI\" -c \"blue,green\" \"cd cyberpulse && c:\\\\Python313\\\\python.exe main.py web\" \"cd cyberpulse/src-tauri && cargo tauri dev\"",
+    "dev:install": "cd cyberpulse && c:\\Python313\\python.exe -m pip install -r requirements.txt",
+    "dev:frontend": "cd frontend && npm run dev",
+    "dev:backend": "cd backend && .venv\\Scripts\\uvicorn app.main:app --reload --host 0.0.0.0 --port 8000",
+    "dev:build": "docker compose up --build",
+    "dev:detached": "docker compose up -d",
+    "dev:local": "powershell -ExecutionPolicy Bypass -File .\\start_dev_lokaal.ps1",
+    "down": "docker compose down",
+    "migrate": "docker compose exec backend alembic upgrade head",
+    "migrate:local": "cd backend && ..\\backend\\.venv\\Scripts\\python.exe -m alembic upgrade head",
+    "logs": "docker compose logs -f",
+    "logs:backend": "docker compose logs -f backend",
+    "logs:worker": "docker compose logs -f worker",
+    "logs:frontend": "docker compose logs -f frontend"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}

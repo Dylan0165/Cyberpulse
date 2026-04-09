@@ -1,0 +1,12 @@
+{
+  "name": "cyberpulse",
+  "version": "2.0.0",
+  "scripts": {
+    "dev": "powershell -ExecutionPolicy Bypass -File .\\start.ps1",
+    "start": "powershell -ExecutionPolicy Bypass -File .\\start.ps1",
+    "tauri": "tauri"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^1.6.0"
+  }
+}

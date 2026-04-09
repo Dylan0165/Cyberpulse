@@ -1,0 +1,54 @@
+{
+  "findings": [
+    {
+      "type": "missing_security_header",
+      "header": "HSTS",
+      "severity": "medium"
+    },
+    {
+      "type": "missing_security_header",
+      "header": "CSP",
+      "severity": "medium"
+    },
+    {
+      "type": "missing_security_header",
+      "header": "X-Content-Type-Options",
+      "severity": "low"
+    },
+    {
+      "type": "missing_security_header",
+      "header": "X-Frame-Options",
+      "severity": "low"
+    },
+    {
+      "type": "missing_security_header",
+      "header": "X-XSS-Protection",
+      "severity": "low"
+    },
+    {
+      "type": "missing_security_header",
+      "header": "Referrer-Policy",
+      "severity": "low"
+    },
+    {
+      "type": "missing_security_header",
+      "header": "Permissions-Policy",
+      "severity": "low"
+    },
+    {
+      "type": "technology_detected",
+      "technology": "Cloudflare",
+      "category": "CDN/WAF",
+      "version": "",
+      "severity": "info"
+    }
+  ],
+  "technologies": [
+    {
+      "technology": "Cloudflare",
+      "category": "CDN/WAF",
+      "version": "",
+      "source_url": "https://nomadark.net"
+    }
+  ]
+}

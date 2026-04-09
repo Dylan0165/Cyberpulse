@@ -1,0 +1,13 @@
+{
+  "findings": [
+    {
+      "type": "subdomain",
+      "subdomain": "www.nomadark.net",
+      "ip": "172.67.223.4",
+      "severity": "info"
+    }
+  ],
+  "subdomains": [
+    "www.nomadark.net"
+  ]
+}

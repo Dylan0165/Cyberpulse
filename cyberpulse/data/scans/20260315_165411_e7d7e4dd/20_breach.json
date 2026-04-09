@@ -1,0 +1,9 @@
+{
+  "findings": [
+    {
+      "type": "no_breaches_found",
+      "detail": "No known breaches found for this domain (limited check without HIBP key)",
+      "severity": "info"
+    }
+  ]
+}

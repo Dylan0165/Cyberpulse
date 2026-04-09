@@ -1,0 +1,319 @@
+{
+  "findings": [
+    {
+      "type": "admin_panel",
+      "path": "/admin",
+      "status": 200,
+      "detail": "Admin panel at /admin (HTTP 200)",
+      "severity": "high"
+    },
+    {
+      "type": "admin_panel",
+      "path": "/admin/",
+      "status": 200,
+      "detail": "Admin panel at /admin/ (HTTP 200)",
+      "severity": "high"
+    },
+    {
+      "type": "admin_panel",
+      "path": "/administrator",
+      "status": 200,
+      "detail": "Admin panel at /administrator (HTTP 200)",
+      "severity": "high"
+    },
+    {
+      "type": "admin_panel",
+      "path": "/wp-admin",
+      "status": 200,
+      "detail": "Admin panel at /wp-admin (HTTP 200)",
+      "severity": "high"
+    },
+    {
+      "type": "admin_panel",
+      "path": "/panel",
+      "status": 200,
+      "detail": "Admin panel at /panel (HTTP 200)",
+      "severity": "high"
+    },
+    {
+      "type": "admin_panel",
+      "path": "/cpanel",
+      "status": 200,
+      "detail": "Admin panel at /cpanel (HTTP 200)",
+      "severity": "high"
+    },
+    {
+      "type": "admin_panel",
+      "path": "/management",
+      "status": 200,
+      "detail": "Admin panel at /management (HTTP 200)",
+      "severity": "high"
+    },
+    {
+      "type": "admin_panel",
+      "path": "/manager",
+      "status": 200,
+      "detail": "Admin panel at /manager (HTTP 200)",
+      "severity": "high"
+    },
+    {
+      "type": "admin_panel",
+      "path": "/admin/dashboard",
+      "status": 200,
+      "detail": "Admin panel at /admin/dashboard (HTTP 200)",
+      "severity": "high"
+    },
+    {
+      "type": "admin_panel",
+      "path": "/admin/config",
+      "status": 200,
+      "detail": "Admin panel at /admin/config (HTTP 200)",
+      "severity": "high"
+    },
+    {
+      "type": "admin_panel",
+      "path": "/admin/settings",
+      "status": 200,
+      "detail": "Admin panel at /admin/settings (HTTP 200)",
+      "severity": "high"
+    },
+    {
+      "type": "admin_panel",
+      "path": "/admin/users",
+      "status": 200,
+      "detail": "Admin panel at /admin/users (HTTP 200)",
+      "severity": "high"
+    },
+    {
+      "type": "admin_panel",
+      "path": "/admin/logs",
+      "status": 200,
+      "detail": "Admin panel at /admin/logs (HTTP 200)",
+      "severity": "high"
+    },
+    {
+      "type": "admin_panel",
+      "path": "/debug",
+      "status": 200,
+      "detail": "Admin panel at /debug (HTTP 200)",
+      "severity": "high"
+    },
+    {
+      "type": "admin_panel",
+      "path": "/console",
+      "status": 200,
+      "detail": "Admin panel at /console (HTTP 200)",
+      "severity": "high"
+    },
+    {
+      "type": "admin_panel",
+      "path": "/phpmyadmin",
+      "status": 200,
+      "detail": "Admin panel at /phpmyadmin (HTTP 200)",
+      "severity": "high"
+    },
+    {
+      "type": "admin_panel",
+      "path": "/server-status",
+      "status": 200,
+      "detail": "Admin panel at /server-status (HTTP 200)",
+      "severity": "high"
+    },
+    {
+      "type": "admin_panel",
+      "path": "/server-info",
+      "status": 200,
+      "detail": "Admin panel at /server-info (HTTP 200)",
+      "severity": "high"
+    },
+    {
+      "type": "admin_panel",
+      "path": "/.env",
+      "status": 200,
+      "detail": "Admin panel at /.env (HTTP 200)",
+      "severity": "high"
+    },
+    {
+      "type": "admin_panel",
+      "path": "/config.php",
+      "status": 200,
+      "detail": "Admin panel at /config.php (HTTP 200)",
+      "severity": "high"
+    },
+    {
+      "type": "admin_panel",
+      "path": "/web.config",
+      "status": 200,
+      "detail": "Admin panel at /web.config (HTTP 200)",
+      "severity": "high"
+    },
+    {
+      "type": "admin_panel",
+      "path": "/wp-config.php",
+      "status": 200,
+      "detail": "Admin panel at /wp-config.php (HTTP 200)",
+      "severity": "high"
+    },
+    {
+      "type": "admin_panel",
+      "path": "/graphql",
+      "status": 200,
+      "detail": "Admin panel at /graphql (HTTP 200)",
+      "severity": "high"
+    },
+    {
+      "type": "admin_panel",
+      "path": "/swagger",
+      "status": 200,
+      "detail": "Admin panel at /swagger (HTTP 200)",
+      "severity": "high"
+    },
+    {
+      "type": "admin_panel",
+      "path": "/api-docs",
+      "status": 200,
+      "detail": "Admin panel at /api-docs (HTTP 200)",
+      "severity": "high"
+    },
+    {
+      "type": "admin_panel",
+      "path": "/actuator",
+      "status": 200,
+      "detail": "Admin panel at /actuator (HTTP 200)",
+      "severity": "high"
+    },
+    {
+      "type": "admin_panel",
+      "path": "/actuator/env",
+      "status": 200,
+      "detail": "Admin panel at /actuator/env (HTTP 200)",
+      "severity": "high"
+    },
+    {
+      "type": "admin_panel",
+      "path": "/actuator/health",
+      "status": 200,
+      "detail": "Admin panel at /actuator/health (HTTP 200)",
+      "severity": "high"
+    },
+    {
+      "type": "admin_panel",
+      "path": "/metrics",
+      "status": 200,
+      "detail": "Admin panel at /metrics (HTTP 200)",
+      "severity": "high"
+    },
+    {
+      "type": "admin_panel",
+      "path": "/trace",
+      "status": 200,
+      "detail": "Admin panel at /trace (HTTP 200)",
+      "severity": "high"
+    },
+    {
+      "type": "admin_panel",
+      "path": "/jolokia",
+      "status": 200,
+      "detail": "Admin panel at /jolokia (HTTP 200)",
+      "severity": "high"
+    },
+    {
+      "type": "debug_endpoint",
+      "path": "/debug",
+      "size": 2319,
+      "detail": "Debug/diagnostic endpoint exposed: /debug",
+      "severity": "high"
+    },
+    {
+      "type": "debug_endpoint",
+      "path": "/_debug",
+      "size": 2319,
+      "detail": "Debug/diagnostic endpoint exposed: /_debug",
+      "severity": "high"
+    },
+    {
+      "type": "debug_endpoint",
+      "path": "/trace",
+      "size": 2319,
+      "detail": "Debug/diagnostic endpoint exposed: /trace",
+      "severity": "high"
+    },
+    {
+      "type": "debug_endpoint",
+      "path": "/metrics",
+      "size": 2319,
+      "detail": "Debug/diagnostic endpoint exposed: /metrics",
+      "severity": "high"
+    },
+    {
+      "type": "debug_endpoint",
+      "path": "/actuator",
+      "size": 2319,
+      "detail": "Debug/diagnostic endpoint exposed: /actuator",
+      "severity": "high"
+    },
+    {
+      "type": "debug_endpoint",
+      "path": "/actuator/env",
+      "size": 2319,
+      "detail": "Debug/diagnostic endpoint exposed: /actuator/env",
+      "severity": "high"
+    },
+    {
+      "type": "debug_endpoint",
+      "path": "/actuator/configprops",
+      "size": 2319,
+      "detail": "Debug/diagnostic endpoint exposed: /actuator/configprops",
+      "severity": "high"
+    },
+    {
+      "type": "debug_endpoint",
+      "path": "/elmah.axd",
+      "size": 2319,
+      "detail": "Debug/diagnostic endpoint exposed: /elmah.axd",
+      "severity": "high"
+    },
+    {
+      "type": "debug_endpoint",
+      "path": "/phpinfo.php",
+      "size": 2319,
+      "detail": "Debug/diagnostic endpoint exposed: /phpinfo.php",
+      "severity": "high"
+    },
+    {
+      "type": "debug_endpoint",
+      "path": "/info.php",
+      "size": 2319,
+      "detail": "Debug/diagnostic endpoint exposed: /info.php",
+      "severity": "high"
+    },
+    {
+      "type": "debug_endpoint",
+      "path": "/.git/config",
+      "size": 2319,
+      "detail": "Debug/diagnostic endpoint exposed: /.git/config",
+      "severity": "high"
+    },
+    {
+      "type": "debug_endpoint",
+      "path": "/.svn/entries",
+      "size": 2319,
+      "detail": "Debug/diagnostic endpoint exposed: /.svn/entries",
+      "severity": "high"
+    },
+    {
+      "type": "debug_endpoint",
+      "path": "/.DS_Store",
+      "size": 2319,
+      "detail": "Debug/diagnostic endpoint exposed: /.DS_Store",
+      "severity": "high"
+    },
+    {
+      "type": "info_disclosure_header",
+      "header": "server",
+      "value": "nginx/1.29.4",
+      "detail": "Info disclosure: server: nginx/1.29.4",
+      "severity": "low"
+    }
+  ]
+}

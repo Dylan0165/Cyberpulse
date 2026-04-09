@@ -1,0 +1,53 @@
+{
+  "findings": [
+    {
+      "type": "sensitive_data",
+      "pattern_name": "Email Address",
+      "source_url": "https://d-esign.nl/assets/index-BgVDogWh.js",
+      "match_count": 9,
+      "severity": "medium"
+    },
+    {
+      "type": "exposed_file",
+      "url": "https://d-esign.nl/robots.txt",
+      "filename": "robots.txt",
+      "severity": "medium"
+    },
+    {
+      "type": "exposed_file",
+      "url": "https://d-esign.nl/.env",
+      "filename": ".env",
+      "severity": "high"
+    },
+    {
+      "type": "exposed_file",
+      "url": "https://d-esign.nl/config.json",
+      "filename": "config.json",
+      "severity": "medium"
+    },
+    {
+      "type": "exposed_file",
+      "url": "https://d-esign.nl/wp-config.php",
+      "filename": "wp-config.php",
+      "severity": "high"
+    },
+    {
+      "type": "exposed_file",
+      "url": "https://d-esign.nl/.git/config",
+      "filename": ".git/config",
+      "severity": "high"
+    },
+    {
+      "type": "exposed_file",
+      "url": "https://d-esign.nl/package.json",
+      "filename": "package.json",
+      "severity": "medium"
+    },
+    {
+      "type": "exposed_file",
+      "url": "https://d-esign.nl/composer.json",
+      "filename": "composer.json",
+      "severity": "medium"
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "findings": [
+    {
+      "type": "no_jwt",
+      "detail": "No JWT tokens discovered in responses",
+      "severity": "info"
+    }
+  ]
+}

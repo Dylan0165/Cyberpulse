@@ -1,0 +1,56 @@
+# ══════════════════════════════════════════════════════════
+# CyberPulse — Dependencies
+# Privacy-first European penetration testing tool
+# ══════════════════════════════════════════════════════════
+
+# ── Web Framework ─────────────────────────────────────────
+fastapi==0.115.12
+uvicorn==0.34.0
+python-multipart==0.0.20
+
+# ── AI (DeepSeek V3.2 via OpenAI SDK) ────────────────────
+openai==1.82.0
+
+# ── PDF Report Generation ────────────────────────────────
+xhtml2pdf==0.2.17
+Jinja2==3.1.6
+
+# ── Scheduling ────────────────────────────────────────────
+APScheduler==3.11.0
+
+# ── HTTP & Networking ─────────────────────────────────────
+requests==2.32.3
+urllib3==2.4.0
+
+# ── Scraping & Parsing ───────────────────────────────────
+feedparser==6.0.11
+beautifulsoup4==4.13.4
+lxml==5.4.0
+
+# ── Nmap Integration ─────────────────────────────────────
+python-nmap==0.7.1
+
+# ── Terminal Logging ──────────────────────────────────────
+rich==14.0.0
+
+# ── Environment Variables ─────────────────────────────────
+python-dotenv==1.1.0
+
+# ── DNS ───────────────────────────────────────────────────
+dnspython==2.7.0
+
+# ── JWT Analysis ──────────────────────────────────────────
+PyJWT==2.10.1
+
+# ── XML Parsing (nmap output) ─────────────────────────────
+defusedxml==0.7.1
+
+# ── SSL Certificate Analysis ─────────────────────────────
+cryptography==44.0.3
+pyOpenSSL==25.1.0
+
+# ── WHOIS ─────────────────────────────────────────────────
+python-whois==0.9.5
+
+# ── Compression (CVE feed gzip) ──────────────────────────
+# stdlib gzip — no extra dependency needed

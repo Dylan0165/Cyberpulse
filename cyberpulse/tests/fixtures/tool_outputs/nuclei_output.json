@@ -1,0 +1,5 @@
+{
+  "stdout": "{\"template-id\":\"cve-2023-1234\",\"info\":{\"name\":\"Test CVE\",\"severity\":\"high\"},\"host\":\"example.com\",\"matched-at\":\"https://example.com/vulnerable\"}\n{\"template-id\":\"exposed-panels\",\"info\":{\"name\":\"Admin Panel Exposed\",\"severity\":\"medium\"},\"host\":\"example.com\",\"matched-at\":\"https://example.com/admin\"}",
+  "stderr": "",
+  "return_code": 0
+}

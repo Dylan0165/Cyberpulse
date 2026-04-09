@@ -1,0 +1,253 @@
+{
+  "samenvatting": {
+    "risicoscore": 75,
+    "niveau": "hoog",
+    "korte_beschrijving": "De scan toont meerdere kritieke beveiligingsproblemen, waaronder Remote Code Execution (RCE) kwetsbaarheden, gebrek aan rate limiting, en ontbrekende beveiligingsheaders. Het risiconiveau is hoog vanwege de combinatie van kritieke kwetsbaarheden die directe compromittering mogelijk maken."
+  },
+  "management_samenvatting": "De penetratietest voor nomadark.net heeft ernstige beveiligingsrisico's blootgelegd. De meest kritieke bevinding is dat aanvallers mogelijk opdrachten kunnen uitvoeren op de server (Remote Code Execution), wat kan leiden tot volledige overname. Daarnaast ontbreekt bescherming tegen brute-force aanvallen op login- en 2FA-systemen, en zijn essentiële beveiligingsheaders niet geconfigureerd. Er zijn ook indicaties van mogelijke WAF-bypass technieken en blootgestelde Kubernetes-poorten. Aanbevolen wordt om onmiddellijk de RCE-kwetsbaarheden te patchen, rate limiting te implementeren en beveiligingsheaders toe te voegen om het risico te verminderen.",
+  "bevindingen": [
+    {
+      "titel": "Remote Code Execution (RCE) via command injection",
+      "module": "Remote Code Execution",
+      "ernst": "critical",
+      "beschrijving": "De server is kwetsbaar voor command injection via meerdere parameters (cmd, exec, command, execute, ping, query, host, ip, address, domain). Testpayloads zoals '; whoami' resulteren in uitvoering van commando's, wat wijst op kritieke RCE-kwetsbaarheden.",
+      "impact": "Aanvallers kunnen willekeurige commando's uitvoeren op de server, leiden tot volledige systeemcompromittering, data-diefstal, of malware-installatie.",
+      "aanbeveling": "Implementeer inputvalidatie en sanitization voor alle gebruikersinvoer. Gebruik parameterized queries of veilige API's voor systeemcommando's. Overweeg een Web Application Firewall (WAF) met RCE-bescherming.",
+      "referenties": [
+        "CVE-2021-44228",
+        "OWASP-A03",
+        "https://owasp.org/www-community/attacks/Command_Injection"
+      ]
+    },
+    {
+      "titel": "Geen rate limiting op login- en 2FA-endpoints",
+      "module": "Rate Limiting & DoS",
+      "ernst": "high",
+      "beschrijving": "Er is geen rate limiting gedetecteerd op login-paden (/login, /api/login, /auth/login, etc.) en 2FA-verificatie-endpoints (/api/2fa/verify, /api/otp/verify, etc.), zelfs na 15-30 aanvragen.",
+      "impact": "Aanvallers kunnen brute-force aanvallen uitvoeren op wachtwoorden en 2FA-codes, leiden tot accountovernames.",
+      "aanbeveling": "Implementeer rate limiting (bijv. max 5-10 pogingen per IP per minuut) voor alle authenticatie-endpoints. Gebruik tools zoals fail2ban of cloud-based rate limiting.",
+      "referenties": [
+        "OWASP-A07",
+        "https://owasp.org/www-community/controls/Blocking_Brute_Force_Attacks"
+      ]
+    },
+    {
+      "titel": "HTTP Request Smuggling indicatie",
+      "module": "HTTP Request Smuggling",
+      "ernst": "high",
+      "beschrijving": "Mogelijke CL.TE smuggling gedetecteerd met HTTP 400-respons, wat kan wijzen op kwetsbaarheden in request parsing.",
+      "impact": "Aanvallers kunnen request smuggling gebruiken om cache poisoning, sessiehijacking, of bypass van beveiligingscontroles te veroorzaken.",
+      "aanbeveling": "Update server- en proxysoftware naar de laatste versies. Configureer servers om inconsistente headers te weigeren. Test met tools zoals smuggler.py.",
+      "referenties": [
+        "CVE-2023-44487",
+        "https://portswigger.net/web-security/request-smuggling"
+      ]
+    },
+    {
+      "titel": "WAF-bypass via HTTP Parameter Pollution (HPP)",
+      "module": "HTTP Parameter Pollution",
+      "ernst": "high",
+      "beschrijving": "Mogelijke WAF-bypass gedetecteerd via HPP voor SQL injection en XSS, door meerdere parameters met dezelfde naam te gebruiken.",
+      "impact": "Aanvallers kunnen WAF-regels omzeilen om SQL injection of XSS-aanvallen uit te voeren.",
+      "aanbeveling": "Implementeer parameter sanitization en valideer unieke parameter namen. Configureer WAF om HPP-payloads te detecteren. Gebruik prepared statements voor databases.",
+      "referenties": [
+        "OWASP-A01",
+        "https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/07-Input_Validation_Testing/04-Testing_for_HTTP_Parameter_Pollution"
+      ]
+    },
+    {
+      "titel": "Blootgestelde Kubernetes-poorten (8080, 8443)",
+      "module": "Docker & Container Exposure",
+      "ernst": "high",
+      "beschrijving": "Poorten 8080 en 8443 zijn open en geassocieerd met Kubernetes API, mogelijk blootstellend containerbeheerinterfaces.",
+      "impact": "Onbevoegde toegang tot Kubernetes API kan leiden tot containerescape, privilege escalation, of clustercompromittering.",
+      "aanbeveling": "Beperk toegang tot Kubernetes-poorten met firewalls of netwerkbeleid. Implementeer authenticatie en autorisatie (bijv. RBAC). Overweeg een private netwerk of VPN.",
+      "referenties": [
+        "CVE-2023-2728",
+        "https://kubernetes.io/docs/concepts/security/"
+      ]
+    },
+    {
+      "titel": "Ontbrekende HSTS en CSP headers",
+      "module": "OWASP Top 10 Compliance",
+      "ernst": "medium",
+      "beschrijving": "HSTS (HTTP Strict Transport Security) en CSP (Content Security Policy) headers ontbreken, wat beveiligingsmisconfiguraties aangeeft.",
+      "impact": "Zonder HSTS is HTTPS-downgrade mogelijk; zonder CSP is XSS-mitigatie beperkt.",
+      "aanbeveling": "Voeg HSTS header toe: 'Strict-Transport-Security: max-age=31536000; includeSubDomains'. Implementeer CSP met restrictieve bronnen (bijv. 'default-src 'self'').",
+      "referenties": [
+        "OWASP-A02",
+        "https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Strict-Transport-Security"
+      ]
+    },
+    {
+      "titel": "Geen DMARC en SPF DNS-records",
+      "module": "DNS Zone Transfer",
+      "ernst": "medium",
+      "beschrijving": "Geen DMARC of SPF records gevonden voor het domein, wat email spoofing mogelijk maakt.",
+      "impact": "Aanvallers kunnen phishing-emails versturen die lijken te komen van nomadark.net, leiden tot social engineering-aanvallen.",
+      "aanbeveling": "Configureer SPF record (bijv. 'v=spf1 include:_spf.google.com ~all') en DMARC record (bijv. 'v=DMARC1; p=none; rua=mailto:dmarc@nomadark.net').",
+      "referenties": [
+        "https://dmarc.org/",
+        "https://datatracker.ietf.org/doc/html/rfc7208"
+      ]
+    },
+    {
+      "titel": "Clickjacking mogelijk door ontbrekende X-Frame-Options",
+      "module": "Clickjacking & UI Redressing",
+      "ernst": "medium",
+      "beschrijving": "Geen X-Frame-Options of CSP frame-ancestors header op root en login-pagina's, wat clickjacking mogelijk maakt.",
+      "impact": "Aanvallers kunnen de site in een iframe insluiten om gebruikers te misleiden tot het klikken op verborgen elementen.",
+      "aanbeveling": "Voeg X-Frame-Options: DENY of SAMEORIGIN header toe, of gebruik CSP met 'frame-ancestors 'self''.",
+      "referenties": [
+        "OWASP-A05",
+        "https://owasp.org/www-community/attacks/Clickjacking"
+      ]
+    },
+    {
+      "titel": "Blootgestelde backup-bestanden (wp-config.php.bak)",
+      "module": "Subdomain Enumeration",
+      "ernst": "high",
+      "beschrijving": "Backup-bestanden zoals wp-config.php.bak en wp-config.php~ gevonden met HTTP 403 status, maar hun aanwezigheid kan informatie lekken.",
+      "impact": "Aanvallers kunnen proberen deze bestanden te downloaden voor configuratie-informatie, database credentials, of andere gevoelige data.",
+      "aanbeveling": "Verwijder onnodige backup-bestanden van de server. Configureer web server om toegang tot .bak, ~, en andere backup-extensies te blokkeren. Gebruik .gitignore voor versiebeheer.",
+      "referenties": [
+        "OWASP-A05",
+        "https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/02-Configuration_and_Deployment_Management_Testing/04-Review_Old_Backup_and_Unreferenced_Files_for_Sensitive_Information"
+      ]
+    },
+    {
+      "titel": "Open redirect kwetsbaarheden op login-pagina",
+      "module": "Email Security",
+      "ernst": "medium",
+      "beschrijving": "Open redirect gedetecteerd op /login met parameters zoals url, redirect, redirect_url, etc., die leiden naar externe domeinen zoals discordapp.com.",
+      "impact": "Aanvallers kunnen phishing-aanvallen uitvoeren door gebruikers naar kwaadaardige sites te redirecten, vertrouwen misbruikend.",
+      "aanbeveling": "Valideer en sanitize redirect-parameters, beperk tot interne URLs of gebruik allowlists. Implementeer safe redirect mechanismen.",
+      "referenties": [
+        "OWASP-A01",
+        "https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/10-Business_Logic_Testing/07-Test_Open_Redirects"
+      ]
+    },
+    {
+      "titel": "Geen account lockout na mislukte login-pogingen",
+      "module": "Password Policy Analysis",
+      "ernst": "medium",
+      "beschrijving": "Geen account lockout mechanisme gedetecteerd na 6 mislukte login-pogingen, wat brute-force aanvallen vergemakkelijkt.",
+      "impact": "Aanvallers kunnen herhaaldelijk wachtwoorden proberen zonder beperkingen, leiden tot accountcompromittering.",
+      "aanbeveling": "Implementeer account lockout na 5-10 mislukte pogingen, met tijdelijke blokkade of captcha. Gebruik multi-factor authenticatie (MFA).",
+      "referenties": [
+        "OWASP-A07",
+        "https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html"
+      ]
+    },
+    {
+      "titel": "Informatie leakage via Server header",
+      "module": "Privilege Escalation",
+      "ernst": "low",
+      "beschrijving": "Server header onthult 'cloudflare', wat servertechnologie blootstelt en fingerprinting vergemakkelijkt.",
+      "impact": "Aanvallers kunnen deze informatie gebruiken voor gerichte aanvallen op specifieke technologieën of versies.",
+      "aanbeveling": "Configureer web server om Server header te verwijderen of te maskeren (bijv. met mod_security of cloud configuratie).",
+      "referenties": [
+        "OWASP-A05",
+        "https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/08-Configuration_Management_Testing/02-Fingerprint_Web_Server"
+      ]
+    },
+    {
+      "titel": "Geen DNSSEC ingeschakeld",
+      "module": "SSL/TLS Audit",
+      "ernst": "low",
+      "beschrijving": "DNSSEC is niet ingeschakeld voor het domein, wat DNS spoofing of cache poisoning mogelijk maakt.",
+      "impact": "Aanvallers kunnen DNS-responsen manipuleren om gebruikers naar kwaadaardige sites te redirecten.",
+      "aanbeveling": "Schakel DNSSEC in via de DNS provider (Cloudflare) en configureer DS records in de domeinregistrar.",
+      "referenties": [
+        "https://www.cloudflare.com/dns/dnssec/",
+        "https://www.icann.org/resources/pages/dnssec-what-is-it-why-important-2019-03-05-en"
+      ]
+    },
+    {
+      "titel": "Blootgestelde robots.txt bestand",
+      "module": "Cloud Exposure",
+      "ernst": "medium",
+      "beschrijving": "robots.txt bestand is publiek toegankelijk (status 200), mogelijk gevoelige paden of directory's onthullend.",
+      "impact": "Aanvallers kunnen robots.txt gebruiken voor reconnaissance om verborgen paden of gevoelige bestanden te vinden.",
+      "aanbeveling": "Review robots.txt inhoud en verwijder gevoelige entries. Overweeg om robots.txt te beperken tot niet-gevoelige paden of gebruik authentication.",
+      "referenties": [
+        "https://developers.google.com/search/docs/crawling-indexing/robots/intro"
+      ]
+    },
+    {
+      "titel": "Geen 2FA/MFA implementatie gedetecteerd",
+      "module": "2FA/MFA Bypass",
+      "ernst": "medium",
+      "beschrijving": "Geen 2FA of MFA implementatie gedetecteerd op de site, wat authenticatiebeveiliging vermindert.",
+      "impact": "Zonder 2FA zijn accounts kwetsbaarder voor credential stuffing of phishing-aanvallen.",
+      "aanbeveling": "Implementeer 2FA voor gebruikersaccounts, gebruik TOTP (Time-based One-Time Password) of hardware tokens. Integreer met services zoals Authy of Google Authenticator.",
+      "referenties": [
+        "OWASP-A07",
+        "https://owasp.org/www-project-cheatsheets/cheatsheets/Multifactor_Authentication_Cheat_Sheet.html"
+      ]
+    }
+  ],
+  "aanbevelingen_prioriteit": [
+    {
+      "prioriteit": 1,
+      "actie": "Patch de RCE-kwetsbaarheden door inputvalidatie en sanitization te implementeren voor alle gebruikersinvoerparameters.",
+      "reden": "Dit is de meest kritieke bevinding die directe servercompromittering mogelijk maakt.",
+      "complexiteit": "gemiddeld"
+    },
+    {
+      "prioriteit": 2,
+      "actie": "Implementeer rate limiting op alle login- en 2FA-endpoints om brute-force aanvallen te voorkomen.",
+      "reden": "Beschermt tegen accountovernames en verhoogt de authenticatiebeveiliging.",
+      "complexiteit": "laag"
+    },
+    {
+      "prioriteit": 3,
+      "actie": "Voeg essentiële beveiligingsheaders toe: HSTS, CSP, X-Frame-Options, X-Content-Type-Options.",
+      "reden": "Verbetert algemene webbeveiliging en vermindert risico's zoals clickjacking en XSS.",
+      "complexiteit": "laag"
+    },
+    {
+      "prioriteit": 4,
+      "actie": "Beperk toegang tot Kubernetes-poorten (8080, 8443) met firewalls en implementeer RBAC.",
+      "reden": "Voorkomt onbevoegde toegang tot containerbeheer en vermindert blootstelling.",
+      "complexiteit": "gemiddeld"
+    },
+    {
+      "prioriteit": 5,
+      "actie": "Configureer DMARC en SPF DNS-records om email spoofing te voorkomen.",
+      "reden": "Beschermt tegen phishing-aanvallen en verbetert email authenticatie.",
+      "complexiteit": "laag"
+    },
+    {
+      "prioriteit": 6,
+      "actie": "Verwijder of beveilig backup-bestanden zoals wp-config.php.bak en masker Server header.",
+      "reden": "Vermindert informatie leakage en voorkomt ongeautoriseerde toegang tot gevoelige data.",
+      "complexiteit": "laag"
+    },
+    {
+      "prioriteit": 7,
+      "actie": "Implementeer account lockout mechanismen na mislukte login-pogingen en overweeg 2FA.",
+      "reden": "Voegt extra beveiligingslagen toe voor authenticatie en vermindert brute-force risico's.",
+      "complexiteit": "gemiddeld"
+    },
+    {
+      "prioriteit": 8,
+      "actie": "Test en patch HTTP request smuggling en HPP kwetsbaarheden met server updates en WAF configuratie.",
+      "reden": "Voorkomt advanced aanvallen die beveiligingscontroles kunnen omzeilen.",
+      "complexiteit": "hoog"
+    },
+    {
+      "prioriteit": 9,
+      "actie": "Schakel DNSSEC in via Cloudflare en review robots.txt inhoud.",
+      "reden": "Verbetert DNS-beveiliging en beperkt informatie disclosure.",
+      "complexiteit": "laag"
+    },
+    {
+      "prioriteit": 10,
+      "actie": "Voer een volledige security audit uit en monitor logs voor verdachte activiteiten.",
+      "reden": "Zorgt voor continue beveiligingsbewustzijn en vroege detectie van incidenten.",
+      "complexiteit": "gemiddeld"
+    }
+  ],
+  "technische_details": "De scan voor nomadark.net toont 164 bevindingen, met 17 critical, 15 high, 28 medium, 19 low, en 52 info. Kritieke RCE-kwetsbaarheden zijn gedetecteerd in Module 32, waar command injection via parameters zoals cmd, exec, etc., output van commando's zoals 'whoami' produceert, wijzend op onveilige inputverwerking. Module 41 en 42 tonen gebrek aan rate limiting op login- en 2FA-endpoints, met 15+ pogingen zonder beperkingen, wat brute-force aanvallen mogelijk maakt. Module 51 en 58 indiceren HTTP request smuggling en HPP-based WAF-bypass, met CL.TE smuggling (HTTP 400) en SQL/XSS bypass via parameter pollution. Module 63 exposeert Kubernetes-poorten 8080 en 8443, mogelijk blootstellend container-APIs. Beveiligingsheaders (HSTS, CSP, X-Frame-Options, etc.) ontbreken in Modules 05, 08, en 48, leiden tot misconfiguraties. DNS issues omvatten geen DMARC/SPF records (Module 46) en geen DNSSEC (Module 07). Backup-bestanden zoals wp-config.php.bak zijn gevonden (Module 09), en open redirects op /login (Module 15). De server gebruikt Cloudflare (gedetecteerd in Modules 02, 05, 21) met TLSv1.3 en AES_256_GCM_SHA384 cipher (Module 06, 47), maar WAF-bescherming kan worden omzeild. Aanbevelingen focussen op patching RCE, implementeren rate limiting, toevoegen headers, en beveiligen van blootgestelde services."
+}

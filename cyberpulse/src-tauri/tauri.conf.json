@@ -1,0 +1,62 @@
+{
+  "package": {
+    "productName": "CyberPulse",
+    "version": "0.1.0"
+  },
+  "build": {
+    "beforeDevCommand": "cd frontend && npm run dev",
+    "beforeBuildCommand": "cd frontend && npm run build",
+    "devPath": "http://localhost:5173",
+    "distDir": "../../cyberpulse/frontend/dist"
+  },
+  "tauri": {
+    "windows": [
+      {
+        "title": "CyberPulse",
+        "width": 1280,
+        "height": 800,
+        "minWidth": 1024,
+        "minHeight": 600,
+        "resizable": true,
+        "fullscreen": false,
+        "decorations": true,
+        "transparent": false,
+        "theme": "Dark"
+      }
+    ],
+    "bundle": {
+      "active": true,
+      "identifier": "nl.d-esign.cyberpulse",
+      "icon": [
+        "icons/32x32.png",
+        "icons/128x128.png",
+        "icons/128x128@2x.png",
+        "icons/icon.icns",
+        "icons/icon.ico"
+      ]
+    },
+    "allowlist": {
+      "all": false,
+      "shell": {
+        "execute": true,
+        "sidecar": true,
+        "scope": [
+          {
+            "name": "cyberpulse-engine",
+            "cmd": "python",
+            "args": true
+          }
+        ]
+      },
+      "path": { "all": true },
+      "fs": {
+        "all": true,
+        "scope": ["$APPDATA/cyberpulse/**", "$DOCUMENT/**", "$RESOURCE/**"]
+      },
+      "dialog": { "open": true, "save": true }
+    },
+    "security": {
+      "csp": "default-src 'self'; connect-src 'self' http://localhost:7823; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com"
+    }
+  }
+}

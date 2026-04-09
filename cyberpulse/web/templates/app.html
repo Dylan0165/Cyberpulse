@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CyberPulse – Dashboard</title>
+    <link rel="stylesheet" href="{{ request.url_for('static', path='style.css') }}">
+    <style>
+        /* ─── Scan list ─── */
+        .scan-list { display:flex; flex-direction:column; gap:10px; }
+        .scan-card {
+            background:var(--card-bg);
+            border:1px solid var(--border);
+            border-radius:10px;
+            padding:14px 18px;
+            display:flex;
+            align-items:center;
+            gap:14px;
+            cursor:pointer;
+            transition:border-color .15s;
+        }
+        .scan-card:hover { border-color:var(--accent); }
+        .scan-card-icon {
+            width:36px;height:36px;border-radius:8px;
+            display:flex;align-items:center;justify-content:center;
+            flex-shrink:0;
+        }
+        .scan-card-icon.running { background:rgba(59,130,246,.15); color:#3b82f6; }
+        .scan-card-icon.done { background:rgba(34,197,94,.15); color:#22c55e; }
+        .scan-card-icon.failed { background:rgba(239,68,68,.15); color:#ef4444; }
+        .scan-card-icon.queued { background:rgba(251,191,36,.15); color:#fbbf24; }
+        .scan-card-body { flex:1; min-width:0; }
+        .scan-card-target { font-weight:600; font-size:.9rem; }
+        .scan-card-meta { font-size:.78rem; color:var(--text-muted); margin-top:2px; }
+        .scan-card-badge {
+            font-size:.7rem; font-weight:600; padding:3px 8px;
+            border-radius:999px; white-space:nowrap;
+        }
+        .badge-running { background:rgba(59,130,246,.15); color:#3b82f6; }
+        .badge-done { background:rgba(34,197,94,.15); color:#22c55e; }
+        .badge-failed { background:rgba(239,68,68,.15); color:#ef4444; }
+        .badge-queued { background:rgba(251,191,36,.15); color:#fbbf24; }
+        /* ─── Module picker ─── */
+        .module-grid {
+            display:grid;
+            grid-template-columns:repeat(auto-fill,minmax(180px,1fr));
+            gap:8px;
+            max-height:320px;
+            overflow-y:auto;
+        }
+        .module-toggle {
+            padding:8px 12px;
+            border:1px solid var(--border);
+            border-radius:8px;
+            cursor:pointer;
+            font-size:.8rem;
+            display:flex;align-items:center;gap:8px;
+            transition:all .15s;
+            background:transparent;
+            color:var(--text);
+        }
+        .module-toggle:hover { border-color:var(--accent); background:rgba(99,102,241,.06); }
+        .module-toggle.selected { border-color:var(--accent); background:rgba(99,102,241,.12); }
+        .module-toggle input { display:none; }
+        /* ─── Progress bar live ─── */
+        .live-progress {
+            height:6px;border-radius:3px;
+            background:var(--border);overflow:hidden;
+            margin-top:8px;
+        }
+        .live-progress-fill {
+            height:100%;border-radius:3px;
+            background:linear-gradient(90deg,#6366f1,#3b82f6);
+            transition:width .4s ease;
+        }
+        /* ─── Two-column layout ─── */
+        .dashboard-grid {
+            display:grid;
+            grid-template-columns:1fr 380px;
+            gap:24px;
+            align-items:start;
+        }
+        @media (max-width:900px) { .dashboard-grid { grid-template-columns:1fr; } }
+        /* ─── Empty state ─── */
+        .empty-state {
+            text-align:center;padding:48px 24px;
+            color:var(--text-muted);
+        }
+        .empty-state svg { opacity:.35; margin-bottom:14px; }
+        .empty-state h3 { font-size:1rem; margin:0 0 6px; color:var(--text); }
+        .empty-state p { font-size:.85rem; margin:0; }
+        /* ─── SSE toast ─── */
+        #toast {
+            position:fixed;bottom:20px;right:20px;
+            background:var(--card-bg);border:1px solid var(--border);
+            border-radius:10px;padding:10px 16px;
+            font-size:.82rem;box-shadow:0 4px 20px rgba(0,0,0,.3);
+            display:none;z-index:9999;max-width:320px;
+        }
+    </style>
+</head>
+<body>
+<div class="app-shell">
+
+    <!-- ══ Sidebar ══ -->
+    <aside class="sidebar" id="sidebar">
+        <a href="/" class="sidebar-brand">
+            <div class="brand-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            </div>
+            <div>
+                <span class="brand-name">CyberPulse</span>
+                <span class="brand-tagline">v3.0 · {{ module_count }} modules</span>
+            </div>
+        </a>
+
+        <nav class="sidebar-nav">
+            <div class="nav-group">
+                <span class="nav-group-label">Platform</span>
+                <a href="/" class="nav-item" style="color:var(--text-muted);font-size:.8rem;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+                    Terug naar website
+                </a>
+                <a href="/app" class="nav-item active">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                    Dashboard
+                </a>
+            </div>
+            <div class="nav-group">
+                <span class="nav-group-label">Scanning</span>
+                <a href="#new-scan" class="nav-item" id="nav-new-scan">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    Nieuwe Scan
+                </a>
+                <a href="/app/reports" class="nav-item">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                    Rapporten
+                </a>
+            </div>
+            <div class="nav-group">
+                <span class="nav-group-label">Status</span>
+                <a href="/health" class="nav-item" target="_blank">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                    Engine Status
+                </a>
+            </div>
+        </nav>
+
+        <div class="sidebar-footer">
+            <div class="status-row">
+                <span class="status-dot" id="engine-status-dot"></span>
+                <span id="engine-status-text">Verbinden…</span>
+            </div>
+            <div class="sidebar-meta">{{ module_count }} modules · Anthropic Claude · v3.0</div>
+        </div>
+    </aside>
+
+    <!-- ══ Main ══ -->
+    <div class="main-wrapper" id="main-wrapper">
+        <header class="topbar">
+            <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Toggle sidebar">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+            </button>
+            <span class="topbar-title">Security Dashboard</span>
+            <div class="topbar-spacer"></div>
+            <button class="btn btn-primary btn-sm" id="topbar-new-scan">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Nieuwe scan
+            </button>
+        </header>
+
+        <main class="page-content">
+
+            <!-- Page Header -->
+            <div class="page-header">
+                <h1>Dashboard</h1>
+                <p>Beheer en monitor je penetratietests. Beschikbare credits: <strong id="credits-display">{{ credits }}</strong></p>
+            </div>
+
+            <!-- Stats Grid -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon blue">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+                    </div>
+                    <div>
+                        <div class="stat-value" id="stat-total">{{ total_scans }}</div>
+                        <div class="stat-label">Totale scans</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon green">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                    </div>
+                    <div>
+                        <div class="stat-value" id="stat-done">{{ completed_scans }}</div>
+                        <div class="stat-label">Afgerond</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon orange">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                    </div>
+                    <div>
+                        <div class="stat-value" id="stat-findings">{{ total_findings }}</div>
+                        <div class="stat-label">Bevindingen</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon purple">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                    </div>
+                    <div>
+                        <div class="stat-value">{{ module_count }}</div>
+                        <div class="stat-label">Modules</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dashboard grid: scan list + new scan form -->
+            <div class="dashboard-grid">
+
+                <!-- Left: Recent scans -->
+                <div>
+                    <div class="panel">
+                        <div class="panel-header">
+                            <div class="panel-title">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                                Recente Scans
+                            </div>
+                            <a href="/app/reports" style="font-size:.8rem;color:var(--accent);">Alle rapporten →</a>
+                        </div>
+                        <div class="panel-body">
+                            <div class="scan-list" id="scan-list">
+                                {% if recent_scans %}
+                                    {% for scan in recent_scans %}
+                                    <div class="scan-card" onclick="openReport('{{ scan.id }}')">
+                                        <div class="scan-card-icon {{ scan.status }}">
+                                            {% if scan.status == 'running' %}
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="5 12 12 5 19 12"/><polyline points="5 12 12 19 19 12"/></svg>
+                                            {% elif scan.status == 'done' %}
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                                            {% elif scan.status == 'failed' %}
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                                            {% else %}
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>
+                                            {% endif %}
+                                        </div>
+                                        <div class="scan-card-body">
+                                            <div class="scan-card-target">{{ scan.target }}</div>
+                                            <div class="scan-card-meta">{{ scan.scan_type }} · {{ scan.created_at.strftime('%d %b %Y %H:%M') }} · {{ scan.finding_count }} bevindingen</div>
+                                            {% if scan.status == 'running' %}
+                                            <div class="live-progress">
+                                                <div class="live-progress-fill" id="progress-{{ scan.id }}" style="width:{{ scan.progress }}%"></div>
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                        <span class="scan-card-badge badge-{{ scan.status }}">
+                                            {% if scan.status == 'running' %}Bezig{% elif scan.status == 'done' %}Klaar{% elif scan.status == 'failed' %}Fout{% else %}Wacht{% endif %}
+                                        </span>
+                                    </div>
+                                    {% endfor %}
+                                {% else %}
+                                <div class="empty-state">
+                                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                                    <h3>Nog geen scans</h3>
+                                    <p>Start je eerste penetratietest via het formulier.</p>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: New scan form -->
+                <div id="new-scan">
+                    <div class="panel">
+                        <div class="panel-header">
+                            <div class="panel-title">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                                Nieuwe Scan
+                            </div>
+                        </div>
+                        <div class="panel-body">
+                            <div class="alert alert-warning" style="margin-bottom:16px;">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:1px;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                                Scan alleen systemen met toestemming.
+                            </div>
+
+                            <form id="scan-form" onsubmit="startScan(event)">
+                                <div style="margin-bottom:14px;">
+                                    <label class="field-label">Doelwit</label>
+                                    <div class="input-wrapper">
+                                        <svg class="input-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg>
+                                        <input type="text" name="target" id="target" class="field-input has-icon"
+                                               placeholder="voorbeeld.nl of 192.168.1.1" required
+                                               pattern="[a-zA-Z0-9._\-:/]+" title="Voer een geldig domein of IP in">
+                                    </div>
+                                </div>
+
+                                <div style="margin-bottom:14px;">
+                                    <label class="field-label">Scan type</label>
+                                    <select name="scan_type" id="scan_type" class="field-input field-select" onchange="toggleModules()">
+                                        <option value="quick">Snelle Scan – 8 modules (1 credit)</option>
+                                        <option value="full">Volledige Scan – {{ module_count }} modules (5 credits)</option>
+                                        <option value="custom">Aangepast – kies modules zelf</option>
+                                    </select>
+                                </div>
+
+                                <!-- Custom module selector -->
+                                <div id="module-picker" style="display:none;margin-bottom:14px;">
+                                    <label class="field-label">Modules selecteren</label>
+                                    <div class="module-grid" id="module-grid">
+                                        {% for module in available_modules %}
+                                        <label class="module-toggle" data-id="{{ module.id }}">
+                                            <input type="checkbox" name="modules" value="{{ module.id }}">
+                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+                                            {{ module.name }}
+                                        </label>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+
+                                <div style="margin-bottom:16px;">
+                                    <label class="field-label">Extra opties</label>
+                                    <div style="display:flex;flex-direction:column;gap:8px;">
+                                        <label style="display:flex;align-items:center;gap:8px;font-size:.85rem;cursor:pointer;">
+                                            <input type="checkbox" name="aggressive" id="aggressive" style="accent-color:var(--accent);">
+                                            Agressieve modus
+                                        </label>
+                                        <label style="display:flex;align-items:center;gap:8px;font-size:.85rem;cursor:pointer;">
+                                            <input type="checkbox" name="stealth" id="stealth" style="accent-color:var(--accent);">
+                                            Stealth modus (langzamer)
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div style="display:flex;gap:10px;">
+                                    <button type="submit" class="btn btn-primary" style="flex:1;" id="submit-btn">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                                        Scan starten
+                                    </button>
+                                    <button type="button" class="btn btn-ghost" onclick="resetForm()">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.53"/></svg>
+                                    </button>
+                                </div>
+                                <p style="font-size:.72rem;color:var(--text-muted);margin-top:10px;text-align:center;">
+                                    Beschikbaar: <strong id="credits-small">{{ credits }}</strong> credits
+                                </p>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div><!-- /dashboard-grid -->
+
+        </main>
+    </div>
+</div>
+
+<!-- Toast notification -->
+<div id="toast"></div>
+
+<script>
+// ── Sidebar toggle ──
+document.getElementById('sidebar-toggle').addEventListener('click', () => {
+    document.getElementById('sidebar').classList.toggle('collapsed');
+    document.getElementById('main-wrapper').classList.toggle('sidebar-collapsed');
+});
+document.getElementById('topbar-new-scan').addEventListener('click', () => {
+    document.getElementById('new-scan').scrollIntoView({ behavior: 'smooth' });
+});
+document.getElementById('nav-new-scan').addEventListener('click', (e) => {
+    e.preventDefault();
+    document.getElementById('new-scan').scrollIntoView({ behavior: 'smooth' });
+});
+
+// ── Module picker toggle ──
+function toggleModules() {
+    const type = document.getElementById('scan_type').value;
+    document.getElementById('module-picker').style.display = type === 'custom' ? 'block' : 'none';
+}
+document.querySelectorAll('.module-toggle').forEach(label => {
+    label.addEventListener('click', () => label.classList.toggle('selected'));
+});
+
+// ── Start scan ──
+async function startScan(e) {
+    e.preventDefault();
+    const btn = document.getElementById('submit-btn');
+    btn.disabled = true;
+    btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="spin"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> Starten…';
+
+    const form = document.getElementById('scan-form');
+    const fd = new FormData(form);
+    const body = {
+        target: fd.get('target'),
+        scan_type: fd.get('scan_type'),
+        aggressive: fd.get('aggressive') === 'on',
+        stealth: fd.get('stealth') === 'on',
+        modules: fd.getAll('modules'),
+    };
+
+    try {
+        const res = await fetch('/scan/start', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body),
+        });
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({ detail: 'Onbekende fout' }));
+            showToast('Fout: ' + (err.detail || res.statusText), 'error');
+        } else {
+            const data = await res.json();
+            showToast('Scan gestart!', 'success');
+            setTimeout(() => { window.location.href = '/scan/' + data.scan_id; }, 800);
+        }
+    } catch (err) {
+        showToast('Netwerkfout: ' + err.message, 'error');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg> Scan starten';
+    }
+}
+
+function resetForm() {
+    document.getElementById('scan-form').reset();
+    document.getElementById('module-picker').style.display = 'none';
+    document.querySelectorAll('.module-toggle').forEach(l => l.classList.remove('selected'));
+}
+
+// ── Open report ──
+function openReport(scanId) {
+    window.location.href = '/scan/' + scanId;
+}
+
+// ── Toast ──
+function showToast(msg, type = 'info') {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.style.display = 'block';
+    t.style.borderColor = type === 'error' ? '#ef4444' : type === 'success' ? '#22c55e' : 'var(--border)';
+    clearTimeout(t._timer);
+    t._timer = setTimeout(() => { t.style.display = 'none'; }, 3500);
+}
+
+// ── Engine status check ──
+async function checkEngine() {
+    try {
+        const res = await fetch('/health');
+        const dot = document.getElementById('engine-status-dot');
+        const txt = document.getElementById('engine-status-text');
+        if (res.ok) {
+            dot.style.background = '#22c55e';
+            txt.textContent = 'Engine online';
+        } else {
+            dot.style.background = '#ef4444';
+            txt.textContent = 'Engine fout';
+        }
+    } catch {
+        document.getElementById('engine-status-dot').style.background = '#ef4444';
+        document.getElementById('engine-status-text').textContent = 'Niet bereikbaar';
+    }
+}
+checkEngine();
+setInterval(checkEngine, 30000);
+
+// ── SSE: live scan progress updates ──
+const running = document.querySelectorAll('.scan-card .live-progress-fill');
+if (running.length) {
+    const es = new EventSource('/events/scans');
+    es.onmessage = (ev) => {
+        try {
+            const data = JSON.parse(ev.data);
+            if (data.scan_id && data.progress !== undefined) {
+                const bar = document.getElementById('progress-' + data.scan_id);
+                if (bar) bar.style.width = data.progress + '%';
+                if (data.status === 'done' || data.status === 'failed') {
+                    setTimeout(() => location.reload(), 2000);
+                }
+            }
+        } catch {}
+    };
+}
+</script>
+</body>
+</html>

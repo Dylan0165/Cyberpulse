@@ -1,0 +1,1146 @@
+<!DOCTYPE html>
+<html lang="nl" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="AI-gestuurde pentesting voor elk budget — 70 modules, resultaat binnen 4 uur, vanaf €149.">
+  <title>CyberPulse — Professionele Pentesting</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    /* ── Reset ──────────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body { font-family: var(--sans); background: var(--bg); color: var(--text);
+           transition: background .3s, color .3s; overflow-x: hidden; line-height: 1.6; }
+
+    /* ── Tokens ─────────────────────────────────────────────────────── */
+    :root {
+      --gold: #C9A84C; --gold-l: #E8C96A; --gold-d: #9A7B2A;
+      --gold-bg: rgba(201,168,76,.10);
+      --t: .3s cubic-bezier(.4,0,.2,1);
+      --r: 12px; --r-lg: 20px; --r-xl: 28px;
+      --w: 1160px;
+      --serif: 'Playfair Display', Georgia, serif;
+      --sans:  'Inter', system-ui, sans-serif;
+    }
+    [data-theme="light"] {
+      --bg: #FAFAF8; --bg-alt: #F2F2EE; --bg-card: #FFFFFF;
+      --text: #0A0A08; --text-2: #3D3D38; --text-3: #888880;
+      --border: #E8E8E2;
+      --nav-bg: rgba(250,250,248,.92);
+      --sh: 0 2px 24px rgba(0,0,0,.07);
+      --sh-lg: 0 12px 48px rgba(0,0,0,.11);
+      --sh-gold: 0 0 0 1.5px var(--gold), 0 12px 40px rgba(201,168,76,.20);
+    }
+    [data-theme="dark"] {
+      --bg: #080806; --bg-alt: #0E0E0B; --bg-card: #111110;
+      --text: #F5F5F0; --text-2: #AAAAA5; --text-3: #666660;
+      --border: #1C1C18;
+      --nav-bg: rgba(8,8,6,.92);
+      --sh: 0 2px 24px rgba(0,0,0,.45);
+      --sh-lg: 0 12px 48px rgba(0,0,0,.58);
+      --sh-gold: 0 0 0 1.5px var(--gold), 0 12px 40px rgba(201,168,76,.16);
+    }
+
+    /* ── Type ───────────────────────────────────────────────────────── */
+    h1, h2, h3 { font-family: var(--serif); letter-spacing: -.02em; line-height: 1.18; }
+    h1 { font-size: clamp(2.8rem, 6vw, 5.4rem); font-weight: 900; }
+    h2 { font-size: clamp(2rem, 3.8vw, 3.2rem); font-weight: 700; }
+    h3 { font-size: 1.25rem; font-weight: 700; }
+    p  { color: var(--text-2); }
+    .gold-text {
+      background: linear-gradient(135deg, var(--gold-d) 0%, var(--gold) 45%, var(--gold-l) 65%, var(--gold) 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .label {
+      font-size: .72rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase;
+      color: var(--gold);
+    }
+
+    /* ── Layout ─────────────────────────────────────────────────────── */
+    .container { max-width: var(--w); margin: 0 auto; padding: 0 24px; }
+    .section    { padding: 104px 0; }
+    .section-sm { padding: 72px 0; }
+    .tc { text-align: center; }
+    .gold-line {
+      display: block; width: 52px; height: 3px; border-radius: 2px;
+      background: linear-gradient(90deg, var(--gold), var(--gold-l));
+      margin: 18px auto 0;
+    }
+    .gold-line.left { margin-left: 0; }
+
+    /* ── Buttons ────────────────────────────────────────────────────── */
+    .btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 13px 28px; border-radius: var(--r);
+      font-family: var(--sans); font-size: .9rem; font-weight: 600;
+      text-decoration: none; border: none; cursor: pointer;
+      transition: all var(--t); white-space: nowrap;
+    }
+    .btn-gold {
+      background: linear-gradient(135deg, var(--gold-d), var(--gold), var(--gold-l));
+      color: #0A0A08;
+    }
+    .btn-gold:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(201,168,76,.45); }
+    .btn-outline {
+      background: transparent; border: 1.5px solid var(--border); color: var(--text);
+    }
+    .btn-outline:hover { border-color: var(--gold); color: var(--gold); }
+
+    /* ── Nav ────────────────────────────────────────────────────────── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+      padding: 0 24px;
+      background: var(--nav-bg);
+      backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+      border-bottom: 1px solid transparent;
+      transition: border-color var(--t), box-shadow var(--t);
+    }
+    nav.scrolled { border-color: var(--border); box-shadow: var(--sh); }
+    .nav-inner {
+      max-width: var(--w); margin: 0 auto; height: 64px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .nav-logo {
+      font-family: var(--serif); font-size: 1.3rem; font-weight: 700;
+      color: var(--text); text-decoration: none;
+      display: flex; align-items: center; gap: 9px;
+    }
+    .nav-links { display: flex; align-items: center; gap: 32px; list-style: none; }
+    .nav-links a {
+      font-size: .87rem; font-weight: 500; color: var(--text-2);
+      text-decoration: none; transition: color var(--t);
+    }
+    .nav-links a:hover { color: var(--gold); }
+    .nav-right { display: flex; align-items: center; gap: 14px; }
+    .theme-btn {
+      width: 38px; height: 38px; border-radius: 50%;
+      border: 1.5px solid var(--border); background: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: .95rem; color: var(--text-2); transition: all var(--t);
+    }
+    .theme-btn:hover { border-color: var(--gold); color: var(--gold); }
+
+    /* ── Hero ───────────────────────────────────────────────────────── */
+    .hero {
+      min-height: 100vh; display: flex; align-items: center;
+      position: relative; overflow: hidden; padding-top: 64px;
+    }
+    .hero-bg {
+      position: absolute; inset: 0; pointer-events: none; will-change: transform;
+      background:
+        radial-gradient(ellipse 65% 55% at 10% 65%, var(--gold-bg) 0%, transparent 70%),
+        radial-gradient(ellipse 50% 45% at 88% 28%, var(--gold-bg) 0%, transparent 65%);
+    }
+    .hero-grid {
+      position: absolute; inset: 0; pointer-events: none;
+      background-image:
+        linear-gradient(var(--border) 1px, transparent 1px),
+        linear-gradient(90deg, var(--border) 1px, transparent 1px);
+      background-size: 64px 64px; opacity: .4;
+    }
+    .hero-content { position: relative; z-index: 1; max-width: 760px; }
+    .hero h1 { margin-bottom: 22px; }
+    .hero-sub {
+      font-size: 1.12rem; color: var(--text-2); line-height: 1.75;
+      max-width: 540px; margin-bottom: 40px;
+    }
+    .hero-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 56px; }
+    .hero-trust {
+      display: flex; flex-wrap: wrap; gap: 24px;
+      border-top: 1px solid var(--border); padding-top: 28px;
+    }
+    .trust-item {
+      display: flex; align-items: center; gap: 7px;
+      font-size: .82rem; font-weight: 500; color: var(--text-3);
+    }
+    .trust-icon { color: var(--gold); font-size: .95rem; }
+
+    /* floating visual */
+    .hero-visual {
+      position: absolute; right: -40px; top: 50%; transform: translateY(-50%);
+      width: 480px; pointer-events: none;
+    }
+    .fcard {
+      position: absolute; background: var(--bg-card);
+      border: 1.5px solid var(--border); border-radius: var(--r-lg);
+      padding: 18px 22px; box-shadow: var(--sh-lg);
+    }
+    .fcard-1 { top: 5%;  left: 5%;  width: 210px; animation: fc1 6s ease-in-out infinite; }
+    .fcard-2 { top: 38%; right: 5%; width: 188px; animation: fc2 7s ease-in-out infinite; border-color: var(--gold); }
+    .fcard-3 { bottom: 8%; left: 15%; width: 200px; animation: fc1 8s ease-in-out infinite .6s; }
+    @keyframes fc1 { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-12px)} }
+    @keyframes fc2 { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-9px)}  }
+    .fcard-lbl { font-size: .68rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--text-3); margin-bottom: 7px; }
+    .fcard-val { font-family: var(--serif); font-size: 1.25rem; font-weight: 700; }
+    .fcard-bar { height: 4px; background: var(--border); border-radius: 2px; margin-top: 10px; overflow: hidden; }
+    .fcard-fill { height: 100%; background: linear-gradient(90deg, var(--gold-d), var(--gold-l)); border-radius: 2px; }
+
+    /* ── Stats bar ──────────────────────────────────────────────────── */
+    .stats-bar {
+      background: var(--bg-alt);
+      border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+      padding: 44px 0;
+    }
+    .stats-grid { display: grid; grid-template-columns: repeat(4,1fr); }
+    .stat-item { text-align: center; padding: 10px 16px; border-right: 1px solid var(--border); }
+    .stat-item:last-child { border-right: none; }
+    .stat-num {
+      font-family: var(--serif); font-size: 2.6rem; font-weight: 900;
+      line-height: 1; margin-bottom: 6px;
+    }
+    .stat-lbl { font-size: .8rem; color: var(--text-3); font-weight: 500; letter-spacing: .04em; }
+
+    /* ── Packages ───────────────────────────────────────────────────── */
+    .pkgs-grid {
+      display: grid; grid-template-columns: repeat(3,1fr); gap: 20px; margin-top: 56px;
+    }
+    .pkg {
+      background: var(--bg-card); border: 1.5px solid var(--border);
+      border-radius: var(--r-lg); padding: 32px 26px;
+      box-shadow: var(--sh); transition: all var(--t);
+      position: relative; display: flex; flex-direction: column;
+    }
+    .pkg:hover { transform: translateY(-4px); box-shadow: var(--sh-lg); }
+    .pkg.featured { border-color: var(--gold); box-shadow: var(--sh-gold); }
+    .pkg-badge {
+      position: absolute; top: -13px; left: 50%; transform: translateX(-50%);
+      background: linear-gradient(135deg, var(--gold-d), var(--gold));
+      color: #0A0A08; font-size: .68rem; font-weight: 700;
+      letter-spacing: .1em; text-transform: uppercase;
+      padding: 4px 14px; border-radius: 20px;
+    }
+    .pkg-tier {
+      display: inline-block; font-size: .7rem; font-weight: 700;
+      letter-spacing: .09em; text-transform: uppercase;
+      color: var(--gold); background: var(--gold-bg);
+      padding: 4px 10px; border-radius: 6px; margin-bottom: 14px;
+    }
+    .pkg-name  { font-family: var(--serif); font-size: 1.45rem; font-weight: 700; margin-bottom: 4px; }
+    .pkg-pitch { font-size: .88rem; color: var(--text-2); font-style: italic; margin-bottom: 18px; line-height: 1.55; }
+    .pkg-desc  { font-size: .86rem; color: var(--text-2); line-height: 1.68; margin-bottom: 22px; flex: 1; }
+    .pkg-price { font-family: var(--serif); font-size: 2.5rem; font-weight: 900; line-height: 1; margin-bottom: 3px; }
+    .pkg-psub  { font-size: .78rem; color: var(--text-3); margin-bottom: 20px; }
+    .pkg-feats { list-style: none; margin-bottom: 26px; }
+    .pkg-feats li {
+      display: flex; align-items: flex-start; gap: 8px;
+      font-size: .84rem; color: var(--text-2);
+      padding: 5px 0; border-bottom: 1px solid var(--border);
+    }
+    .pkg-feats li:last-child { border: none; }
+    .pkg-feats li::before { content: "✓"; color: var(--gold); font-weight: 700; flex-shrink: 0; margin-top:.1em; }
+    .pkg-cta { margin-top: auto; }
+
+    /* ── Wizard ─────────────────────────────────────────────────────── */
+    .wizard-box {
+      background: var(--bg-card); border: 1.5px solid var(--border);
+      border-radius: var(--r-xl); padding: 52px 48px;
+      max-width: 680px; margin: 52px auto 0;
+      box-shadow: var(--sh-lg);
+    }
+    .wsteps { display: flex; align-items: center; margin-bottom: 44px; }
+    .wdot {
+      width: 30px; height: 30px; border-radius: 50%;
+      border: 2px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      font-size: .74rem; font-weight: 700; color: var(--text-3);
+      background: var(--bg); transition: all var(--t); flex-shrink: 0;
+    }
+    .wdot.active { border-color: var(--gold); color: var(--gold); background: var(--gold-bg); }
+    .wdot.done   { background: var(--gold); border-color: var(--gold); color: #0A0A08; }
+    .wline { flex: 1; height: 2px; background: var(--border); position: relative; overflow: hidden; }
+    .wline-fill { position: absolute; inset: 0; background: var(--gold); width: 0; transition: width .55s var(--t); }
+    .wq { animation: wqIn .32s ease; }
+    @keyframes wqIn { from{opacity:0;transform:translateX(28px)} to{opacity:1;transform:none} }
+    .wq-lbl   { margin-bottom: 8px; }
+    .wq-title { font-family: var(--serif); font-size: 1.5rem; font-weight: 700; margin-bottom: 26px; }
+    .wq-opts  { display: grid; grid-template-columns: 1fr 1fr; gap: 11px; }
+    .wopt {
+      padding: 14px 18px; border: 1.5px solid var(--border); border-radius: var(--r);
+      background: var(--bg-alt); cursor: pointer; text-align: left; transition: all var(--t);
+    }
+    .wopt:hover   { border-color: var(--gold); background: var(--gold-bg); }
+    .wopt.sel     { border-color: var(--gold); background: var(--gold-bg); }
+    .wopt-icon    { font-size: 1.35rem; margin-bottom: 7px; }
+    .wopt-title   { font-size: .88rem; font-weight: 600; color: var(--text); }
+    .wopt-sub     { font-size: .76rem; color: var(--text-3); margin-top: 2px; }
+    .w-result     { text-align: center; animation: wqIn .32s ease; }
+    .wr-label     { font-family: var(--serif); font-size: .95rem; color: var(--text-3); margin-bottom: 4px; }
+    .wr-name      { font-family: var(--serif); font-size: 2.5rem; font-weight: 900; margin-bottom: 4px; }
+    .wr-price     { font-size: 1.4rem; font-weight: 600; color: var(--gold); margin-bottom: 14px; }
+    .wr-desc      { font-size: .9rem; color: var(--text-2); max-width: 440px; margin: 0 auto 28px; line-height: 1.68; }
+    .wr-btns      { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+    .w-footer     { display: flex; justify-content: space-between; align-items: center; margin-top: 28px; }
+    .w-prog       { font-size: .78rem; color: var(--text-3); }
+    .w-hint       { font-size: .78rem; color: var(--text-3); }
+
+    /* ── How it works ───────────────────────────────────────────────── */
+    .how-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 28px; margin-top: 52px; }
+    .how-card {
+      padding: 34px 26px; background: var(--bg-card);
+      border: 1.5px solid var(--border); border-radius: var(--r-lg); box-shadow: var(--sh);
+    }
+    .how-num {
+      font-family: var(--serif); font-size: 3.8rem; font-weight: 900;
+      color: var(--border); line-height: 1; margin-bottom: 14px;
+    }
+    .how-card h3 { margin-bottom: 10px; }
+    .how-card p  { font-size: .88rem; }
+
+    /* ── Comparison ─────────────────────────────────────────────────── */
+    .comp-table { width: 100%; border-collapse: collapse; margin-top: 44px; }
+    .comp-table th, .comp-table td { padding: 15px 20px; text-align: left; border-bottom: 1px solid var(--border); font-size: .88rem; }
+    .comp-table th { font-size: .76rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--text-3); }
+    .comp-table thead th:nth-child(2) { color: var(--gold); }
+    .comp-table tbody tr:hover td { background: var(--gold-bg); transition: background var(--t); }
+    .comp-table td:first-child { font-weight: 500; color: var(--text); }
+    .hl { background: rgba(201,168,76,.06); }
+    .yes { color: var(--gold); font-weight: 700; }
+    .chk { color: #4ade80; font-weight: 700; }
+    .no  { color: #f87171; }
+    .dim { color: var(--text-3); }
+
+    /* ── FAQ ────────────────────────────────────────────────────────── */
+    .faq-list { max-width: 700px; margin: 44px auto 0; }
+    .faq-item { border-bottom: 1px solid var(--border); }
+    .faq-q {
+      width: 100%; text-align: left; padding: 20px 0;
+      background: none; border: none; cursor: pointer;
+      display: flex; justify-content: space-between; align-items: center;
+      font-family: var(--sans); font-size: .95rem; font-weight: 600; color: var(--text); gap: 16px;
+    }
+    .faq-q svg { flex-shrink: 0; transition: transform var(--t); color: var(--gold); }
+    .faq-item.open .faq-q svg { transform: rotate(180deg); }
+    .faq-a {
+      max-height: 0; overflow: hidden; transition: max-height .4s ease, padding-bottom .4s;
+      font-size: .88rem; color: var(--text-2); line-height: 1.72;
+    }
+    .faq-item.open .faq-a { max-height: 280px; padding-bottom: 20px; }
+
+    /* ── CTA block ──────────────────────────────────────────────────── */
+    .cta-block {
+      background: var(--bg-alt);
+      border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+      text-align: center; padding: 100px 24px;
+    }
+    .cta-block h2 { margin-bottom: 14px; }
+    .cta-block p  { font-size: 1.08rem; max-width: 500px; margin: 0 auto 34px; }
+
+    /* ── Footer ─────────────────────────────────────────────────────── */
+    footer { background: var(--bg-card); border-top: 1px solid var(--border); padding: 52px 0 28px; }
+    .foot-inner { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 36px; }
+    .foot-brand { max-width: 240px; }
+    .foot-brand .nav-logo { margin-bottom: 12px; display: inline-flex; }
+    .foot-brand p { font-size: .82rem; color: var(--text-3); line-height: 1.65; }
+    .foot-col h4 { font-size: .74rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--text-3); margin-bottom: 14px; }
+    .foot-col ul { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+    .foot-col a  { font-size: .84rem; color: var(--text-2); text-decoration: none; transition: color var(--t); }
+    .foot-col a:hover { color: var(--gold); }
+    .foot-bottom {
+      border-top: 1px solid var(--border); margin-top: 40px; padding-top: 24px;
+      display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px;
+    }
+    .foot-bottom p { font-size: .77rem; color: var(--text-3); }
+
+    /* ── Scroll reveal ──────────────────────────────────────────────── */
+    .reveal { opacity: 0; transform: translateY(28px); transition: opacity .65s ease, transform .65s ease; }
+    .reveal.visible { opacity: 1; transform: none; }
+    .d1 { transition-delay: .10s; } .d2 { transition-delay: .20s; }
+    .d3 { transition-delay: .30s; } .d4 { transition-delay: .40s; }
+    .d5 { transition-delay: .50s; }
+
+    /* ── Responsive ─────────────────────────────────────────────────── */
+    @media (max-width: 1024px) {
+      .pkgs-grid { grid-template-columns: repeat(2,1fr); }
+      .hero-visual { display: none; }
+      .hero-content { max-width: 100%; }
+    }
+    @media (max-width: 768px) {
+      .section { padding: 72px 0; }
+      .pkgs-grid, .how-grid { grid-template-columns: 1fr; }
+      .stats-grid { grid-template-columns: repeat(2,1fr); }
+      .stat-item { border-right: none; border-bottom: 1px solid var(--border); }
+      .wizard-box { padding: 32px 22px; }
+      .wq-opts { grid-template-columns: 1fr; }
+      .nav-links { display: none; }
+      .foot-inner { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════ NAV ═══════════════════════════════════════ -->
+<nav id="nav">
+  <div class="nav-inner">
+    <a href="/" class="nav-logo">
+      <svg width="26" height="26" viewBox="0 0 28 28" fill="none">
+        <path d="M14 2L4 7v8c0 5.5 4.3 10.7 10 12 5.7-1.3 10-6.5 10-12V7L14 2z" stroke="#C9A84C" stroke-width="1.8"/>
+        <path d="M9 14l3.5 3.5L19 10" stroke="#C9A84C" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      CyberPulse
+    </a>
+    <ul class="nav-links">
+      <li><a href="#packages">Pakketten</a></li>
+      <li><a href="#wizard">Keuzehulp</a></li>
+      <li><a href="#how">Werkwijze</a></li>
+      <li><a href="#faq">FAQ</a></li>
+    </ul>
+    <div class="nav-right">
+      <button class="theme-btn" id="themeBtn">🌙</button>
+      <a href="/app" class="btn btn-gold">Start scan →</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ═══════════════════════════════════════ HERO ══════════════════════════════════════ -->
+<section class="hero">
+  <div class="hero-bg" id="heroBg"></div>
+  <div class="hero-grid"></div>
+
+  <div class="container" style="width:100%;position:relative;z-index:1;">
+    <div class="hero-content">
+      <div style="margin-bottom:22px;"><span class="label">AI‑gestuurde cybersecurity</span></div>
+      <h1>Uw beveiliging.<br><span class="gold-text">Professioneel getest.</span></h1>
+      <p class="hero-sub">
+        Dezelfde tests die grote bureaus uitvoeren voor duizenden euro's —
+        geautomatiseerd, betaalbaar en klaar binnen 4 uur. Vanaf <strong style="color:var(--text)">€149</strong>.
+      </p>
+      <div class="hero-actions">
+        <a href="#wizard" class="btn btn-gold">Vind mijn pakket →</a>
+        <a href="#packages" class="btn btn-outline">Bekijk alle pakketten</a>
+      </div>
+      <div class="hero-trust">
+        <span class="trust-item"><span class="trust-icon">🛡️</span> 70 testmodules</span>
+        <span class="trust-item"><span class="trust-icon">⚡</span> Resultaat binnen 4 uur</span>
+        <span class="trust-item"><span class="trust-icon">🤖</span> Nederlands AI‑rapport</span>
+        <span class="trust-item"><span class="trust-icon">📋</span> PDF inclusief</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Floating cards (desktop only) -->
+  <div class="hero-visual">
+    <div class="fcard fcard-1">
+      <div class="fcard-lbl">Gevonden risico's</div>
+      <div class="fcard-val">3 <span style="font-size:.82rem;color:var(--text-2)">kritiek</span></div>
+      <div class="fcard-bar"><div class="fcard-fill" style="width:68%"></div></div>
+    </div>
+    <div class="fcard fcard-2">
+      <div class="fcard-lbl">Scan voltooid</div>
+      <div class="fcard-val gold-text">✓ 70 / 70</div>
+    </div>
+    <div class="fcard fcard-3">
+      <div class="fcard-lbl">Besparing vs bureau</div>
+      <div class="fcard-val">93% <span style="font-size:.82rem;color:#4ade80">goedkoper</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════ STATS ═════════════════════════════════════ -->
+<div class="stats-bar">
+  <div class="container">
+    <div class="stats-grid">
+      <div class="stat-item">
+        <div class="stat-num gold-text" data-count="70">0</div>
+        <div class="stat-lbl">Testmodules</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num gold-text" data-count="5">0</div>
+        <div class="stat-lbl">Aanvalsfasen gedekt</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num gold-text">€149</div>
+        <div class="stat-lbl">Vanaf prijs</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num gold-text" data-count="93">0</div>
+        <div class="stat-lbl">% goedkoper dan bureau</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ PACKAGES ══════════════════════════════════ -->
+<section class="section" id="packages">
+  <div class="container tc">
+    <div class="reveal">
+      <span class="label">Prijsoverzicht</span>
+      <h2 style="margin-top:10px;">Kies uw beveiligingsniveau</h2>
+      <span class="gold-line"></span>
+      <p style="margin-top:18px;font-size:1.05rem;max-width:560px;margin-left:auto;margin-right:auto;">
+        Van een snelle basischeck tot een volledige aanvalssimulatie. Elk pakket levert
+        een helder rapport in begrijpelijke taal.
+      </p>
+    </div>
+
+    <div class="pkgs-grid">
+
+      <!-- 1 — Starter -->
+      <div class="pkg reveal d1">
+        <span class="pkg-tier">Starter</span>
+        <div class="pkg-name">De Deurcheck</div>
+        <div class="pkg-pitch">"Zijn uw digitale deuren en ramen vergrendeld?"</div>
+        <div class="pkg-desc">
+          Wij controleren de basisbeveiliging van uw website. Net als controleren of uw
+          voordeur op slot zit vóór vertrek — snel, eenvoudig en meteen duidelijk.
+        </div>
+        <div class="pkg-price gold-text">€149</div>
+        <div class="pkg-psub">eenmalig &middot; resultaat in ~15 min &middot; 15 modules</div>
+        <ul class="pkg-feats">
+          <li>Poorten en open diensten checken</li>
+          <li>SSL/TLS certificaat &amp; verval</li>
+          <li>Beveiligingsheaders analyse</li>
+          <li>DNS &amp; domeinreputatie</li>
+          <li>Helder AI‑rapport in het Nederlands</li>
+        </ul>
+        <div class="pkg-cta">
+          <a href="/app" class="btn btn-outline" style="width:100%;justify-content:center;">Starter kiezen</a>
+        </div>
+      </div>
+
+      <!-- 2 — Website -->
+      <div class="pkg reveal d2">
+        <span class="pkg-tier">Populair</span>
+        <div class="pkg-name">De Websitedoorlichting</div>
+        <div class="pkg-pitch">"Een APK‑keuring voor uw website."</div>
+        <div class="pkg-desc">
+          Grondige doorlichting van uw volledige website — van inlogpagina's tot
+          verborgen kwetsbaarheden. Ideaal voor webshops en bedrijven die klantgegevens verwerken.
+        </div>
+        <div class="pkg-price gold-text">€349</div>
+        <div class="pkg-psub">eenmalig &middot; resultaat in ~45 min &middot; 30 modules</div>
+        <ul class="pkg-feats">
+          <li>Alles uit Starter</li>
+          <li>OWASP Top 10 kwetsbaarheden</li>
+          <li>Login &amp; authenticatietests</li>
+          <li>Formulieren en invoervalidatie</li>
+          <li>CMS‑checks (WordPress, Drupal…)</li>
+          <li>Uitgebreid rapport + PDF download</li>
+        </ul>
+        <div class="pkg-cta">
+          <a href="/app" class="btn btn-outline" style="width:100%;justify-content:center;">Website pakket kiezen</a>
+        </div>
+      </div>
+
+      <!-- 3 — Professional (featured) -->
+      <div class="pkg featured reveal d3">
+        <div class="pkg-badge">Beste waarde</div>
+        <span class="pkg-tier">Professional</span>
+        <div class="pkg-name">De Inbraaktest</div>
+        <div class="pkg-pitch">"Wij proberen daadwerkelijk in te breken."</div>
+        <div class="pkg-desc">
+          We denken en werken als een echte hacker — stap voor stap proberen we uw
+          systeem binnen te dringen. Wat wij vinden, vertellen wij u als eerste.
+        </div>
+        <div class="pkg-price gold-text">€699</div>
+        <div class="pkg-psub">eenmalig &middot; resultaat in ~2 uur &middot; 50 modules</div>
+        <ul class="pkg-feats">
+          <li>Alles uit Websitedoorlichting</li>
+          <li>Actieve exploitatiepogingen</li>
+          <li>API &amp; webservice pentesting</li>
+          <li>Injection‑aanvallen (SQL, XSS…)</li>
+          <li>Sessie‑ en cookiekwetsbaarheden</li>
+          <li>Cloud configuratiecheck</li>
+          <li>Geprioriteerde aanbevelingen</li>
+        </ul>
+        <div class="pkg-cta">
+          <a href="/app" class="btn btn-gold" style="width:100%;justify-content:center;">Professional kiezen →</a>
+        </div>
+      </div>
+
+      <!-- 4 — Compliance -->
+      <div class="pkg reveal d1">
+        <span class="pkg-tier">Compliance</span>
+        <div class="pkg-name">De Auditvoorbereiding</div>
+        <div class="pkg-pitch">"Klaar voor NIS2, ISO 27001 en AVG."</div>
+        <div class="pkg-desc">
+          Alles wat u nodig heeft om een compliance‑audit succesvol te doorstaan.
+          Inclusief bewijs en een aanbevelingsrapport dat direct ingediend kan worden
+          bij uw auditor of toezichthouder.
+        </div>
+        <div class="pkg-price gold-text">€999</div>
+        <div class="pkg-psub">eenmalig &middot; resultaat in ~3 uur &middot; 55 modules</div>
+        <ul class="pkg-feats">
+          <li>Alles uit Professional</li>
+          <li>NIS2 / ISO 27001 bevindingen‑mapping</li>
+          <li>AVG &amp; GDPR kwetsbaarheden</li>
+          <li>Bewijs‑documentatie per bevinding</li>
+          <li>Auditklaar compliance‑rapport</li>
+          <li>Aanbevelingen gekoppeld aan norm‑eisen</li>
+        </ul>
+        <div class="pkg-cta">
+          <a href="/app" class="btn btn-outline" style="width:100%;justify-content:center;">Compliance kiezen</a>
+        </div>
+      </div>
+
+      <!-- 5 — Enterprise -->
+      <div class="pkg reveal d2">
+        <span class="pkg-tier">Enterprise</span>
+        <div class="pkg-name">De Totaalcheck</div>
+        <div class="pkg-pitch">"Uw gehele digitale infrastructuur onder de loep."</div>
+        <div class="pkg-desc">
+          Niet alleen uw website, maar uw volledige digitale omgeving: API's, cloud,
+          containers, netwerken en meer. Voor organisaties met meerdere systemen en diensten.
+        </div>
+        <div class="pkg-price gold-text">€1.499</div>
+        <div class="pkg-psub">eenmalig &middot; resultaat in ~4 uur &middot; 70 modules</div>
+        <ul class="pkg-feats">
+          <li>Alle 70 testmodules</li>
+          <li>Cloud &amp; containerbeveiliging</li>
+          <li>Kubernetes &amp; Docker checks</li>
+          <li>CI/CD pipeline exposure</li>
+          <li>Supply chain risico‑analyse</li>
+          <li>Aanvalsketen simulatie (M70)</li>
+          <li>Executive management‑samenvatting</li>
+        </ul>
+        <div class="pkg-cta">
+          <a href="/app" class="btn btn-outline" style="width:100%;justify-content:center;">Enterprise kiezen</a>
+        </div>
+      </div>
+
+      <!-- 6 — Red Team -->
+      <div class="pkg reveal d3">
+        <span class="pkg-tier">Red Team</span>
+        <div class="pkg-name">De Aanvalssimulatie</div>
+        <div class="pkg-pitch">"Wij worden de aanvaller."</div>
+        <div class="pkg-desc">
+          De meest realistische test die er bestaat. Geen limieten, volledig vanuit
+          het perspectief van een geavanceerde aanvaller. Voor organisaties waar een
+          datalek geen optie is.
+        </div>
+        <div class="pkg-price gold-text">€2.999</div>
+        <div class="pkg-psub">eenmalig &middot; resultaat in ~6 uur &middot; alle modules</div>
+        <ul class="pkg-feats">
+          <li>Alles uit Enterprise</li>
+          <li>Volledige red team scenario's</li>
+          <li>Custom exploitatiepaden</li>
+          <li>Threat intelligence koppeling</li>
+          <li>Aanvallersperspectief rapport</li>
+          <li>Strategische beveiligingsroadmap</li>
+          <li>C‑level executive presentatie</li>
+        </ul>
+        <div class="pkg-cta">
+          <a href="/app" class="btn btn-outline" style="width:100%;justify-content:center;">Red Team kiezen</a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════ WIZARD ════════════════════════════════════ -->
+<section class="section-sm" id="wizard"
+  style="background:var(--bg-alt);border-top:1px solid var(--border);border-bottom:1px solid var(--border);">
+  <div class="container tc">
+    <div class="reveal">
+      <span class="label">Keuzehulp</span>
+      <h2 style="margin-top:10px;">Welk pakket past bij u?</h2>
+      <span class="gold-line"></span>
+      <p style="margin-top:16px;font-size:1.05rem;max-width:500px;margin-left:auto;margin-right:auto;">
+        Beantwoord 4 korte vragen — wij adviseren het juiste pakket.
+      </p>
+    </div>
+
+    <div class="wizard-box reveal">
+      <!-- Step dots -->
+      <div class="wsteps">
+        <div class="wdot active" id="wd0">1</div>
+        <div class="wline"><div class="wline-fill" id="wf0"></div></div>
+        <div class="wdot" id="wd1">2</div>
+        <div class="wline"><div class="wline-fill" id="wf1"></div></div>
+        <div class="wdot" id="wd2">3</div>
+        <div class="wline"><div class="wline-fill" id="wf2"></div></div>
+        <div class="wdot" id="wd3">4</div>
+      </div>
+
+      <!-- Q1 -->
+      <div class="wq" id="wq0">
+        <div class="label wq-lbl">Vraag 1 van 4</div>
+        <div class="wq-title">Wat voor online aanwezigheid heeft u?</div>
+        <div class="wq-opts">
+          <button class="wopt" data-q="0" data-v="0" onclick="pickOpt(this)">
+            <div class="wopt-icon">🌐</div>
+            <div class="wopt-title">Blog of portfolio</div>
+            <div class="wopt-sub">Eenvoudige informatieve site</div>
+          </button>
+          <button class="wopt" data-q="0" data-v="1" onclick="pickOpt(this)">
+            <div class="wopt-icon">🛒</div>
+            <div class="wopt-title">Webshop of zakelijke site</div>
+            <div class="wopt-sub">Klanten &amp; transacties</div>
+          </button>
+          <button class="wopt" data-q="0" data-v="2" onclick="pickOpt(this)">
+            <div class="wopt-icon">⚙️</div>
+            <div class="wopt-title">Platform of applicatie</div>
+            <div class="wopt-sub">Logins, accounts, SaaS</div>
+          </button>
+          <button class="wopt" data-q="0" data-v="3" onclick="pickOpt(this)">
+            <div class="wopt-icon">🏛️</div>
+            <div class="wopt-title">Meerdere systemen</div>
+            <div class="wopt-sub">Grote organisatie of overheid</div>
+          </button>
+        </div>
+      </div>
+
+      <!-- Q2 -->
+      <div class="wq" id="wq1" style="display:none">
+        <div class="label wq-lbl">Vraag 2 van 4</div>
+        <div class="wq-title">Welke klantdata verwerkt u?</div>
+        <div class="wq-opts">
+          <button class="wopt" data-q="1" data-v="0" onclick="pickOpt(this)">
+            <div class="wopt-icon">👁️</div>
+            <div class="wopt-title">Geen persoonlijke data</div>
+            <div class="wopt-sub">Alleen publieke informatie</div>
+          </button>
+          <button class="wopt" data-q="1" data-v="1" onclick="pickOpt(this)">
+            <div class="wopt-icon">📧</div>
+            <div class="wopt-title">Naam &amp; e‑mailadres</div>
+            <div class="wopt-sub">Basisgegevens van gebruikers</div>
+          </button>
+          <button class="wopt" data-q="1" data-v="2" onclick="pickOpt(this)">
+            <div class="wopt-icon">💳</div>
+            <div class="wopt-title">Betaalgegevens of BSN</div>
+            <div class="wopt-sub">Gevoelige klantinformatie</div>
+          </button>
+          <button class="wopt" data-q="1" data-v="3" onclick="pickOpt(this)">
+            <div class="wopt-icon">🏥</div>
+            <div class="wopt-title">Medisch of juridisch</div>
+            <div class="wopt-sub">Bijzondere persoonsgegevens</div>
+          </button>
+        </div>
+      </div>
+
+      <!-- Q3 -->
+      <div class="wq" id="wq2" style="display:none">
+        <div class="label wq-lbl">Vraag 3 van 4</div>
+        <div class="wq-title">Waarom wilt u een pentest?</div>
+        <div class="wq-opts">
+          <button class="wopt" data-q="2" data-v="0" onclick="pickOpt(this)">
+            <div class="wopt-icon">🔍</div>
+            <div class="wopt-title">Gewoon even checken</div>
+            <div class="wopt-sub">Preventief, eigen initiatief</div>
+          </button>
+          <button class="wopt" data-q="2" data-v="1" onclick="pickOpt(this)">
+            <div class="wopt-icon">🤝</div>
+            <div class="wopt-title">Klant of investeerder vraagt erom</div>
+            <div class="wopt-sub">Vertrouwen aantonen</div>
+          </button>
+          <button class="wopt" data-q="2" data-v="2" onclick="pickOpt(this)">
+            <div class="wopt-icon">📋</div>
+            <div class="wopt-title">Wettelijke vereiste</div>
+            <div class="wopt-sub">NIS2, ISO 27001, PCI‑DSS</div>
+          </button>
+          <button class="wopt" data-q="2" data-v="3" onclick="pickOpt(this)">
+            <div class="wopt-icon">🎯</div>
+            <div class="wopt-title">Maximale zekerheid</div>
+            <div class="wopt-sub">Echt alles uitsluiten</div>
+          </button>
+        </div>
+      </div>
+
+      <!-- Q4 -->
+      <div class="wq" id="wq3" style="display:none">
+        <div class="label wq-lbl">Vraag 4 van 4</div>
+        <div class="wq-title">Wanneer was uw laatste beveiligingscheck?</div>
+        <div class="wq-opts">
+          <button class="wopt" data-q="3" data-v="0" onclick="pickOpt(this)">
+            <div class="wopt-icon">❓</div>
+            <div class="wopt-title">Nooit</div>
+            <div class="wopt-sub">Dit is de eerste keer</div>
+          </button>
+          <button class="wopt" data-q="3" data-v="1" onclick="pickOpt(this)">
+            <div class="wopt-icon">📅</div>
+            <div class="wopt-title">Meer dan een jaar geleden</div>
+            <div class="wopt-sub">Al een tijdje niet meer</div>
+          </button>
+          <button class="wopt" data-q="3" data-v="2" onclick="pickOpt(this)">
+            <div class="wopt-icon">🔄</div>
+            <div class="wopt-title">Minder dan één jaar geleden</div>
+            <div class="wopt-sub">Relatief recent</div>
+          </button>
+          <button class="wopt" data-q="3" data-v="3" onclick="pickOpt(this)">
+            <div class="wopt-icon">📊</div>
+            <div class="wopt-title">Wij doen dit regelmatig</div>
+            <div class="wopt-sub">Structureel beleid</div>
+          </button>
+        </div>
+      </div>
+
+      <!-- Result -->
+      <div class="w-result" id="wres" style="display:none">
+        <div class="wr-label">Ons advies voor u:</div>
+        <div class="wr-name gold-text" id="wrName">—</div>
+        <div class="wr-price" id="wrPrice">—</div>
+        <div class="wr-desc" id="wrDesc">—</div>
+        <div class="wr-btns">
+          <a href="/app" class="btn btn-gold" id="wrBtn">Start nu →</a>
+          <button class="btn btn-outline" onclick="wizardReset()">Opnieuw</button>
+        </div>
+      </div>
+
+      <div class="w-footer">
+        <span class="w-prog" id="wprog">Stap 1 van 4</span>
+        <span class="w-hint" id="whint">Selecteer een optie om door te gaan</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════ HOW ═══════════════════════════════════════ -->
+<section class="section" id="how">
+  <div class="container tc">
+    <div class="reveal">
+      <span class="label">Werkwijze</span>
+      <h2 style="margin-top:10px;">Zo eenvoudig werkt het</h2>
+      <span class="gold-line"></span>
+    </div>
+    <div class="how-grid">
+      <div class="how-card reveal d1">
+        <div class="how-num">01</div>
+        <h3>Vul uw domein in</h3>
+        <p>Voer het domein of IP‑adres in, kies uw pakket en klik op starten. Geen installatie, geen technische kennis vereist.</p>
+      </div>
+      <div class="how-card reveal d2">
+        <div class="how-num">02</div>
+        <h3>Wij testen automatisch</h3>
+        <p>Onze 70 modules doorzoeken uw systeem methodisch — van verkenning tot exploitatie. Live voortgang zichtbaar in uw browser.</p>
+      </div>
+      <div class="how-card reveal d3">
+        <div class="how-num">03</div>
+        <h3>Ontvang uw rapport</h3>
+        <p>Binnen 4 uur: een helder, Nederlands rapport met alle bevindingen, risicoscores en concrete aanbevelingen. Plus PDF.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════ COMPARISON ════════════════════════════════ -->
+<section class="section-sm" style="background:var(--bg-alt);border-top:1px solid var(--border);border-bottom:1px solid var(--border);">
+  <div class="container">
+    <div class="reveal tc" style="margin-bottom:0;">
+      <span class="label">Vergelijking</span>
+      <h2 style="margin-top:10px;">CyberPulse vs handmatig bureau</h2>
+      <span class="gold-line"></span>
+    </div>
+    <table class="comp-table reveal">
+      <thead>
+        <tr>
+          <th>Kenmerk</th>
+          <th>⚡ CyberPulse</th>
+          <th>Handmatig bureau</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Prijs</td>
+          <td class="hl yes">€149 – €2.999</td>
+          <td>€5.000 – €25.000+</td>
+        </tr>
+        <tr>
+          <td>Doorlooptijd</td>
+          <td class="hl yes">15 min – 6 uur</td>
+          <td>2 – 4 weken</td>
+        </tr>
+        <tr>
+          <td>Rapport beschikbaar</td>
+          <td class="hl yes">Direct na scan</td>
+          <td>1 – 3 weken later</td>
+        </tr>
+        <tr>
+          <td>70 geautomatiseerde modules</td>
+          <td class="hl chk">✓ Altijd inbegrepen</td>
+          <td class="dim">Varieert per bureau</td>
+        </tr>
+        <tr>
+          <td>AI‑analyse in het Nederlands</td>
+          <td class="hl chk">✓ Inbegrepen</td>
+          <td class="no">✗ Niet standaard</td>
+        </tr>
+        <tr>
+          <td>Herhaalbaar op elk moment</td>
+          <td class="hl chk">✓ Meteen opnieuw starten</td>
+          <td class="no">✗ Nieuw traject vereist</td>
+        </tr>
+        <tr>
+          <td>Business logic &amp; creativiteit</td>
+          <td class="dim">Beperkt (geautomatiseerd)</td>
+          <td class="chk">✓ Sterk punt van de mens</td>
+        </tr>
+        <tr>
+          <td>Social engineering</td>
+          <td class="no">✗ Niet van toepassing</td>
+          <td class="chk">✓ Mogelijk op aanvraag</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════ FAQ ═══════════════════════════════════════ -->
+<section class="section" id="faq">
+  <div class="container tc">
+    <div class="reveal">
+      <span class="label">FAQ</span>
+      <h2 style="margin-top:10px;">Veelgestelde vragen</h2>
+      <span class="gold-line"></span>
+    </div>
+    <div class="faq-list">
+
+      <div class="faq-item reveal">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          Is dit legaal — mag ik dit zomaar uitvoeren?
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="faq-a">
+          Ja, maar uitsluitend op systemen waarvan u de eigenaar bent of waarvoor u
+          aantoonbare schriftelijke toestemming heeft. CyberPulse mag nooit worden ingezet
+          voor ongeautoriseerde tests. U bevestigt dit akkoord bij gebruik van de tool.
+        </div>
+      </div>
+
+      <div class="faq-item reveal d1">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          Wat is het verschil met gratis tools zoals Nmap of Nikto?
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="faq-a">
+          CyberPulse combineert 70 gespecialiseerde modules — exploitatie, cloud checks,
+          threat intelligence — en analyseert alles met AI tot één begrijpelijk rapport
+          in het Nederlands. Gratis losse tools vereisen diepgaande technische kennis
+          om resultaten te interpreteren en samen te voegen.
+        </div>
+      </div>
+
+      <div class="faq-item reveal d2">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          Hoe veilig zijn mijn scanresultaten?
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="faq-a">
+          Alle scanresultaten worden lokaal opgeslagen op uw eigen machine. Er worden
+          geen bevindingen naar externe servers gestuurd, met uitzondering van de
+          AI‑analyse (anonieme technische data naar de DeepSeek API).
+        </div>
+      </div>
+
+      <div class="faq-item reveal d3">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          Vervangt CyberPulse een echte pentester volledig?
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="faq-a">
+          Nee — en dat beweren wij ook niet. Een menselijke pentester voegt creativiteit,
+          business‑context en social engineering toe die geen tool kan evenaren.
+          CyberPulse automatiseert de technische checks (goed voor ±70-80% van de
+          bevindingen) voor een fractie van de kosten. Bij kritieke systemen raden wij
+          aan gevonden kwetsbaarheden te laten bevestigen door een specialist.
+        </div>
+      </div>
+
+      <div class="faq-item reveal d4">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          Welk pakket heb ik nodig voor NIS2 of ISO 27001?
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="faq-a">
+          Wij adviseren minimaal het <strong>Compliance‑pakket (€999)</strong>. Dit pakket
+          bevat de bewijs‑documentatie en compliance‑mapping die auditors verwachten.
+          Voor grotere organisaties met meerdere systemen raden wij het Enterprise‑pakket aan.
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════ CTA ═══════════════════════════════════════ -->
+<div class="cta-block">
+  <div class="container">
+    <div class="reveal">
+      <span class="label" style="display:block;margin-bottom:14px;">Klaar om te beginnen?</span>
+      <h2>Weet binnen 4 uur hoe veilig<br><span class="gold-text">uw organisatie écht is.</span></h2>
+      <p>Geen abonnement. Geen verplichtingen. Betaal per scan.</p>
+      <a href="/app" class="btn btn-gold" style="font-size:1rem;padding:15px 34px;">Start uw eerste scan →</a>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ FOOTER ════════════════════════════════════ -->
+<footer>
+  <div class="container">
+    <div class="foot-inner">
+      <div class="foot-brand">
+        <a href="/" class="nav-logo">
+          <svg width="22" height="22" viewBox="0 0 28 28" fill="none">
+            <path d="M14 2L4 7v8c0 5.5 4.3 10.7 10 12 5.7-1.3 10-6.5 10-12V7L14 2z" stroke="#C9A84C" stroke-width="1.8"/>
+            <path d="M9 14l3.5 3.5L19 10" stroke="#C9A84C" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          CyberPulse
+        </a>
+        <p>AI‑gestuurde pentesting. Professionele resultaten. Betaalbaar voor iedereen.</p>
+      </div>
+      <div class="foot-col">
+        <h4>Pakketten</h4>
+        <ul>
+          <li><a href="#packages">Starter — €149</a></li>
+          <li><a href="#packages">Websitedoorlichting — €349</a></li>
+          <li><a href="#packages">Professional — €699</a></li>
+          <li><a href="#packages">Compliance — €999</a></li>
+          <li><a href="#packages">Enterprise — €1.499</a></li>
+          <li><a href="#packages">Red Team — €2.999</a></li>
+        </ul>
+      </div>
+      <div class="foot-col">
+        <h4>Navigatie</h4>
+        <ul>
+          <li><a href="/app">Start scan</a></li>
+          <li><a href="#wizard">Keuzehulp wizard</a></li>
+          <li><a href="#how">Hoe werkt het</a></li>
+          <li><a href="#faq">FAQ</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <p>© 2026 CyberPulse — Uitsluitend te gebruiken op systemen met toestemming.</p>
+      <p style="color:var(--gold);">Made with ⚡ &amp; AI</p>
+    </div>
+  </div>
+</footer>
+
+<script>
+/* ── Theme ──────────────────────────────────────────────────────────── */
+const html = document.documentElement;
+const themeBtn = document.getElementById('themeBtn');
+let theme = localStorage.getItem('cp-theme') || 'light';
+
+function applyTheme(t) {
+  html.setAttribute('data-theme', t);
+  themeBtn.textContent = t === 'dark' ? '☀️' : '🌙';
+  localStorage.setItem('cp-theme', t);
+  theme = t;
+}
+applyTheme(theme);
+themeBtn.addEventListener('click', () => applyTheme(theme === 'dark' ? 'light' : 'dark'));
+
+/* ── Nav scroll ─────────────────────────────────────────────────────── */
+const navEl = document.getElementById('nav');
+window.addEventListener('scroll', () => {
+  navEl.classList.toggle('scrolled', window.scrollY > 24);
+}, { passive: true });
+
+/* ── Parallax hero ──────────────────────────────────────────────────── */
+const heroBg = document.getElementById('heroBg');
+window.addEventListener('scroll', () => {
+  if (heroBg) heroBg.style.transform = `translateY(${window.scrollY * 0.32}px)`;
+}, { passive: true });
+
+/* ── Scroll reveal ──────────────────────────────────────────────────── */
+const ro = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) { e.target.classList.add('visible'); ro.unobserve(e.target); }
+  });
+}, { threshold: 0.10 });
+document.querySelectorAll('.reveal').forEach(el => ro.observe(el));
+
+/* ── Counter animation ──────────────────────────────────────────────── */
+const co = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (!e.isIntersecting) return;
+    const el = e.target;
+    const target = parseInt(el.dataset.count, 10);
+    if (isNaN(target)) return;
+    let v = 0; const step = Math.max(1, Math.ceil(target / 55));
+    const t = setInterval(() => {
+      v = Math.min(v + step, target);
+      el.textContent = v;
+      if (v >= target) clearInterval(t);
+    }, 28);
+    co.unobserve(el);
+  });
+}, { threshold: 0.5 });
+document.querySelectorAll('[data-count]').forEach(el => co.observe(el));
+
+/* ── Wizard ─────────────────────────────────────────────────────────── */
+const ans = [null, null, null, null];
+const PKGS = [
+  { name: 'De Deurcheck',          price: '€149',   desc: 'Een snelle basischeck — ideaal als eerste stap. Wij kijken of uw fundament op orde is en geven directe aanbevelingen.' },
+  { name: 'De Websitedoorlichting',price: '€349',   desc: 'APK‑keuring voor uw website. Grondige check voor webshops en bedrijven die klantgegevens verwerken.' },
+  { name: 'De Inbraaktest',        price: '€699',   desc: 'Wij proberen actief in te breken en vertellen u alles wat wij vinden — vóórdat een kwaadwillende het doet.' },
+  { name: 'De Auditvoorbereiding', price: '€999',   desc: 'Alles voor NIS2, ISO 27001 en AVG. Inclusief bewijs‑documentatie die direct ingediend kan worden bij uw auditor.' },
+  { name: 'De Totaalcheck',        price: '€1.499', desc: 'Al uw systemen, API\'s en cloudinfrastructuur in één uitputtende scan. Voor organisaties met meerdere diensten.' },
+  { name: 'De Aanvalssimulatie',   price: '€2.999', desc: 'De meest realistische test. Voor organisaties waar een datalek geen enkele optie is.' },
+];
+
+function pickOpt(el) {
+  const q = +el.dataset.q, v = +el.dataset.v;
+  document.querySelectorAll(`.wopt[data-q="${q}"]`).forEach(o => o.classList.remove('sel'));
+  el.classList.add('sel');
+  ans[q] = v;
+  setTimeout(() => nextStep(q), 340);
+}
+
+function nextStep(q) {
+  if (q < 3) {
+    document.getElementById(`wq${q}`).style.display = 'none';
+    document.getElementById(`wq${q + 1}`).style.display = 'block';
+    document.getElementById(`wd${q}`).className = 'wdot done';
+    document.getElementById(`wd${q + 1}`).classList.add('active');
+    document.getElementById(`wf${q}`).style.width = '100%';
+    document.getElementById('wprog').textContent = `Stap ${q + 2} van 4`;
+  } else {
+    showResult();
+  }
+}
+
+function showResult() {
+  for (let i = 0; i < 4; i++) {
+    const el = document.getElementById(`wq${i}`);
+    if (el) el.style.display = 'none';
+    document.getElementById(`wd${i}`).className = 'wdot done';
+    if (i < 3) document.getElementById(`wf${i}`).style.width = '100%';
+  }
+  document.getElementById('wprog').textContent = 'Uw advies is gereed ✓';
+  document.getElementById('whint').textContent = '';
+
+  // Score logic
+  let s = (ans[0] ?? 0) + (ans[1] ?? 0);
+  if (ans[2] === 2) s += 1;  // compliance need
+  if (ans[2] === 3) s += 2;  // max certainty
+  if (ans[3] === 3) s = Math.max(s - 1, 0); // already regular → slight reduction
+  const idx = Math.min(Math.round(s / 1.5), 5);
+  const pkg = PKGS[idx];
+
+  document.getElementById('wrName').textContent = pkg.name;
+  document.getElementById('wrPrice').textContent = pkg.price;
+  document.getElementById('wrDesc').textContent = pkg.desc;
+
+  const res = document.getElementById('wres');
+  res.style.display = 'block';
+  res.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+function wizardReset() {
+  ans.fill(null);
+  document.getElementById('wres').style.display = 'none';
+  for (let i = 0; i < 4; i++) {
+    document.getElementById(`wd${i}`).className = 'wdot' + (i === 0 ? ' active' : '');
+    document.querySelectorAll(`.wopt[data-q="${i}"]`).forEach(o => o.classList.remove('sel'));
+    if (i < 3) document.getElementById(`wf${i}`).style.width = '0%';
+    const q = document.getElementById(`wq${i}`);
+    if (q) q.style.display = i === 0 ? 'block' : 'none';
+  }
+  document.getElementById('wprog').textContent = 'Stap 1 van 4';
+  document.getElementById('whint').textContent = 'Selecteer een optie om door te gaan';
+}
+
+/* ── FAQ accordion ──────────────────────────────────────────────────── */
+function toggleFaq(btn) {
+  const item = btn.closest('.faq-item');
+  const open = item.classList.contains('open');
+  document.querySelectorAll('.faq-item.open').forEach(i => i.classList.remove('open'));
+  if (!open) item.classList.add('open');
+}
+</script>
+</body>
+</html>

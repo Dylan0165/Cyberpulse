@@ -1,0 +1,10 @@
+{
+  "findings": [
+    {
+      "type": "ssl_connection_error",
+      "detail": "[Errno 11001] getaddrinfo failed",
+      "severity": "high"
+    }
+  ],
+  "certificate": {}
+}

@@ -1,0 +1,838 @@
+{
+  "findings": [
+    {
+      "type": "sensitive_file",
+      "path": "/.env",
+      "size": 2319,
+      "content_type": "text/html",
+      "detail": "Sensitive file found: /.env (2319 bytes)",
+      "severity": "critical"
+    },
+    {
+      "type": "sensitive_file",
+      "path": "/.env.local",
+      "size": 2319,
+      "content_type": "text/html",
+      "detail": "Sensitive file found: /.env.local (2319 bytes)",
+      "severity": "critical"
+    },
+    {
+      "type": "sensitive_file",
+      "path": "/.env.production",
+      "size": 2319,
+      "content_type": "text/html",
+      "detail": "Sensitive file found: /.env.production (2319 bytes)",
+      "severity": "critical"
+    },
+    {
+      "type": "sensitive_file",
+      "path": "/.env.staging",
+      "size": 2319,
+      "content_type": "text/html",
+      "detail": "Sensitive file found: /.env.staging (2319 bytes)",
+      "severity": "critical"
+    },
+    {
+      "type": "sensitive_file",
+      "path": "/.env.development",
+      "size": 2319,
+      "content_type": "text/html",
+      "detail": "Sensitive file found: /.env.development (2319 bytes)",
+      "severity": "critical"
+    },
+    {
+      "type": "sensitive_file",
+      "path": "/.env.backup",
+      "size": 2319,
+      "content_type": "text/html",
+      "detail": "Sensitive file found: /.env.backup (2319 bytes)",
+      "severity": "critical"
+    },
+    {
+      "type": "sensitive_file",
+      "path": "/.env.bak",
+      "size": 2319,
+      "content_type": "text/html",
+      "detail": "Sensitive file found: /.env.bak (2319 bytes)",
+      "severity": "critical"
+    },
+    {
+      "type": "sensitive_file",
+      "path": "/.env.old",
+      "size": 2319,
+      "content_type": "text/html",
+      "detail": "Sensitive file found: /.env.old (2319 bytes)",
+      "severity": "critical"
+    },
+    {
+      "type": "sensitive_file",
+      "path": "/config.php",
+      "size": 2319,
+      "content_type": "text/html",
+      "detail": "Sensitive file found: /config.php (2319 bytes)",
+      "severity": "critical"
+    },
+    {
+      "type": "sensitive_file",
+      "path": "/config.php.bak",
+      "size": 2319,
+      "content_type": "text/html",
+      "detail": "Sensitive file found: /config.php.bak (2319 bytes)",
+      "severity": "critical"
+    },
+    {
+      "type": "sensitive_file",
+      "path": "/config.inc.php",
+      "size": 2319,
+      "content_type": "text/html",
+      "detail": "Sensitive file found: /config.inc.php (2319 bytes)",
+      "severity": "medium"
+    },
+    {
+      "type": "sensitive_file",
+      "path": "/wp-config.php",
+      "size": 2319,
+      "content_type": "text/html",
+      "detail": "Sensitive file found: /wp-config.php (2319 bytes)",
+      "severity": "critical"
+    },
+    {
+      "type": "sensitive_file",
+      "path": "/wp-config.php.bak",
+      "size": 2319,
+      "content_type": "text/html",
+      "detail": "Sensitive file found: /wp-config.php.bak (2319 bytes)",
+      "severity": "critical"
+    },
+    {
+      "type": "sensitive_file",
+      "path": "/wp-config.php.old",
+      "size": 2319,
+      "content_type": "text/html",
+      "detail": "Sensitive file found: /wp-config.php.old (2319 bytes)",
+      "severity": "critical"
+    },
+    {
+      "type": "sensitive_file",
+      "path": "/configuration.php",
+      "size": 2319,
+      "content_type": "text/html",
+      "detail": "Sensitive file found: /configuration.php (2319 bytes)",
+      "severity": "medium"
+    },
+    {
+      "type": "sensitive_file",
+      "path": "/settings.php",
+      "size": 2319,
+      "content_type": "text/html",
+      "detail": "Sensitive file found: /settings.php (2319 bytes)",
+      "severity": "medium"
+    },
+    {
+      "type": "sensitive_file",
+      "path": "/local_settings.py",
+      "size": 2319,
+      "content_type": "text/html",
+      "detail": "Sensitive file found: /local_settings.py (2319 bytes)",
+      "severity": "medium"
+    },
+    {
+      "type": "sensitive_file",
+      "path": "/config.yml",
+      "size": 2319,
+      "content_type": "text/html",
+      "detail": "Sensitive file found: /config.yml (2319 bytes)",
+      "severity": "medium"
+    },
+    {
+      "type": "sensitive_file",
+      "path": "/config.yaml",
+      "size": 2319,
+      "content_type": "text/html",
+      "detail": "Sensitive file found: /config.yaml (2319 bytes)",
+      "severity": "medium"
+    },
+    {
+      "type": "sensitive_file",
+      "path": "/config.json",
+      "size": 2319,
+      "content_type": "text/html",
+      "detail": "Sensitive file found: /config.json (2319 bytes)",
+      "severity": "medium"
+    },
+    {
+      "type": "sensitive_file",
+      "path": "/database.yml",
+      "size": 2319,
+      "content_type": "text/html",
+      "detail": "Sensitive file found: /database.yml (2319 bytes)",
+      "severity": "high"
+    },
+    {
+      "type": "sensitive_file",
+      "path": "/secrets.yml",
+      "size": 2319,
+      "content_type": "text/html",
+      "detail": "Sensitive file found: /secrets.yml (2319 bytes)",
+      "severity": "critical"
+    },
+    {
+      "type": "sensitive_file",
+      "path": "/credentials.json",
+      "size": 2319,
+      "content_type": "text/html",
+      "detail": "Sensitive file found: /credentials.json (2319 bytes)",
+      "severity": "critical"
+    },
+    {
+      "type": "sensitive_file",
+      "path": "/web.config",
+      "size": 2319,
+      "content_type": "text/html",
+      "detail": "Sensitive file found: /web.config (2319 bytes)",
+      "severity": "medium"
+    },
+    {
+      "type": "sensitive_file",
+      "path": "/web.config.bak",
+      "size": 2319,
+      "content_type": "text/html",
+      "detail": "Sensitive file found: /web.config.bak (2319 bytes)",
+      "severity": "high"
+    },
+    {
+      "type": "sensitive_file",
+      "path": "/appsettings.json",
+      "size": 2319,
+      "content_type": "text/html",
+      "detail": "Sensitive file found: /appsettings.json (2319 bytes)",
+      "severity": "critical"
+    },
+    {
+      "type": "sensitive_file",
+      "path": "/application.properties",
+      "size": 2319,
+      "content_type": "text/html",
+      "detail": "Sensitive file found: /application.properties (2319 bytes)",
+      "severity": "critical"
+    },
+    {
+      "type": "sensitive_file",
+      "path": "/application.yml",
+      "size": 2319,
+      "content_type": "text/html",
+      "detail": "Sensitive file found: /application.yml (2319 bytes)",
+      "severity": "medium"
+    },
+    {
+      "type": "sensitive_file",
+      "path": "/composer.json",
+      "size": 2319,
+      "content_type": "text/html",
+      "detail": "Sensitive file found: /composer.json (2319 bytes)",
+      "severity": "medium"
+    },
+    {
+      "type": "sensitive_file",
+      "path": "/composer.lock",
+      "size": 2319,
+      "content_type": "text/html",
+      "detail": "Sensitive file found: /composer.lock (2319 bytes)",
+      "severity": "medium"
+    },
+    {
+      "type": "sensitive_file",
+      "path": "/package.json",
+      "size": 2319,
+      "content_type": "text/html",
+      "detail": "Sensitive file found: /package.json (2319 bytes)",
+      "severity": "medium"
+    },
+    {
+      "type": "sensitive_file",
+      "path": "/package-lock.json",
+      "size": 2319,
+      "content_type": "text/html",
+      "detail": "Sensitive file found: /package-lock.json (2319 bytes)",
+      "severity": "medium"
+    },
+    {
+      "type": "sensitive_file",
+      "path": "/yarn.lock",
+      "size": 2319,
+      "content_type": "text/html",
+      "detail": "Sensitive file found: /yarn.lock (2319 bytes)",
+      "severity": "medium"
+    },
+    {
+      "type": "sensitive_file",
+      "path": "/Gemfile",
+      "size": 2319,
+      "content_type": "text/html",
+      "detail": "Sensitive file found: /Gemfile (2319 bytes)",
+      "severity": "medium"
+    },
+    {
+      "type": "sensitive_file",
+      "path": "/Gemfile.lock",
+      "size": 2319,
+      "content_type": "text/html",
+      "detail": "Sensitive file found: /Gemfile.lock (2319 bytes)",
+      "severity": "medium"
+    },
+    {
+      "type": "sensitive_file",
+      "path": "/requirements.txt",
+      "size": 2319,
+      "content_type": "text/html",
+      "detail": "Sensitive file found: /requirements.txt (2319 bytes)",
+      "severity": "medium"
+    },
+    {
+      "type": "sensitive_file",
+      "path": "/Pipfile",
+      "size": 2319,
+      "content_type": "text/html",
+      "detail": "Sensitive file found: /Pipfile (2319 bytes)",
+      "severity": "medium"
+    },
+    {
+      "type": "sensitive_file",
+      "path": "/Pipfile.lock",
+      "size": 2319,
+      "content_type": "text/html",
+      "detail": "Sensitive file found: /Pipfile.lock (2319 bytes)",
+      "severity": "medium"
+    },
+    {
+      "type": "sensitive_file",
+      "path": "/docker-compose.yml",
+      "size": 2319,
+      "content_type": "text/html",
+      "detail": "Sensitive file found: /docker-compose.yml (2319 bytes)",
+      "severity": "high"
+    },
+    {
+      "type": "sensitive_file",
+      "path": "/Dockerfile",
+      "size": 2319,
+      "content_type": "text/html",
+      "detail": "Sensitive file found: /Dockerfile (2319 bytes)",
+      "severity": "medium"
+    },
+    {
+      "type": "sensitive_file",
+      "path": "/.docker/config.json",
+      "size": 2319,
+      "content_type": "text/html",
+      "detail": "Sensitive file found: /.docker/config.json (2319 bytes)",
+      "severity": "medium"
+    },
+    {
+      "type": "sensitive_file",
+      "path": "/id_rsa",
+      "size": 2319,
+      "content_type": "text/html",
+      "detail": "Sensitive file found: /id_rsa (2319 bytes)",
+      "severity": "critical"
+    },
+    {
+      "type": "sensitive_file",
+      "path": "/.ssh/id_rsa",
+      "size": 2319,
+      "content_type": "text/html",
+      "detail": "Sensitive file found: /.ssh/id_rsa (2319 bytes)",
+      "severity": "critical"
+    },
+    {
+      "type": "sensitive_file",
+      "path": "/.ssh/authorized_keys",
+      "size": 2319,
+      "content_type": "text/html",
+      "detail": "Sensitive file found: /.ssh/authorized_keys (2319 bytes)",
+      "severity": "medium"
+    },
+    {
+      "type": "sensitive_file",
+      "path": "/htpasswd",
+      "size": 2319,
+      "content_type": "text/html",
+      "detail": "Sensitive file found: /htpasswd (2319 bytes)",
+      "severity": "critical"
+    },
+    {
+      "type": "sensitive_file",
+      "path": "/.htpasswd",
+      "size": 2319,
+      "content_type": "text/html",
+      "detail": "Sensitive file found: /.htpasswd (2319 bytes)",
+      "severity": "critical"
+    },
+    {
+      "type": "sensitive_file",
+      "path": "/.htaccess",
+      "size": 2319,
+      "content_type": "text/html",
+      "detail": "Sensitive file found: /.htaccess (2319 bytes)",
+      "severity": "medium"
+    },
+    {
+      "type": "sensitive_file",
+      "path": "/error_log",
+      "size": 2319,
+      "content_type": "text/html",
+      "detail": "Sensitive file found: /error_log (2319 bytes)",
+      "severity": "medium"
+    },
+    {
+      "type": "sensitive_file",
+      "path": "/debug.log",
+      "size": 2319,
+      "content_type": "text/html",
+      "detail": "Sensitive file found: /debug.log (2319 bytes)",
+      "severity": "medium"
+    },
+    {
+      "type": "sensitive_file",
+      "path": "/access.log",
+      "size": 2319,
+      "content_type": "text/html",
+      "detail": "Sensitive file found: /access.log (2319 bytes)",
+      "severity": "medium"
+    },
+    {
+      "type": "sensitive_file",
+      "path": "/.git/config",
+      "size": 2319,
+      "content_type": "text/html",
+      "detail": "Sensitive file found: /.git/config (2319 bytes)",
+      "severity": "critical"
+    },
+    {
+      "type": "sensitive_file",
+      "path": "/.git/HEAD",
+      "size": 2319,
+      "content_type": "text/html",
+      "detail": "Sensitive file found: /.git/HEAD (2319 bytes)",
+      "severity": "critical"
+    },
+    {
+      "type": "sensitive_file",
+      "path": "/.svn/entries",
+      "size": 2319,
+      "content_type": "text/html",
+      "detail": "Sensitive file found: /.svn/entries (2319 bytes)",
+      "severity": "critical"
+    },
+    {
+      "type": "sensitive_file",
+      "path": "/.hg/hgrc",
+      "size": 2319,
+      "content_type": "text/html",
+      "detail": "Sensitive file found: /.hg/hgrc (2319 bytes)",
+      "severity": "medium"
+    },
+    {
+      "type": "sensitive_file",
+      "path": "/.DS_Store",
+      "size": 2319,
+      "content_type": "text/html",
+      "detail": "Sensitive file found: /.DS_Store (2319 bytes)",
+      "severity": "medium"
+    },
+    {
+      "type": "sensitive_file",
+      "path": "/crossdomain.xml",
+      "size": 2319,
+      "content_type": "text/html",
+      "detail": "Sensitive file found: /crossdomain.xml (2319 bytes)",
+      "severity": "medium"
+    },
+    {
+      "type": "sensitive_file",
+      "path": "/sitemap.xml",
+      "size": 2319,
+      "content_type": "text/html",
+      "detail": "Sensitive file found: /sitemap.xml (2319 bytes)",
+      "severity": "medium"
+    },
+    {
+      "type": "sensitive_file",
+      "path": "/robots.txt",
+      "size": 2319,
+      "content_type": "text/html",
+      "detail": "Sensitive file found: /robots.txt (2319 bytes)",
+      "severity": "medium"
+    },
+    {
+      "type": "sensitive_file",
+      "path": "/.well-known/security.txt",
+      "size": 2319,
+      "content_type": "text/html",
+      "detail": "Sensitive file found: /.well-known/security.txt (2319 bytes)",
+      "severity": "medium"
+    },
+    {
+      "type": "sensitive_file",
+      "path": "/phpinfo.php",
+      "size": 2319,
+      "content_type": "text/html",
+      "detail": "Sensitive file found: /phpinfo.php (2319 bytes)",
+      "severity": "medium"
+    },
+    {
+      "type": "sensitive_file",
+      "path": "/info.php",
+      "size": 2319,
+      "content_type": "text/html",
+      "detail": "Sensitive file found: /info.php (2319 bytes)",
+      "severity": "medium"
+    },
+    {
+      "type": "sensitive_file",
+      "path": "/test.php",
+      "size": 2319,
+      "content_type": "text/html",
+      "detail": "Sensitive file found: /test.php (2319 bytes)",
+      "severity": "medium"
+    },
+    {
+      "type": "sensitive_file",
+      "path": "/server-status",
+      "size": 2319,
+      "content_type": "text/html",
+      "detail": "Sensitive file found: /server-status (2319 bytes)",
+      "severity": "medium"
+    },
+    {
+      "type": "sensitive_file",
+      "path": "/server-info",
+      "size": 2319,
+      "content_type": "text/html",
+      "detail": "Sensitive file found: /server-info (2319 bytes)",
+      "severity": "medium"
+    },
+    {
+      "type": "backup_file",
+      "path": "/d-esign_nl.bak",
+      "size": 2319,
+      "detail": "Backup file: /d-esign_nl.bak (2319 bytes)",
+      "severity": "high"
+    },
+    {
+      "type": "backup_file",
+      "path": "/d-esign_nl.backup",
+      "size": 2319,
+      "detail": "Backup file: /d-esign_nl.backup (2319 bytes)",
+      "severity": "high"
+    },
+    {
+      "type": "backup_file",
+      "path": "/d-esign_nl.old",
+      "size": 2319,
+      "detail": "Backup file: /d-esign_nl.old (2319 bytes)",
+      "severity": "high"
+    },
+    {
+      "type": "backup_file",
+      "path": "/d-esign_nl.orig",
+      "size": 2319,
+      "detail": "Backup file: /d-esign_nl.orig (2319 bytes)",
+      "severity": "high"
+    },
+    {
+      "type": "backup_file",
+      "path": "/d-esign_nl.save",
+      "size": 2319,
+      "detail": "Backup file: /d-esign_nl.save (2319 bytes)",
+      "severity": "high"
+    },
+    {
+      "type": "backup_file",
+      "path": "/d-esign_nl.swp",
+      "size": 2319,
+      "detail": "Backup file: /d-esign_nl.swp (2319 bytes)",
+      "severity": "high"
+    },
+    {
+      "type": "backup_file",
+      "path": "/d-esign_nl.swo",
+      "size": 2319,
+      "detail": "Backup file: /d-esign_nl.swo (2319 bytes)",
+      "severity": "high"
+    },
+    {
+      "type": "backup_file",
+      "path": "/d-esign_nl~",
+      "size": 2319,
+      "detail": "Backup file: /d-esign_nl~ (2319 bytes)",
+      "severity": "high"
+    },
+    {
+      "type": "backup_file",
+      "path": "/d-esign_nl.tmp",
+      "size": 2319,
+      "detail": "Backup file: /d-esign_nl.tmp (2319 bytes)",
+      "severity": "high"
+    },
+    {
+      "type": "backup_file",
+      "path": "/d-esign_nl.temp",
+      "size": 2319,
+      "detail": "Backup file: /d-esign_nl.temp (2319 bytes)",
+      "severity": "high"
+    },
+    {
+      "type": "backup_file",
+      "path": "/d-esign_nl.copy",
+      "size": 2319,
+      "detail": "Backup file: /d-esign_nl.copy (2319 bytes)",
+      "severity": "high"
+    },
+    {
+      "type": "backup_file",
+      "path": "/d-esign_nl.dist",
+      "size": 2319,
+      "detail": "Backup file: /d-esign_nl.dist (2319 bytes)",
+      "severity": "high"
+    },
+    {
+      "type": "backup_file",
+      "path": "/d-esign.nl.bak",
+      "size": 2319,
+      "detail": "Backup file: /d-esign.nl.bak (2319 bytes)",
+      "severity": "high"
+    },
+    {
+      "type": "backup_file",
+      "path": "/d-esign.nl.backup",
+      "size": 2319,
+      "detail": "Backup file: /d-esign.nl.backup (2319 bytes)",
+      "severity": "high"
+    },
+    {
+      "type": "backup_file",
+      "path": "/d-esign.nl.old",
+      "size": 2319,
+      "detail": "Backup file: /d-esign.nl.old (2319 bytes)",
+      "severity": "high"
+    },
+    {
+      "type": "backup_file",
+      "path": "/d-esign.nl.orig",
+      "size": 2319,
+      "detail": "Backup file: /d-esign.nl.orig (2319 bytes)",
+      "severity": "high"
+    },
+    {
+      "type": "backup_file",
+      "path": "/d-esign.nl.save",
+      "size": 2319,
+      "detail": "Backup file: /d-esign.nl.save (2319 bytes)",
+      "severity": "high"
+    },
+    {
+      "type": "backup_file",
+      "path": "/d-esign.nl.swp",
+      "size": 2319,
+      "detail": "Backup file: /d-esign.nl.swp (2319 bytes)",
+      "severity": "high"
+    },
+    {
+      "type": "backup_file",
+      "path": "/d-esign.nl.swo",
+      "size": 2319,
+      "detail": "Backup file: /d-esign.nl.swo (2319 bytes)",
+      "severity": "high"
+    },
+    {
+      "type": "backup_file",
+      "path": "/d-esign.nl~",
+      "size": 2319,
+      "detail": "Backup file: /d-esign.nl~ (2319 bytes)",
+      "severity": "high"
+    },
+    {
+      "type": "backup_file",
+      "path": "/d-esign.nl.tmp",
+      "size": 2319,
+      "detail": "Backup file: /d-esign.nl.tmp (2319 bytes)",
+      "severity": "high"
+    },
+    {
+      "type": "backup_file",
+      "path": "/d-esign.nl.temp",
+      "size": 2319,
+      "detail": "Backup file: /d-esign.nl.temp (2319 bytes)",
+      "severity": "high"
+    },
+    {
+      "type": "backup_file",
+      "path": "/d-esign.nl.copy",
+      "size": 2319,
+      "detail": "Backup file: /d-esign.nl.copy (2319 bytes)",
+      "severity": "high"
+    },
+    {
+      "type": "backup_file",
+      "path": "/d-esign.nl.dist",
+      "size": 2319,
+      "detail": "Backup file: /d-esign.nl.dist (2319 bytes)",
+      "severity": "high"
+    },
+    {
+      "type": "backup_file",
+      "path": "/d-esign.bak",
+      "size": 2319,
+      "detail": "Backup file: /d-esign.bak (2319 bytes)",
+      "severity": "high"
+    },
+    {
+      "type": "backup_file",
+      "path": "/d-esign.backup",
+      "size": 2319,
+      "detail": "Backup file: /d-esign.backup (2319 bytes)",
+      "severity": "high"
+    },
+    {
+      "type": "backup_file",
+      "path": "/d-esign.old",
+      "size": 2319,
+      "detail": "Backup file: /d-esign.old (2319 bytes)",
+      "severity": "high"
+    },
+    {
+      "type": "backup_file",
+      "path": "/d-esign.orig",
+      "size": 2319,
+      "detail": "Backup file: /d-esign.orig (2319 bytes)",
+      "severity": "high"
+    },
+    {
+      "type": "backup_file",
+      "path": "/d-esign.save",
+      "size": 2319,
+      "detail": "Backup file: /d-esign.save (2319 bytes)",
+      "severity": "high"
+    },
+    {
+      "type": "backup_file",
+      "path": "/d-esign.swp",
+      "size": 2319,
+      "detail": "Backup file: /d-esign.swp (2319 bytes)",
+      "severity": "high"
+    },
+    {
+      "type": "backup_file",
+      "path": "/d-esign.swo",
+      "size": 2319,
+      "detail": "Backup file: /d-esign.swo (2319 bytes)",
+      "severity": "high"
+    },
+    {
+      "type": "backup_file",
+      "path": "/d-esign~",
+      "size": 2319,
+      "detail": "Backup file: /d-esign~ (2319 bytes)",
+      "severity": "high"
+    },
+    {
+      "type": "backup_file",
+      "path": "/d-esign.tmp",
+      "size": 2319,
+      "detail": "Backup file: /d-esign.tmp (2319 bytes)",
+      "severity": "high"
+    },
+    {
+      "type": "backup_file",
+      "path": "/d-esign.temp",
+      "size": 2319,
+      "detail": "Backup file: /d-esign.temp (2319 bytes)",
+      "severity": "high"
+    },
+    {
+      "type": "backup_file",
+      "path": "/d-esign.copy",
+      "size": 2319,
+      "detail": "Backup file: /d-esign.copy (2319 bytes)",
+      "severity": "high"
+    },
+    {
+      "type": "backup_file",
+      "path": "/d-esign.dist",
+      "size": 2319,
+      "detail": "Backup file: /d-esign.dist (2319 bytes)",
+      "severity": "high"
+    },
+    {
+      "type": "vcs_exposed",
+      "vcs": "SVN",
+      "path": "/.svn/entries",
+      "detail": "SVN repository exposed: /.svn/entries",
+      "severity": "critical"
+    },
+    {
+      "type": "vcs_exposed",
+      "vcs": "SVN",
+      "path": "/.svn/wc.db",
+      "detail": "SVN repository exposed: /.svn/wc.db",
+      "severity": "critical"
+    },
+    {
+      "type": "vcs_exposed",
+      "vcs": "Mercurial",
+      "path": "/.hg/hgrc",
+      "detail": "Mercurial repository exposed: /.hg/hgrc",
+      "severity": "critical"
+    },
+    {
+      "type": "vcs_exposed",
+      "vcs": "Bazaar",
+      "path": "/.bzr/README",
+      "detail": "Bazaar repository exposed: /.bzr/README",
+      "severity": "critical"
+    },
+    {
+      "type": "ide_file",
+      "path": "/.idea/workspace.xml",
+      "detail": "IDE file exposed: /.idea/workspace.xml",
+      "severity": "medium"
+    },
+    {
+      "type": "ide_file",
+      "path": "/.vscode/settings.json",
+      "detail": "IDE file exposed: /.vscode/settings.json",
+      "severity": "medium"
+    },
+    {
+      "type": "ide_file",
+      "path": "/.project",
+      "detail": "IDE file exposed: /.project",
+      "severity": "medium"
+    },
+    {
+      "type": "ide_file",
+      "path": "/.classpath",
+      "detail": "IDE file exposed: /.classpath",
+      "severity": "medium"
+    },
+    {
+      "type": "ide_file",
+      "path": "/nbproject/project.xml",
+      "detail": "IDE file exposed: /nbproject/project.xml",
+      "severity": "medium"
+    },
+    {
+      "type": "ide_file",
+      "path": "/.sublime-workspace",
+      "detail": "IDE file exposed: /.sublime-workspace",
+      "severity": "medium"
+    },
+    {
+      "type": "ide_file",
+      "path": "/.sublime-project",
+      "detail": "IDE file exposed: /.sublime-project",
+      "severity": "medium"
+    }
+  ]
+}

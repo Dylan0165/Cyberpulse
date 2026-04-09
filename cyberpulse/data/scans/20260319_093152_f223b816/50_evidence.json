@@ -1,0 +1,55 @@
+{
+  "findings": [
+    {
+      "type": "severity_summary",
+      "severity_level": "critical",
+      "count": 17,
+      "detail": "CRITICAL: 17 findings",
+      "severity": "info"
+    },
+    {
+      "type": "severity_summary",
+      "severity_level": "high",
+      "count": 15,
+      "detail": "HIGH: 15 findings",
+      "severity": "info"
+    },
+    {
+      "type": "severity_summary",
+      "severity_level": "medium",
+      "count": 28,
+      "detail": "MEDIUM: 28 findings",
+      "severity": "info"
+    },
+    {
+      "type": "severity_summary",
+      "severity_level": "low",
+      "count": 19,
+      "detail": "LOW: 19 findings",
+      "severity": "info"
+    },
+    {
+      "type": "severity_summary",
+      "severity_level": "info",
+      "count": 52,
+      "detail": "INFO: 52 findings",
+      "severity": "info"
+    },
+    {
+      "type": "critical_validation",
+      "total_criticals": 17,
+      "validated": 0,
+      "detail": "Validated 10 of 17 critical findings",
+      "severity": "info"
+    },
+    {
+      "type": "risk_score",
+      "score": 320,
+      "max_possible": 1310,
+      "percentage": 24.4,
+      "risk_level": "MEDIUM",
+      "detail": "Risk Score: 320/1310 (24.4%) \u2014 MEDIUM",
+      "severity": "info"
+    }
+  ]
+}

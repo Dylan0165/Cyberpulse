@@ -1,0 +1,23 @@
+# Lokale dev requirements voor Python 3.13 — zonder psycopg2 en weasyprint
+fastapi
+uvicorn[standard]
+sqlalchemy[asyncio]
+asyncpg
+alembic
+celery[redis]
+redis
+httpx
+python-dotenv
+pydantic
+pydantic-settings
+anthropic
+stripe
+python-jose[cryptography]
+passlib[bcrypt]
+python-multipart
+Jinja2
+websockets
+dnspython
+aiofiles
+orjson
+tenacity

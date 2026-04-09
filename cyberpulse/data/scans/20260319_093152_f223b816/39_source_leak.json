@@ -1,0 +1,11 @@
+{
+  "findings": [
+    {
+      "type": "tech_fingerprint",
+      "header": "Server",
+      "value": "cloudflare",
+      "detail": "Technology disclosure: Server: cloudflare",
+      "severity": "low"
+    }
+  ]
+}

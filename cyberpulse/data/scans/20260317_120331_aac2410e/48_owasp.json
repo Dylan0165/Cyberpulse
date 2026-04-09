@@ -1,0 +1,22 @@
+{
+  "findings": [
+    {
+      "type": "a01_access",
+      "owasp_category": "A01",
+      "detail": "Unrestricted access to /admin",
+      "severity": "high"
+    },
+    {
+      "type": "a02_no_hsts",
+      "owasp_category": "A02",
+      "detail": "Missing HSTS header",
+      "severity": "medium"
+    },
+    {
+      "type": "a05_missing_headers",
+      "owasp_category": "A05",
+      "detail": "Missing security headers: content-security-policy, referrer-policy, permissions-policy",
+      "severity": "medium"
+    }
+  ]
+}

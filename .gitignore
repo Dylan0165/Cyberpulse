@@ -1,0 +1,47 @@
+# Dependencies
+node_modules/
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Environment — never commit secrets to a public repo
+.env
+.env.local
+.env.production
+**/.env
+**/.env.local
+**/.env.production
+*.env
+
+# Build artifacts
+.next/
+dist/
+build/
+*.egg-info/
+
+# Rust build output
+target/
+**/target/
+
+# Docker volumes
+pgdata/
+redisdata/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+celerybeat-schedule
+
+# Reports (never commit scan data)
+reports/
+scan_output/

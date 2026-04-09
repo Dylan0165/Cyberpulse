@@ -1,0 +1,20 @@
+{
+  "findings": [
+    {
+      "type": "http_fingerprint",
+      "port": 80,
+      "server": "cloudflare",
+      "x_powered_by": "",
+      "detail": "Server: cloudflare, X-Powered-By:",
+      "severity": "info"
+    },
+    {
+      "type": "http_fingerprint",
+      "port": 443,
+      "server": "cloudflare",
+      "x_powered_by": "",
+      "detail": "Server: cloudflare, X-Powered-By:",
+      "severity": "info"
+    }
+  ]
+}

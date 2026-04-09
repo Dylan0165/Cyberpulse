@@ -1,0 +1,140 @@
+{
+  "findings": [
+    {
+      "type": "nameserver",
+      "nameserver": "ns1.transip.nl",
+      "detail": "Nameserver: ns1.transip.nl",
+      "severity": "info"
+    },
+    {
+      "type": "nameserver",
+      "nameserver": "ns0.transip.net",
+      "detail": "Nameserver: ns0.transip.net",
+      "severity": "info"
+    },
+    {
+      "type": "nameserver",
+      "nameserver": "ns2.transip.eu",
+      "detail": "Nameserver: ns2.transip.eu",
+      "severity": "info"
+    },
+    {
+      "type": "zone_transfer",
+      "nameserver": "ns1.transip.nl",
+      "records_count": 7,
+      "detail": "ZONE TRANSFER SUCCESSFUL from ns1.transip.nl! (7 records)",
+      "severity": "critical",
+      "records_sample": [
+        "Server:  ns1.transip.nl",
+        "Address:  195.8.195.195",
+        "DNS request timed out.",
+        "timeout was 2 seconds.",
+        "DNS request timed out.",
+        "timeout was 2 seconds.",
+        "*** Request to ns1.transip.nl timed-out"
+      ]
+    },
+    {
+      "type": "zone_transfer",
+      "nameserver": "ns0.transip.net",
+      "records_count": 7,
+      "detail": "ZONE TRANSFER SUCCESSFUL from ns0.transip.net! (7 records)",
+      "severity": "critical",
+      "records_sample": [
+        "Server:  ns0.transip.net",
+        "Address:  195.135.195.195",
+        "DNS request timed out.",
+        "timeout was 2 seconds.",
+        "DNS request timed out.",
+        "timeout was 2 seconds.",
+        "*** Request to ns0.transip.net timed-out"
+      ]
+    },
+    {
+      "type": "zone_transfer",
+      "nameserver": "ns2.transip.eu",
+      "records_count": 7,
+      "detail": "ZONE TRANSFER SUCCESSFUL from ns2.transip.eu! (7 records)",
+      "severity": "critical",
+      "records_sample": [
+        "Server:  ns2.transip.eu",
+        "Address:  37.97.199.195",
+        "DNS request timed out.",
+        "timeout was 2 seconds.",
+        "DNS request timed out.",
+        "timeout was 2 seconds.",
+        "*** Request to ns2.transip.eu timed-out"
+      ]
+    },
+    {
+      "type": "dns_record",
+      "record_type": "MX",
+      "value": "10, mail exchanger = d-esign.nl",
+      "detail": "MX: 10, mail exchanger = d-esign.nl",
+      "severity": "info"
+    },
+    {
+      "type": "dns_record",
+      "record_type": "TXT",
+      "value": "spf1 ~all",
+      "detail": "TXT: spf1 ~all",
+      "severity": "info"
+    },
+    {
+      "type": "dns_record",
+      "record_type": "SOA",
+      "value": "hostmaster.transip.nl",
+      "detail": "SOA: hostmaster.transip.nl",
+      "severity": "info"
+    },
+    {
+      "type": "dns_record",
+      "record_type": "SOA",
+      "value": "2026021000",
+      "detail": "SOA: 2026021000",
+      "severity": "info"
+    },
+    {
+      "type": "dns_record",
+      "record_type": "SOA",
+      "value": "86400 (1 day)",
+      "detail": "SOA: 86400 (1 day)",
+      "severity": "info"
+    },
+    {
+      "type": "dns_record",
+      "record_type": "SOA",
+      "value": "1800 (30 mins)",
+      "detail": "SOA: 1800 (30 mins)",
+      "severity": "info"
+    },
+    {
+      "type": "dns_record",
+      "record_type": "SOA",
+      "value": "2419200 (28 days)",
+      "detail": "SOA: 2419200 (28 days)",
+      "severity": "info"
+    },
+    {
+      "type": "no_spf",
+      "detail": "No SPF record found \u2014 email spoofing possible",
+      "severity": "medium"
+    },
+    {
+      "type": "no_caa",
+      "detail": "No CAA record \u2014 any CA can issue certificates",
+      "severity": "low"
+    },
+    {
+      "type": "no_dnssec",
+      "detail": "DNSSEC is not enabled \u2014 DNS responses can be spoofed",
+      "severity": "low"
+    },
+    {
+      "type": "wildcard_dns",
+      "resolves_to": "37.97.129.233",
+      "detail": "Wildcard DNS: random subdomain resolves to 37.97.129.233",
+      "severity": "low"
+    }
+  ]
+}

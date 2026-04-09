@@ -1,0 +1,68 @@
+{
+  "findings": [
+    {
+      "type": "open_redirect",
+      "url": "https://nomadark.net/login",
+      "parameter": "url",
+      "payload": "https://evil.com",
+      "redirect_to": "https://discordapp.com/api/oauth2/authorize?response_type=code&client_id=1263462025418375199&redirect_uri=https%3A%2F%2Fnomadark.net%2Fcallback&scope=identify&state=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfX3N0YXRlX3NlY3JldF8iOiJWOXZIRExSQ25USGJFbGc3WnhPTVBFNjNRR0w3UHoifQ.PYUE9UB2TxkwSUaR3cD3FA8IUnQ4cPdCXHjjvEB0x_0&prompt=consent",
+      "severity": "medium"
+    },
+    {
+      "type": "open_redirect",
+      "url": "https://nomadark.net/login",
+      "parameter": "redirect",
+      "payload": "https://evil.com",
+      "redirect_to": "https://discordapp.com/api/oauth2/authorize?response_type=code&client_id=1263462025418375199&redirect_uri=https%3A%2F%2Fnomadark.net%2Fcallback&scope=identify&state=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfX3N0YXRlX3NlY3JldF8iOiJMSmJDSndVSVJOOTM4aHF1Ymc2RVZMMU5zcTJybWMifQ.8hwcCA96mx_5tYnegyuJRPPKEjPdtCz5c5cyRJi_VjE&prompt=consent",
+      "severity": "medium"
+    },
+    {
+      "type": "open_redirect",
+      "url": "https://nomadark.net/login",
+      "parameter": "redirect_url",
+      "payload": "https://evil.com",
+      "redirect_to": "https://discordapp.com/api/oauth2/authorize?response_type=code&client_id=1263462025418375199&redirect_uri=https%3A%2F%2Fnomadark.net%2Fcallback&scope=identify&state=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfX3N0YXRlX3NlY3JldF8iOiJUc3hqQWl1UGNscnNtaE03dGJBRTNTWDhIazU2NEcifQ.yGQni1_nPoSoSOn_JlMR1bQhDeAuuDZb6LmiugPV7Wc&prompt=consent",
+      "severity": "medium"
+    },
+    {
+      "type": "open_redirect",
+      "url": "https://nomadark.net/login",
+      "parameter": "redirect_uri",
+      "payload": "https://evil.com",
+      "redirect_to": "https://discordapp.com/api/oauth2/authorize?response_type=code&client_id=1263462025418375199&redirect_uri=https%3A%2F%2Fnomadark.net%2Fcallback&scope=identify&state=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfX3N0YXRlX3NlY3JldF8iOiIzb3dPODBFOXhtN20wVmF4a1FyQlh6UEtmZGJpTVQifQ.YK8YS8LISF845gJK-DBJ6GSS_BapJfyB3nmXiSM7108&prompt=consent",
+      "severity": "medium"
+    },
+    {
+      "type": "open_redirect",
+      "url": "https://nomadark.net/login",
+      "parameter": "return",
+      "payload": "https://evil.com",
+      "redirect_to": "https://discordapp.com/api/oauth2/authorize?response_type=code&client_id=1263462025418375199&redirect_uri=https%3A%2F%2Fnomadark.net%2Fcallback&scope=identify&state=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfX3N0YXRlX3NlY3JldF8iOiJpOXZtS09JZWFHUEp0YjZyc0FKV1I2b1dqb25rOXgifQ.S_ZgAfOdQ2lyVgt5_HaPVAHMSC9iUbT57WgYA_Fdfxw&prompt=consent",
+      "severity": "medium"
+    },
+    {
+      "type": "open_redirect",
+      "url": "https://nomadark.net/login",
+      "parameter": "return_url",
+      "payload": "https://evil.com",
+      "redirect_to": "https://discordapp.com/api/oauth2/authorize?response_type=code&client_id=1263462025418375199&redirect_uri=https%3A%2F%2Fnomadark.net%2Fcallback&scope=identify&state=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfX3N0YXRlX3NlY3JldF8iOiJmTkF0NzQ4TG44bUplSXhsR0liblk4NXRRZzF2eHoifQ.Q-NfxJh78gkza3TDQraqtBJuVSsUEWRjb5Ws9aXwbmM&prompt=consent",
+      "severity": "medium"
+    },
+    {
+      "type": "open_redirect",
+      "url": "https://nomadark.net/login",
+      "parameter": "returnurl",
+      "payload": "https://evil.com",
+      "redirect_to": "https://discordapp.com/api/oauth2/authorize?response_type=code&client_id=1263462025418375199&redirect_uri=https%3A%2F%2Fnomadark.net%2Fcallback&scope=identify&state=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfX3N0YXRlX3NlY3JldF8iOiJ2aWs0STY4ZXVQM0NVdlFrS1FEWWxmakV0MEZvUTQifQ.bXANoVBL34kvS2dAihaCM3cG2sATC7c7fTceCm1z6Z8&prompt=consent",
+      "severity": "medium"
+    },
+    {
+      "type": "open_redirect",
+      "url": "https://nomadark.net/login",
+      "parameter": "returnto",
+      "payload": "https://evil.com",
+      "redirect_to": "https://discordapp.com/api/oauth2/authorize?response_type=code&client_id=1263462025418375199&redirect_uri=https%3A%2F%2Fnomadark.net%2Fcallback&scope=identify&state=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfX3N0YXRlX3NlY3JldF8iOiJucUtXTEJYZjNKNVZjMWlqMlVzNXJPN1hSRXJqTTYifQ.4YfO4qLVT18VIzpkDacygUxC5P1myGzVvcZwtwYAXd4&prompt=consent",
+      "severity": "medium"
+    }
+  ]
+}

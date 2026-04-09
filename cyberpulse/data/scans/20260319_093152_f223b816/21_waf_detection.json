@@ -1,0 +1,16 @@
+{
+  "findings": [
+    {
+      "type": "waf_detected",
+      "waf": "Cloudflare",
+      "method": "header_analysis",
+      "detail": "WAF 'Cloudflare' detected through response headers",
+      "severity": "info"
+    },
+    {
+      "type": "no_waf",
+      "detail": "No WAF detected \u2014 target may be unprotected against web attacks",
+      "severity": "medium"
+    }
+  ]
+}

@@ -1,0 +1,5 @@
+{
+  "stdout": "- Nikto v2.5.0\n---------------------------------------------------------------------------\n+ Target IP:          192.168.1.100\n+ Target Hostname:    example.com\n+ Target Port:        80\n+ Start Time:         2025-01-01 00:00:00\n---------------------------------------------------------------------------\n+ Server: Apache/2.4.50\n+ OSVDB-3268: /admin/: Directory indexing found.\n+ OSVDB-3092: /admin/: This might be interesting...\n+ /config.php: PHP Config file may contain database IDs and passwords.\n+ OSVDB-3233: /icons/README: Apache default file found.\n+ /phpmyadmin/: phpMyAdmin directory found.\n+ 7 items checked: 5 findings.\n---------------------------------------------------------------------------\n+ End Time:           2025-01-01 00:01:00",
+  "stderr": "",
+  "return_code": 0
+}

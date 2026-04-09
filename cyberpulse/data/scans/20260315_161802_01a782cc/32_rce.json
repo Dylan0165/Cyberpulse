@@ -1,0 +1,123 @@
+{
+  "findings": [
+    {
+      "type": "rce_output",
+      "parameter": "cmd",
+      "payload": "; whoami",
+      "detail": "Command injection via 'cmd' \u2014 output matched: (?:root|www-data|apache|nginx|nobody|admin)",
+      "severity": "critical"
+    },
+    {
+      "type": "rce_output",
+      "parameter": "exec",
+      "payload": "; whoami",
+      "detail": "Command injection via 'exec' \u2014 output matched: (?:root|www-data|apache|nginx|nobody|admin)",
+      "severity": "critical"
+    },
+    {
+      "type": "rce_output",
+      "parameter": "command",
+      "payload": "; whoami",
+      "detail": "Command injection via 'command' \u2014 output matched: (?:root|www-data|apache|nginx|nobody|admin)",
+      "severity": "critical"
+    },
+    {
+      "type": "rce_output",
+      "parameter": "execute",
+      "payload": "; whoami",
+      "detail": "Command injection via 'execute' \u2014 output matched: (?:root|www-data|apache|nginx|nobody|admin)",
+      "severity": "critical"
+    },
+    {
+      "type": "rce_output",
+      "parameter": "ping",
+      "payload": "; whoami",
+      "detail": "Command injection via 'ping' \u2014 output matched: (?:root|www-data|apache|nginx|nobody|admin)",
+      "severity": "critical"
+    },
+    {
+      "type": "rce_output",
+      "parameter": "query",
+      "payload": "; whoami",
+      "detail": "Command injection via 'query' \u2014 output matched: (?:root|www-data|apache|nginx|nobody|admin)",
+      "severity": "critical"
+    },
+    {
+      "type": "rce_output",
+      "parameter": "host",
+      "payload": "; whoami",
+      "detail": "Command injection via 'host' \u2014 output matched: (?:root|www-data|apache|nginx|nobody|admin)",
+      "severity": "critical"
+    },
+    {
+      "type": "rce_output",
+      "parameter": "ip",
+      "payload": "; whoami",
+      "detail": "Command injection via 'ip' \u2014 output matched: (?:root|www-data|apache|nginx|nobody|admin)",
+      "severity": "critical"
+    },
+    {
+      "type": "rce_output",
+      "parameter": "address",
+      "payload": "; whoami",
+      "detail": "Command injection via 'address' \u2014 output matched: (?:root|www-data|apache|nginx|nobody|admin)",
+      "severity": "critical"
+    },
+    {
+      "type": "rce_output",
+      "parameter": "domain",
+      "payload": "; whoami",
+      "detail": "Command injection via 'domain' \u2014 output matched: (?:root|www-data|apache|nginx|nobody|admin)",
+      "severity": "critical"
+    },
+    {
+      "type": "rce_output",
+      "parameter": "url",
+      "payload": "; whoami",
+      "detail": "Command injection via 'url' \u2014 output matched: (?:root|www-data|apache|nginx|nobody|admin)",
+      "severity": "critical"
+    },
+    {
+      "type": "rce_output",
+      "parameter": "target",
+      "payload": "; whoami",
+      "detail": "Command injection via 'target' \u2014 output matched: (?:root|www-data|apache|nginx|nobody|admin)",
+      "severity": "critical"
+    },
+    {
+      "type": "rce_output",
+      "parameter": "filename",
+      "payload": "; whoami",
+      "detail": "Command injection via 'filename' \u2014 output matched: (?:root|www-data|apache|nginx|nobody|admin)",
+      "severity": "critical"
+    },
+    {
+      "type": "rce_output",
+      "parameter": "file",
+      "payload": "; whoami",
+      "detail": "Command injection via 'file' \u2014 output matched: (?:root|www-data|apache|nginx|nobody|admin)",
+      "severity": "critical"
+    },
+    {
+      "type": "rce_output",
+      "parameter": "path",
+      "payload": "; whoami",
+      "detail": "Command injection via 'path' \u2014 output matched: (?:root|www-data|apache|nginx|nobody|admin)",
+      "severity": "critical"
+    },
+    {
+      "type": "rce_output",
+      "parameter": "dir",
+      "payload": "; whoami",
+      "detail": "Command injection via 'dir' \u2014 output matched: (?:root|www-data|apache|nginx|nobody|admin)",
+      "severity": "critical"
+    },
+    {
+      "type": "rce_output",
+      "parameter": "log",
+      "payload": "; whoami",
+      "detail": "Command injection via 'log' \u2014 output matched: (?:root|www-data|apache|nginx|nobody|admin)",
+      "severity": "critical"
+    }
+  ]
+}

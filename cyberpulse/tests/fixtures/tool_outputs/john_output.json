@@ -1,0 +1,5 @@
+{
+  "stdout": "john version 1.9.0\nLoaded 3 password hashes with 3 different salts (bcrypt [Blowfish 32/64 X3])\nPress 'q' or Ctrl-C to abort\nadmin:$2a$10$...:  admin123     (admin)\nuser:$2a$10$...:  password1     (user)\n3g 0:00:00:05 DONE 2/3 (0.6g/s) 100%\n2 password hashes cracked, 1 left",
+  "stderr": "",
+  "return_code": 0
+}

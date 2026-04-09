@@ -1,0 +1,95 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap');
+
+@layer base {
+  :root {
+    /* CyberPulse design tokens — match desktop */
+    --background: 0 0% 96%;
+    --foreground: 0 0% 7%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 7%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 7%;
+    --primary: 0 0% 10%;
+    --primary-foreground: 0 0% 96%;
+    --secondary: 0 0% 92%;
+    --secondary-foreground: 0 0% 7%;
+    --muted: 0 0% 92%;
+    --muted-foreground: 0 0% 33%;
+    --accent: 0 0% 92%;
+    --accent-foreground: 0 0% 7%;
+    --destructive: 0 80% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 0 0% 83%;
+    --input: 0 0% 83%;
+    --ring: 0 0% 10%;
+    --radius: 0px;
+
+    /* Severity palette */
+    --critical: #ff3333;
+    --high: #ff8800;
+    --medium: #ffcc00;
+    --low: #888888;
+    --info: #aaaaaa;
+  }
+
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+    font-size: 13px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+/* No border-radius on cards */
+.rounded-lg, .rounded-xl, .rounded-md {
+  border-radius: 0px !important;
+}
+.rounded-full {
+  border-radius: 2px !important;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: hsl(var(--muted));
+}
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted-foreground) / 0.3);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground) / 0.5);
+}
+
+/* Terminal output styling */
+.terminal-output {
+  font-family: "JetBrains Mono", "Fira Code", monospace;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+/* Severity badges */
+.badge-critical { background: var(--critical); color: #fff; }
+.badge-high     { background: var(--high); color: #000; }
+.badge-medium   { background: var(--medium); color: #000; }
+.badge-low      { background: transparent; border: 1px solid var(--low); color: var(--low); }
+.badge-info     { background: transparent; border: 1px solid var(--info); color: var(--info); }
+
+/* Scan phase animation */
+@keyframes pulse-scan {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+.animate-pulse-scan {
+  animation: pulse-scan 2s ease-in-out infinite;
+}

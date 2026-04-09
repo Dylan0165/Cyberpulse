@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CyberPulse — Scan Voortgang</title>
+    <link rel="stylesheet" href="{{ request.url_for('static', path='style.css') }}">
+</head>
+<body>
+<div class="app-shell">
+
+    <aside class="sidebar" id="sidebar">
+        <a href="/app" class="sidebar-brand">
+            <div class="brand-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            </div>
+            <div>
+                <span class="brand-name">CyberPulse</span>
+                <span class="brand-tagline">v3.0 · 70 modules</span>
+            </div>
+        </a>
+        <nav class="sidebar-nav">
+            <div class="nav-group">
+                <span class="nav-group-label">Platform</span>
+                <a href="/" class="nav-item" style="color:var(--text-muted);font-size:.8rem;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+                    Terug naar website
+                </a>
+                <a href="/app" class="nav-item">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                    Dashboard
+                </a>
+            </div>
+            <div class="nav-group">
+                <span class="nav-group-label">Huidig</span>
+                <a href="#" class="nav-item active">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                    Scan Voortgang
+                </a>
+            </div>
+        </nav>
+        <div class="sidebar-footer">
+            <div class="status-row">
+                <span class="status-dot"></span>
+                Scan actief
+            </div>
+            <div class="sidebar-meta">Scan ID: <span style="font-family:var(--font-mono);color:var(--blue);">{{ scan_id[:12] }}…</span></div>
+        </div>
+    </aside>
+
+    <div class="main-wrapper" id="main-wrapper">
+        <header class="topbar">
+            <button class="sidebar-toggle" id="sidebar-toggle">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+            </button>
+            <span class="topbar-title">Scan Voortgang</span>
+            <div class="topbar-spacer"></div>
+            <div class="topbar-chip">
+                <span class="dot"></span>
+                Live
+            </div>
+        </header>
+
+        <main class="page-content" id="progress-container" data-scan-id="{{ scan_id }}">
+
+            <div class="progress-header">
+                <h1>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--success);"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                    Scan Bezig
+                </h1>
+                <p>Scan ID: <span class="scan-id-chip">{{ scan_id }}</span></p>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="progress-panel">
+                <div class="progress-info">
+                    <span class="label" id="progress-label">Initialiseren…</span>
+                    <span class="pct" id="progress-percent">0%</span>
+                </div>
+                <div class="progress-track">
+                    <div class="progress-fill" id="progress-fill"></div>
+                </div>
+                <div class="progress-meta">
+                    <span>
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+                        <span id="modules-done">0</span> modules voltooid
+                    </span>
+                    <span>
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                        Gestart: <span id="scan-start-time">—</span>
+                    </span>
+                    <span>
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 3l14 9-14 9V3z"/></svg>
+                        ETA: <span id="eta-display">—</span>
+                    </span>
+                </div>
+            </div>
+
+            <!-- Two-column layout: terminal left, module timeline right -->
+            <div class="progress-layout">
+
+                <!-- Terminal -->
+                <div class="terminal-panel">
+                    <div class="terminal-chrome">
+                        <span class="dot-close"></span>
+                        <span class="dot-min"></span>
+                        <span class="dot-full"></span>
+                        <span class="terminal-label">cyberpulse@scanner ~ $</span>
+                    </div>
+                    <div class="terminal-output" id="terminal-output">
+                        <div class="log-line"><span class="log-info">CyberPulse Scanner v3.0 geïnitialiseerd…</span></div>
+                    </div>
+                </div>
+
+                <!-- Module Timeline -->
+                <div class="module-timeline">
+                    <div class="timeline-header">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                        Module Voortgang
+                    </div>
+                    <ul class="timeline-body" id="module-timeline-list">
+                        <li class="timeline-item pending" id="tl-init">
+                            <span class="timeline-dot"></span>
+                            <span class="timeline-text">Wachten op start…</span>
+                        </li>
+                    </ul>
+                </div>
+
+            </div>
+
+            <!-- Status Bar -->
+            <div class="scan-status-bar" id="scan-status">
+                <span class="pulse-dot"></span>
+                Verbinden met scanner…
+            </div>
+
+        </main>
+    </div>
+</div>
+
+<script src="{{ request.url_for('static', path='app.js') }}"></script>
+</body>
+</html>

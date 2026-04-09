@@ -1,0 +1,1913 @@
+{
+  "scan_id": "20260315_011334_253d3711",
+  "target": "d-esign.nl",
+  "scan_type": "custom",
+  "started_at": "2026-03-15T01:15:45.049881+00:00",
+  "modules_run": [
+    "01",
+    "02",
+    "03",
+    "04",
+    "05",
+    "06",
+    "07",
+    "08",
+    "09",
+    "10",
+    "11",
+    "12",
+    "13",
+    "14",
+    "15",
+    "16",
+    "17",
+    "18",
+    "19",
+    "20"
+  ],
+  "results": [
+    {
+      "module_id": "01",
+      "name": "Port Scanning",
+      "phase": "reconnaissance",
+      "success": true,
+      "findings": [
+        {
+          "type": "open_port",
+          "port": 22,
+          "protocol": "tcp",
+          "service": "SSH",
+          "banner": "SSH-2.0-OpenSSH_9.6p1 Ubuntu-3ubuntu13.15\r\nInvalid SSH identification string.",
+          "severity": "info"
+        },
+        {
+          "type": "open_port",
+          "port": 80,
+          "protocol": "tcp",
+          "service": "HTTP",
+          "banner": "",
+          "severity": "info"
+        },
+        {
+          "type": "open_port",
+          "port": 443,
+          "protocol": "tcp",
+          "service": "HTTPS",
+          "banner": "",
+          "severity": "info"
+        }
+      ],
+      "raw_output": "Resolved d-esign.nl -> 37.97.129.233\nnmap not available ('nmap program was not found in path. PATH is : c:\\\\Users\\\\dylan\\\\AppData\\\\Roaming\\\\Code\\\\User\\\\globalStorage\\\\github.copilot-chat\\\\debugCommand;c:\\\\Users\\\\dylan\\\\AppData\\\\Roaming\\\\Code\\\\User\\\\globalStorage\\\\github.copilot-chat\\\\copilotCli;C:\\\\Users\\\\dylan\\\\AppData\\\\Local\\\\Programs\\\\Microsoft VS Code;C:\\\\Program Files\\\\Eclipse Adoptium\\\\jdk-21.0.10.7-hotspot\\\\bin;C:\\\\Program Files\\\\Eclipse Adoptium\\\\jdk-17.0.18.8-hotspot\\\\bin;C:\\\\Program Files\\\\Microsoft SDKs\\\\Azure\\\\CLI2\\\\wbin;C:\\\\Python313\\\\Scripts\\\\;C:\\\\Python313\\\\;C:\\\\Program Files (x86)\\\\Common Files\\\\Oracle\\\\Java\\\\java8path;C:\\\\Program Files (x86)\\\\Common Files\\\\Oracle\\\\Java\\\\javapath;C:\\\\WINDOWS\\\\system32;C:\\\\WINDOWS;C:\\\\WINDOWS\\\\System32\\\\Wbem;C:\\\\WINDOWS\\\\System32\\\\WindowsPowerShell\\\\v1.0\\\\;C:\\\\WINDOWS\\\\System32\\\\OpenSSH\\\\;C:\\\\Program Files (x86)\\\\NVIDIA Corporation\\\\PhysX\\\\Common;C:\\\\Program Files\\\\dotnet\\\\;C:\\\\Program Files\\\\NVIDIA Corporation\\\\NVIDIA app\\\\NvDLISR;C:\\\\ProgramData\\\\chocolatey\\\\bin;C:\\\\composer;C:\\\\Program Files\\\\PuTTY\\\\;C:\\\\Program Files\\\\nodejs\\\\;C:\\\\Program Files\\\\Git\\\\cmd;C:\\\\Program Files\\\\WireGuard\\\\;C:\\\\Users\\\\dylan\\\\AppData\\\\Local\\\\Microsoft\\\\WindowsApps;C:\\\\Users\\\\dylan\\\\AppData\\\\Local\\\\Programs\\\\Microsoft VS Code\\\\bin;C:\\\\Program Files\\\\Airshipper;C:\\\\Users\\\\dylan\\\\AppData\\\\Local\\\\GitHubDesktop\\\\bin;C:\\\\ProgramData\\\\MySQL\\\\MySQL Server 9.1\\\\bin;C:\\\\Users\\\\dylan\\\\Desktop\\\\Nieuwe map\\\\php-8.4.2-Win32-vs17-x64;C:\\\\Users\\\\dylan\\\\AppData\\\\Local\\\\ComposerSetup\\\\bin;C:\\\\Users\\\\dylan\\\\AppData\\\\Roaming\\\\Composer\\\\vendor\\\\bin;C:\\\\Program Files\\\\MySQL\\\\MySQL Server 8.0\\\\bin;C:\\\\php-8.4.3;C:\\\\Program Files\\\\7-Zip\\\\;C:\\\\Users\\\\dylan\\\\AppData\\\\Roaming\\\\Python\\\\Python313\\\\Scripts;C:\\\\Users\\\\dylan\\\\AppData\\\\Roaming\\\\npm;C:\\\\Users\\\\dylan\\\\AppData\\\\Local\\\\Microsoft\\\\WinGet\\\\Packages\\\\Gyan.FFmpeg_Microsoft.Winget.Source_8wekyb3d8bbwe\\\\ffmpeg-7.1.1-full_build\\\\bin;C:\\\\flutter\\\\bin;C:\\\\Users\\\\dylan\\\\AppData\\\\Local\\\\Android\\\\Sdk\\\\platform-tools;c:\\\\Users\\\\dylan\\\\.vscode\\\\extensions\\\\ms-python.debugpy-2025.18.0-win32-x64\\\\bundled\\\\scripts\\\\noConfigScripts'), falling back to socket scan\nSocket scan on 37.97.129.233 (32 ports, timeout=2s)\n  22/tcp open SSH\n  80/tcp open HTTP\n  443/tcp open HTTPS\n\nTotal open ports: 3",
+      "error": null,
+      "duration": 60.61
+    },
+    {
+      "module_id": "02",
+      "name": "Service Enumeration",
+      "phase": "reconnaissance",
+      "success": true,
+      "findings": [
+        {
+          "type": "service_version",
+          "port": 22,
+          "banner": "SSH-2.0-OpenSSH_9.6p1 Ubuntu-3ubuntu13.15",
+          "severity": "info"
+        },
+        {
+          "type": "http_fingerprint",
+          "port": 80,
+          "server": "",
+          "x_powered_by": "",
+          "detail": "Server: , X-Powered-By:",
+          "severity": "info"
+        },
+        {
+          "type": "http_fingerprint",
+          "port": 443,
+          "server": "nginx/1.29.4",
+          "x_powered_by": "",
+          "detail": "Server: nginx/1.29.4, X-Powered-By:",
+          "severity": "info"
+        },
+        {
+          "type": "ssh_fingerprint",
+          "port": 22,
+          "detail": "SSH-2.0-OpenSSH_9.6p1 Ubuntu-3ubuntu13.15\r",
+          "severity": "info"
+        }
+      ],
+      "raw_output": "Loaded 3 open ports from port scan\n  22: SSH-2.0-OpenSSH_9.6p1 Ubuntu-3ubuntu13.15\n  80: no banner\n  443: no banner\n  HTTP@80: Server: , X-Powered-By:\n  HTTPS@443: Server: nginx/1.29.4, X-Powered-By:\n  SSH@22: SSH-2.0-OpenSSH_9.6p1 Ubuntu-3ubuntu13.15\r",
+      "error": null,
+      "duration": 6.33
+    },
+    {
+      "module_id": "03",
+      "name": "Web Discovery",
+      "phase": "reconnaissance",
+      "success": true,
+      "findings": [
+        {
+          "type": "dns_record",
+          "record_type": "A",
+          "value": "37.97.129.233",
+          "severity": "info"
+        },
+        {
+          "type": "dns_record",
+          "record_type": "MX",
+          "value": "10 d-esign.nl.",
+          "severity": "info"
+        },
+        {
+          "type": "dns_record",
+          "record_type": "NS",
+          "value": "ns1.transip.nl.",
+          "severity": "info"
+        },
+        {
+          "type": "dns_record",
+          "record_type": "NS",
+          "value": "ns0.transip.net.",
+          "severity": "info"
+        },
+        {
+          "type": "dns_record",
+          "record_type": "NS",
+          "value": "ns2.transip.eu.",
+          "severity": "info"
+        },
+        {
+          "type": "dns_record",
+          "record_type": "TXT",
+          "value": "\"v=spf1 ~all\"",
+          "severity": "info"
+        },
+        {
+          "type": "dns_misconfiguration",
+          "detail": "SPF record uses ~all (softfail, not strict)",
+          "value": "v=spf1 ~all",
+          "severity": "medium"
+        },
+        {
+          "type": "dns_record",
+          "record_type": "SOA",
+          "value": "ns0.transip.net. hostmaster.transip.nl. 2026021000 86400 1800 2419200 300",
+          "severity": "info"
+        },
+        {
+          "type": "dns_misconfiguration",
+          "detail": "No DMARC record found",
+          "severity": "medium"
+        }
+      ],
+      "raw_output": "DNS enumeration for d-esign.nl\n  A: 37.97.129.233\n  AAAA: no answer\n  MX: 10 d-esign.nl.\n  NS: ns1.transip.nl., ns0.transip.net., ns2.transip.eu.\n  TXT: \"v=spf1 ~all\"\n  SOA: ns0.transip.net. hostmaster.transip.nl. 2026021000 86400 1800 2419200 300\n  CNAME: no answer\n  DMARC: not found\n  AXFR ns1.transip.nl: denied (good)\n  AXFR ns0.transip.net: denied (good)\n  AXFR ns2.transip.eu: denied (good)",
+      "error": null,
+      "duration": 2.4
+    },
+    {
+      "module_id": "04",
+      "name": "Web Vulnerabilities",
+      "phase": "scanning",
+      "success": true,
+      "findings": [
+        {
+          "type": "subdomain",
+          "subdomain": "admin.d-esign.nl",
+          "ip": "37.97.129.233",
+          "severity": "info"
+        },
+        {
+          "type": "interesting_subdomain",
+          "subdomain": "admin.d-esign.nl",
+          "reason": "Contains 'admin' — may expose sensitive resources",
+          "severity": "medium"
+        },
+        {
+          "type": "subdomain",
+          "subdomain": "api.d-esign.nl",
+          "ip": "37.97.129.233",
+          "severity": "info"
+        },
+        {
+          "type": "subdomain",
+          "subdomain": "app.d-esign.nl",
+          "ip": "37.97.129.233",
+          "severity": "info"
+        },
+        {
+          "type": "subdomain",
+          "subdomain": "assets.d-esign.nl",
+          "ip": "37.97.129.233",
+          "severity": "info"
+        },
+        {
+          "type": "subdomain",
+          "subdomain": "auth.d-esign.nl",
+          "ip": "37.97.129.233",
+          "severity": "info"
+        },
+        {
+          "type": "subdomain",
+          "subdomain": "autodiscover.d-esign.nl",
+          "ip": "37.97.129.233",
+          "severity": "info"
+        },
+        {
+          "type": "subdomain",
+          "subdomain": "backup.d-esign.nl",
+          "ip": "37.97.129.233",
+          "severity": "info"
+        },
+        {
+          "type": "interesting_subdomain",
+          "subdomain": "backup.d-esign.nl",
+          "reason": "Contains 'backup' — may expose sensitive resources",
+          "severity": "medium"
+        },
+        {
+          "type": "subdomain",
+          "subdomain": "beta.d-esign.nl",
+          "ip": "37.97.129.233",
+          "severity": "info"
+        },
+        {
+          "type": "subdomain",
+          "subdomain": "blog.d-esign.nl",
+          "ip": "37.97.129.233",
+          "severity": "info"
+        },
+        {
+          "type": "subdomain",
+          "subdomain": "cdn.d-esign.nl",
+          "ip": "37.97.129.233",
+          "severity": "info"
+        },
+        {
+          "type": "subdomain",
+          "subdomain": "ci.d-esign.nl",
+          "ip": "37.97.129.233",
+          "severity": "info"
+        },
+        {
+          "type": "subdomain",
+          "subdomain": "confluence.d-esign.nl",
+          "ip": "37.97.129.233",
+          "severity": "info"
+        },
+        {
+          "type": "subdomain",
+          "subdomain": "cpanel.d-esign.nl",
+          "ip": "37.97.129.233",
+          "severity": "info"
+        },
+        {
+          "type": "subdomain",
+          "subdomain": "d-esign.nl",
+          "ip": "37.97.129.233",
+          "severity": "info"
+        },
+        {
+          "type": "subdomain",
+          "subdomain": "dashboard.d-esign.nl",
+          "ip": "37.97.129.233",
+          "severity": "info"
+        },
+        {
+          "type": "subdomain",
+          "subdomain": "db.d-esign.nl",
+          "ip": "37.97.129.233",
+          "severity": "info"
+        },
+        {
+          "type": "subdomain",
+          "subdomain": "dev.d-esign.nl",
+          "ip": "37.97.129.233",
+          "severity": "info"
+        },
+        {
+          "type": "interesting_subdomain",
+          "subdomain": "dev.d-esign.nl",
+          "reason": "Contains 'dev' — may expose sensitive resources",
+          "severity": "medium"
+        },
+        {
+          "type": "subdomain",
+          "subdomain": "dns.d-esign.nl",
+          "ip": "37.97.129.233",
+          "severity": "info"
+        },
+        {
+          "type": "subdomain",
+          "subdomain": "docs.d-esign.nl",
+          "ip": "37.97.129.233",
+          "severity": "info"
+        },
+        {
+          "type": "subdomain",
+          "subdomain": "elastic.d-esign.nl",
+          "ip": "37.97.129.233",
+          "severity": "info"
+        },
+        {
+          "type": "subdomain",
+          "subdomain": "exchange.d-esign.nl",
+          "ip": "37.97.129.233",
+          "severity": "info"
+        },
+        {
+          "type": "subdomain",
+          "subdomain": "firewall.d-esign.nl",
+          "ip": "37.97.129.233",
+          "severity": "info"
+        },
+        {
+          "type": "subdomain",
+          "subdomain": "ftp.d-esign.nl",
+          "ip": "37.97.129.233",
+          "severity": "info"
+        },
+        {
+          "type": "subdomain",
+          "subdomain": "gateway.d-esign.nl",
+          "ip": "37.97.129.233",
+          "severity": "info"
+        },
+        {
+          "type": "subdomain",
+          "subdomain": "gitlab.d-esign.nl",
+          "ip": "37.97.129.233",
+          "severity": "info"
+        },
+        {
+          "type": "interesting_subdomain",
+          "subdomain": "gitlab.d-esign.nl",
+          "reason": "Contains 'gitlab' — may expose sensitive resources",
+          "severity": "medium"
+        },
+        {
+          "type": "subdomain",
+          "subdomain": "grafana.d-esign.nl",
+          "ip": "37.97.129.233",
+          "severity": "info"
+        },
+        {
+          "type": "subdomain",
+          "subdomain": "images.d-esign.nl",
+          "ip": "37.97.129.233",
+          "severity": "info"
+        },
+        {
+          "type": "subdomain",
+          "subdomain": "imap.d-esign.nl",
+          "ip": "37.97.129.233",
+          "severity": "info"
+        },
+        {
+          "type": "subdomain",
+          "subdomain": "img.d-esign.nl",
+          "ip": "37.97.129.233",
+          "severity": "info"
+        },
+        {
+          "type": "subdomain",
+          "subdomain": "internal.d-esign.nl",
+          "ip": "37.97.129.233",
+          "severity": "info"
+        },
+        {
+          "type": "interesting_subdomain",
+          "subdomain": "internal.d-esign.nl",
+          "reason": "Contains 'internal' — may expose sensitive resources",
+          "severity": "medium"
+        },
+        {
+          "type": "subdomain",
+          "subdomain": "intranet.d-esign.nl",
+          "ip": "37.97.129.233",
+          "severity": "info"
+        },
+        {
+          "type": "subdomain",
+          "subdomain": "jenkins.d-esign.nl",
+          "ip": "37.97.129.233",
+          "severity": "info"
+        },
+        {
+          "type": "interesting_subdomain",
+          "subdomain": "jenkins.d-esign.nl",
+          "reason": "Contains 'jenkins' — may expose sensitive resources",
+          "severity": "medium"
+        },
+        {
+          "type": "subdomain",
+          "subdomain": "jira.d-esign.nl",
+          "ip": "37.97.129.233",
+          "severity": "info"
+        },
+        {
+          "type": "subdomain",
+          "subdomain": "kafka.d-esign.nl",
+          "ip": "37.97.129.233",
+          "severity": "info"
+        },
+        {
+          "type": "subdomain",
+          "subdomain": "kibana.d-esign.nl",
+          "ip": "37.97.129.233",
+          "severity": "info"
+        },
+        {
+          "type": "subdomain",
+          "subdomain": "lb.d-esign.nl",
+          "ip": "37.97.129.233",
+          "severity": "info"
+        },
+        {
+          "type": "subdomain",
+          "subdomain": "loadbalancer.d-esign.nl",
+          "ip": "37.97.129.233",
+          "severity": "info"
+        },
+        {
+          "type": "subdomain",
+          "subdomain": "login.d-esign.nl",
+          "ip": "37.97.129.233",
+          "severity": "info"
+        },
+        {
+          "type": "subdomain",
+          "subdomain": "m.d-esign.nl",
+          "ip": "37.97.129.233",
+          "severity": "info"
+        },
+        {
+          "type": "subdomain",
+          "subdomain": "mail.d-esign.nl",
+          "ip": "37.97.129.233",
+          "severity": "info"
+        },
+        {
+          "type": "subdomain",
+          "subdomain": "media.d-esign.nl",
+          "ip": "37.97.129.233",
+          "severity": "info"
+        },
+        {
+          "type": "subdomain",
+          "subdomain": "mobile.d-esign.nl",
+          "ip": "37.97.129.233",
+          "severity": "info"
+        },
+        {
+          "type": "subdomain",
+          "subdomain": "mongo.d-esign.nl",
+          "ip": "37.97.129.233",
+          "severity": "info"
+        },
+        {
+          "type": "subdomain",
+          "subdomain": "monitor.d-esign.nl",
+          "ip": "37.97.129.233",
+          "severity": "info"
+        },
+        {
+          "type": "subdomain",
+          "subdomain": "mq.d-esign.nl",
+          "ip": "37.97.129.233",
+          "severity": "info"
+        },
+        {
+          "type": "subdomain",
+          "subdomain": "mx.d-esign.nl",
+          "ip": "37.97.129.233",
+          "severity": "info"
+        },
+        {
+          "type": "subdomain",
+          "subdomain": "mysql.d-esign.nl",
+          "ip": "37.97.129.233",
+          "severity": "info"
+        },
+        {
+          "type": "subdomain",
+          "subdomain": "new.d-esign.nl",
+          "ip": "37.97.129.233",
+          "severity": "info"
+        },
+        {
+          "type": "subdomain",
+          "subdomain": "ns1.d-esign.nl",
+          "ip": "37.97.129.233",
+          "severity": "info"
+        },
+        {
+          "type": "subdomain",
+          "subdomain": "ns2.d-esign.nl",
+          "ip": "37.97.129.233",
+          "severity": "info"
+        },
+        {
+          "type": "subdomain",
+          "subdomain": "office.d-esign.nl",
+          "ip": "37.97.129.233",
+          "severity": "info"
+        },
+        {
+          "type": "subdomain",
+          "subdomain": "old.d-esign.nl",
+          "ip": "37.97.129.233",
+          "severity": "info"
+        },
+        {
+          "type": "interesting_subdomain",
+          "subdomain": "old.d-esign.nl",
+          "reason": "Contains 'old' — may expose sensitive resources",
+          "severity": "medium"
+        },
+        {
+          "type": "subdomain",
+          "subdomain": "owa.d-esign.nl",
+          "ip": "37.97.129.233",
+          "severity": "info"
+        },
+        {
+          "type": "subdomain",
+          "subdomain": "panel.d-esign.nl",
+          "ip": "37.97.129.233",
+          "severity": "info"
+        },
+        {
+          "type": "subdomain",
+          "subdomain": "plesk.d-esign.nl",
+          "ip": "37.97.129.233",
+          "severity": "info"
+        },
+        {
+          "type": "subdomain",
+          "subdomain": "pop.d-esign.nl",
+          "ip": "37.97.129.233",
+          "severity": "info"
+        },
+        {
+          "type": "subdomain",
+          "subdomain": "portal.d-esign.nl",
+          "ip": "37.97.129.233",
+          "severity": "info"
+        },
+        {
+          "type": "subdomain",
+          "subdomain": "postgres.d-esign.nl",
+          "ip": "37.97.129.233",
+          "severity": "info"
+        },
+        {
+          "type": "subdomain",
+          "subdomain": "prometheus.d-esign.nl",
+          "ip": "37.97.129.233",
+          "severity": "info"
+        },
+        {
+          "type": "subdomain",
+          "subdomain": "proxy.d-esign.nl",
+          "ip": "37.97.129.233",
+          "severity": "info"
+        },
+        {
+          "type": "subdomain",
+          "subdomain": "rabbitmq.d-esign.nl",
+          "ip": "37.97.129.233",
+          "severity": "info"
+        },
+        {
+          "type": "subdomain",
+          "subdomain": "redis.d-esign.nl",
+          "ip": "37.97.129.233",
+          "severity": "info"
+        },
+        {
+          "type": "subdomain",
+          "subdomain": "remote.d-esign.nl",
+          "ip": "37.97.129.233",
+          "severity": "info"
+        },
+        {
+          "type": "subdomain",
+          "subdomain": "s3.d-esign.nl",
+          "ip": "37.97.129.233",
+          "severity": "info"
+        },
+        {
+          "type": "subdomain",
+          "subdomain": "sharepoint.d-esign.nl",
+          "ip": "37.97.129.233",
+          "severity": "info"
+        },
+        {
+          "type": "subdomain",
+          "subdomain": "shop.d-esign.nl",
+          "ip": "37.97.129.233",
+          "severity": "info"
+        },
+        {
+          "type": "subdomain",
+          "subdomain": "smtp.d-esign.nl",
+          "ip": "37.97.129.233",
+          "severity": "info"
+        },
+        {
+          "type": "subdomain",
+          "subdomain": "sso.d-esign.nl",
+          "ip": "37.97.129.233",
+          "severity": "info"
+        },
+        {
+          "type": "subdomain",
+          "subdomain": "staging.d-esign.nl",
+          "ip": "37.97.129.233",
+          "severity": "info"
+        },
+        {
+          "type": "interesting_subdomain",
+          "subdomain": "staging.d-esign.nl",
+          "reason": "Contains 'staging' — may expose sensitive resources",
+          "severity": "medium"
+        },
+        {
+          "type": "subdomain",
+          "subdomain": "static.d-esign.nl",
+          "ip": "37.97.129.233",
+          "severity": "info"
+        },
+        {
+          "type": "subdomain",
+          "subdomain": "status.d-esign.nl",
+          "ip": "37.97.129.233",
+          "severity": "info"
+        },
+        {
+          "type": "subdomain",
+          "subdomain": "store.d-esign.nl",
+          "ip": "37.97.129.233",
+          "severity": "info"
+        },
+        {
+          "type": "subdomain",
+          "subdomain": "teams.d-esign.nl",
+          "ip": "37.97.129.233",
+          "severity": "info"
+        },
+        {
+          "type": "subdomain",
+          "subdomain": "test.d-esign.nl",
+          "ip": "37.97.129.233",
+          "severity": "info"
+        },
+        {
+          "type": "interesting_subdomain",
+          "subdomain": "test.d-esign.nl",
+          "reason": "Contains 'test' — may expose sensitive resources",
+          "severity": "medium"
+        },
+        {
+          "type": "subdomain",
+          "subdomain": "v2.d-esign.nl",
+          "ip": "37.97.129.233",
+          "severity": "info"
+        },
+        {
+          "type": "subdomain",
+          "subdomain": "vpn.d-esign.nl",
+          "ip": "37.97.129.233",
+          "severity": "info"
+        },
+        {
+          "type": "subdomain",
+          "subdomain": "webmail.d-esign.nl",
+          "ip": "37.97.129.233",
+          "severity": "info"
+        },
+        {
+          "type": "subdomain",
+          "subdomain": "whm.d-esign.nl",
+          "ip": "37.97.129.233",
+          "severity": "info"
+        },
+        {
+          "type": "subdomain",
+          "subdomain": "wiki.d-esign.nl",
+          "ip": "37.97.129.233",
+          "severity": "info"
+        },
+        {
+          "type": "subdomain",
+          "subdomain": "www.d-esign.nl",
+          "ip": "37.97.129.233",
+          "severity": "info"
+        }
+      ],
+      "raw_output": "Subdomain discovery for d-esign.nl\n\n[crt.sh]\n  d-esign.nl\n\n[DNS brute force — 79 candidates]\n  www.d-esign.nl -> 37.97.129.233\n  mail.d-esign.nl -> 37.97.129.233\n  ftp.d-esign.nl -> 37.97.129.233\n  smtp.d-esign.nl -> 37.97.129.233\n  pop.d-esign.nl -> 37.97.129.233\n  imap.d-esign.nl -> 37.97.129.233\n  webmail.d-esign.nl -> 37.97.129.233\n  admin.d-esign.nl -> 37.97.129.233\n  portal.d-esign.nl -> 37.97.129.233\n  vpn.d-esign.nl -> 37.97.129.233\n  ns1.d-esign.nl -> 37.97.129.233\n  ns2.d-esign.nl -> 37.97.129.233\n  dns.d-esign.nl -> 37.97.129.233\n  mx.d-esign.nl -> 37.97.129.233\n  api.d-esign.nl -> 37.97.129.233\n  dev.d-esign.nl -> 37.97.129.233\n  staging.d-esign.nl -> 37.97.129.233\n  test.d-esign.nl -> 37.97.129.233\n  beta.d-esign.nl -> 37.97.129.233\n  blog.d-esign.nl -> 37.97.129.233\n  shop.d-esign.nl -> 37.97.129.233\n  store.d-esign.nl -> 37.97.129.233\n  app.d-esign.nl -> 37.97.129.233\n  cdn.d-esign.nl -> 37.97.129.233\n  media.d-esign.nl -> 37.97.129.233\n  static.d-esign.nl -> 37.97.129.233\n  assets.d-esign.nl -> 37.97.129.233\n  img.d-esign.nl -> 37.97.129.233\n  images.d-esign.nl -> 37.97.129.233\n  m.d-esign.nl -> 37.97.129.233\n  mobile.d-esign.nl -> 37.97.129.233\n  login.d-esign.nl -> 37.97.129.233\n  auth.d-esign.nl -> 37.97.129.233\n  sso.d-esign.nl -> 37.97.129.233\n  dashboard.d-esign.nl -> 37.97.129.233\n  panel.d-esign.nl -> 37.97.129.233\n  cpanel.d-esign.nl -> 37.97.129.233\n  whm.d-esign.nl -> 37.97.129.233\n  plesk.d-esign.nl -> 37.97.129.233\n  gitlab.d-esign.nl -> 37.97.129.233\n  jenkins.d-esign.nl -> 37.97.129.233\n  ci.d-esign.nl -> 37.97.129.233\n  jira.d-esign.nl -> 37.97.129.233\n  confluence.d-esign.nl -> 37.97.129.233\n  wiki.d-esign.nl -> 37.97.129.233\n  docs.d-esign.nl -> 37.97.129.233\n  status.d-esign.nl -> 37.97.129.233\n  monitor.d-esign.nl -> 37.97.129.233\n  grafana.d-esign.nl -> 37.97.129.233\n  prometheus.d-esign.nl -> 37.97.129.233\n  kibana.d-esign.nl -> 37.97.129.233\n  elastic.d-esign.nl -> 37.97.129.233\n  db.d-esign.nl -> 37.97.129.233\n  mysql.d-esign.nl -> 37.97.129.233\n  postgres.d-esign.nl -> 37.97.129.233\n  redis.d-esign.nl -> 37.97.129.233\n  mongo.d-esign.nl -> 37.97.129.233\n  mq.d-esign.nl -> 37.97.129.233\n  rabbitmq.d-esign.nl -> 37.97.129.233\n  kafka.d-esign.nl -> 37.97.129.233\n  s3.d-esign.nl -> 37.97.129.233\n  backup.d-esign.nl -> 37.97.129.233\n  old.d-esign.nl -> 37.97.129.233\n  new.d-esign.nl -> 37.97.129.233\n  v2.d-esign.nl -> 37.97.129.233\n  internal.d-esign.nl -> 37.97.129.233\n  intranet.d-esign.nl -> 37.97.129.233\n  remote.d-esign.nl -> 37.97.129.233\n  gateway.d-esign.nl -> 37.97.129.233\n  proxy.d-esign.nl -> 37.97.129.233\n  lb.d-esign.nl -> 37.97.129.233\n  loadbalancer.d-esign.nl -> 37.97.129.233\n  firewall.d-esign.nl -> 37.97.129.233\n  exchange.d-esign.nl -> 37.97.129.233\n  owa.d-esign.nl -> 37.97.129.233\n  autodiscover.d-esign.nl -> 37.97.129.233\n  office.d-esign.nl -> 37.97.129.233\n  teams.d-esign.nl -> 37.97.129.233\n  sharepoint.d-esign.nl -> 37.97.129.233\n\nTotal unique subdomains: 80",
+      "error": null,
+      "duration": 13.75
+    },
+    {
+      "module_id": "05",
+      "name": "Injection Testing",
+      "phase": "scanning",
+      "success": true,
+      "findings": [
+        {
+          "type": "missing_security_header",
+          "header": "HSTS",
+          "severity": "medium"
+        },
+        {
+          "type": "missing_security_header",
+          "header": "CSP",
+          "severity": "medium"
+        },
+        {
+          "type": "missing_security_header",
+          "header": "Referrer-Policy",
+          "severity": "low"
+        },
+        {
+          "type": "missing_security_header",
+          "header": "Permissions-Policy",
+          "severity": "low"
+        },
+        {
+          "type": "technology_detected",
+          "technology": "Nginx",
+          "category": "Web Server",
+          "version": "1.29.4",
+          "severity": "info"
+        }
+      ],
+      "raw_output": "Technology detection for d-esign.nl\n\n[https://d-esign.nl] Status: 200\n  [Web Server] Nginx v1.29.4\n\n[Security Headers]\n  HSTS: MISSING\n  CSP: MISSING\n  X-Content-Type-Options: present\n  X-Frame-Options: present\n  X-XSS-Protection: present\n  Referrer-Policy: MISSING\n  Permissions-Policy: MISSING",
+      "error": null,
+      "duration": 0.43
+    },
+    {
+      "module_id": "06",
+      "name": "Authentication",
+      "phase": "scanning",
+      "success": true,
+      "findings": [
+        {
+          "type": "ssl_certificate",
+          "subject": {
+            "commonName": "d-esign.nl"
+          },
+          "issuer": {
+            "countryName": "US",
+            "organizationName": "Let's Encrypt",
+            "commonName": "R12"
+          },
+          "protocol": "TLSv1.3",
+          "cipher": "TLS_AES_128_GCM_SHA256",
+          "severity": "info"
+        }
+      ],
+      "raw_output": "SSL/TLS analysis for d-esign.nl\n  Subject: {'commonName': 'd-esign.nl'}\n  Issuer: {'countryName': 'US', 'organizationName': \"Let's Encrypt\", 'commonName': 'R12'}\n  Valid: Feb 27 10:22:38 2026 GMT - May 28 10:22:37 2026 GMT\n  SANs: d-esign.nl\n  Protocol: TLSv1.3\n  Cipher: TLS_AES_128_GCM_SHA256 (128 bits)\n  Days until expiry: 74\n\n[Protocol Support]\n  TLSv1.0: not supported (good)\n  TLSv1.1: not supported (good)\n\n[HTTP -> HTTPS redirect]\n  HTTP redirects to HTTPS (good)",
+      "error": null,
+      "duration": 1.13
+    },
+    {
+      "module_id": "07",
+      "name": "SSL/TLS Audit",
+      "phase": "scanning",
+      "success": true,
+      "findings": [
+        {
+          "type": "whois_info",
+          "data": {
+            "domain_name": "d-esign.nl",
+            "registrar": "team.blue nl B.V.",
+            "creation_date": "2025-10-31 00:00:00",
+            "expiration_date": "",
+            "updated_date": "2025-10-31 00:00:00",
+            "name_servers": [
+              "",
+              "Creation",
+              "Updated",
+              "ns0.transip.net",
+              "ns1.transip.nl",
+              "ns2.transip.eu"
+            ],
+            "status": [
+              "active"
+            ],
+            "registrant": "",
+            "registrant_org": "",
+            "registrant_country": "",
+            "dnssec": "yes"
+          },
+          "severity": "info"
+        }
+      ],
+      "raw_output": "WHOIS lookup for d-esign.nl\n  domain_name: d-esign.nl\n  registrar: team.blue nl B.V.\n  creation_date: 2025-10-31 00:00:00\n  updated_date: 2025-10-31 00:00:00\n  name_servers: ['', 'Creation', 'Updated', 'ns0.transip.net', 'ns1.transip.nl', 'ns2.transip.eu']\n  status: ['active']\n  dnssec: yes",
+      "error": null,
+      "duration": 0.5
+    },
+    {
+      "module_id": "08",
+      "name": "DNS Reconnaissance",
+      "phase": "reconnaissance",
+      "success": true,
+      "findings": [
+        {
+          "type": "missing_security_header",
+          "header": "HSTS",
+          "ideal": "max-age >= 31536000, includeSubDomains",
+          "severity": "high"
+        },
+        {
+          "type": "missing_security_header",
+          "header": "CSP",
+          "ideal": "Restrict sources for scripts, styles, images",
+          "severity": "high"
+        },
+        {
+          "type": "missing_security_header",
+          "header": "Referrer-Policy",
+          "ideal": "strict-origin-when-cross-origin or no-referrer",
+          "severity": "low"
+        },
+        {
+          "type": "missing_security_header",
+          "header": "Permissions-Policy",
+          "ideal": "Restrict camera, microphone, geolocation, etc.",
+          "severity": "low"
+        },
+        {
+          "type": "missing_security_header",
+          "header": "COOP",
+          "ideal": "same-origin",
+          "severity": "low"
+        },
+        {
+          "type": "missing_security_header",
+          "header": "CORP",
+          "ideal": "same-origin",
+          "severity": "low"
+        },
+        {
+          "type": "information_leakage",
+          "header": "server",
+          "value": "nginx/1.29.4",
+          "detail": "Header 'server' reveals server technology",
+          "severity": "low"
+        }
+      ],
+      "raw_output": "HTTP header analysis for d-esign.nl\n\n[https://d-esign.nl] Status: 200\n\nAll headers:\n  content-encoding: gzip\n  content-type: text/html\n  date: Sun, 15 Mar 2026 01:15:00 GMT\n  etag: W/\"69b4a001-90f\"\n  last-modified: Fri, 13 Mar 2026 23:38:41 GMT\n  server: nginx/1.29.4\n  transfer-encoding: chunked\n  vary: Accept-Encoding\n  x-content-type-options: nosniff\n  x-frame-options: SAMEORIGIN\n  x-xss-protection: 1; mode=block\n\n[Security Headers Check]\n  [MISSING] HSTS\n  [MISSING] CSP\n  [OK] X-Content-Type-Options: nosniff\n  [OK] X-Frame-Options: SAMEORIGIN\n  [MISSING] Referrer-Policy\n  [MISSING] Permissions-Policy\n  [OK] X-XSS-Protection: 1; mode=block\n  [MISSING] COOP\n  [MISSING] CORP\n\n[Information Leakage]\n  [LEAK] server: nginx/1.29.4\n\n[Cookie Security]",
+      "error": null,
+      "duration": 0.22
+    },
+    {
+      "module_id": "09",
+      "name": "Subdomain Enumeration",
+      "phase": "reconnaissance",
+      "success": true,
+      "findings": [
+        {
+          "type": "discovered_path",
+          "path": ".DS_Store",
+          "url": "https://d-esign.nl/.DS_Store",
+          "status_code": 200,
+          "severity": "info"
+        },
+        {
+          "type": "discovered_path",
+          "path": ".bash_history",
+          "url": "https://d-esign.nl/.bash_history",
+          "status_code": 200,
+          "severity": "critical"
+        },
+        {
+          "type": "discovered_path",
+          "path": ".env",
+          "url": "https://d-esign.nl/.env",
+          "status_code": 200,
+          "severity": "critical"
+        },
+        {
+          "type": "discovered_path",
+          "path": ".env.backup",
+          "url": "https://d-esign.nl/.env.backup",
+          "status_code": 200,
+          "severity": "critical"
+        },
+        {
+          "type": "discovered_path",
+          "path": ".env.local",
+          "url": "https://d-esign.nl/.env.local",
+          "status_code": 200,
+          "severity": "critical"
+        },
+        {
+          "type": "discovered_path",
+          "path": ".env.production",
+          "url": "https://d-esign.nl/.env.production",
+          "status_code": 200,
+          "severity": "critical"
+        },
+        {
+          "type": "discovered_path",
+          "path": ".git",
+          "url": "https://d-esign.nl/.git",
+          "status_code": 200,
+          "severity": "critical"
+        },
+        {
+          "type": "discovered_path",
+          "path": ".git/HEAD",
+          "url": "https://d-esign.nl/.git/HEAD",
+          "status_code": 200,
+          "severity": "critical"
+        },
+        {
+          "type": "discovered_path",
+          "path": ".git/config",
+          "url": "https://d-esign.nl/.git/config",
+          "status_code": 200,
+          "severity": "critical"
+        },
+        {
+          "type": "discovered_path",
+          "path": ".htaccess",
+          "url": "https://d-esign.nl/.htaccess",
+          "status_code": 200,
+          "severity": "info"
+        },
+        {
+          "type": "discovered_path",
+          "path": ".htpasswd",
+          "url": "https://d-esign.nl/.htpasswd",
+          "status_code": 200,
+          "severity": "critical"
+        },
+        {
+          "type": "discovered_path",
+          "path": ".mysql_history",
+          "url": "https://d-esign.nl/.mysql_history",
+          "status_code": 200,
+          "severity": "info"
+        },
+        {
+          "type": "discovered_path",
+          "path": ".ssh",
+          "url": "https://d-esign.nl/.ssh",
+          "status_code": 200,
+          "severity": "critical"
+        },
+        {
+          "type": "discovered_path",
+          "path": ".svn",
+          "url": "https://d-esign.nl/.svn",
+          "status_code": 200,
+          "severity": "high"
+        },
+        {
+          "type": "discovered_path",
+          "path": ".svn/entries",
+          "url": "https://d-esign.nl/.svn/entries",
+          "status_code": 200,
+          "severity": "high"
+        },
+        {
+          "type": "discovered_path",
+          "path": ".well-known",
+          "url": "https://d-esign.nl/.well-known",
+          "status_code": 200,
+          "severity": "info"
+        },
+        {
+          "type": "discovered_path",
+          "path": ".well-known/security.txt",
+          "url": "https://d-esign.nl/.well-known/security.txt",
+          "status_code": 200,
+          "severity": "info"
+        },
+        {
+          "type": "discovered_path",
+          "path": "Dockerfile",
+          "url": "https://d-esign.nl/Dockerfile",
+          "status_code": 200,
+          "severity": "info"
+        },
+        {
+          "type": "discovered_path",
+          "path": "Gemfile",
+          "url": "https://d-esign.nl/Gemfile",
+          "status_code": 200,
+          "severity": "info"
+        },
+        {
+          "type": "discovered_path",
+          "path": "Makefile",
+          "url": "https://d-esign.nl/Makefile",
+          "status_code": 200,
+          "severity": "info"
+        },
+        {
+          "type": "discovered_path",
+          "path": "README.md",
+          "url": "https://d-esign.nl/README.md",
+          "status_code": 200,
+          "severity": "info"
+        },
+        {
+          "type": "discovered_path",
+          "path": "Thumbs.db",
+          "url": "https://d-esign.nl/Thumbs.db",
+          "status_code": 200,
+          "severity": "info"
+        },
+        {
+          "type": "discovered_path",
+          "path": "actuator",
+          "url": "https://d-esign.nl/actuator",
+          "status_code": 200,
+          "severity": "info"
+        },
+        {
+          "type": "discovered_path",
+          "path": "actuator/env",
+          "url": "https://d-esign.nl/actuator/env",
+          "status_code": 200,
+          "severity": "high"
+        },
+        {
+          "type": "discovered_path",
+          "path": "actuator/health",
+          "url": "https://d-esign.nl/actuator/health",
+          "status_code": 200,
+          "severity": "info"
+        },
+        {
+          "type": "discovered_path",
+          "path": "admin",
+          "url": "https://d-esign.nl/admin",
+          "status_code": 200,
+          "severity": "medium"
+        },
+        {
+          "type": "discovered_path",
+          "path": "administrator",
+          "url": "https://d-esign.nl/administrator",
+          "status_code": 200,
+          "severity": "medium"
+        },
+        {
+          "type": "discovered_path",
+          "path": "api",
+          "url": "https://d-esign.nl/api",
+          "status_code": 301,
+          "severity": "info"
+        },
+        {
+          "type": "discovered_path",
+          "path": "api-docs",
+          "url": "https://d-esign.nl/api-docs",
+          "status_code": 200,
+          "severity": "info"
+        },
+        {
+          "type": "discovered_path",
+          "path": "assets",
+          "url": "https://d-esign.nl/assets",
+          "status_code": 301,
+          "severity": "info"
+        },
+        {
+          "type": "discovered_path",
+          "path": "authorized_keys",
+          "url": "https://d-esign.nl/authorized_keys",
+          "status_code": 200,
+          "severity": "critical"
+        },
+        {
+          "type": "discovered_path",
+          "path": "backup",
+          "url": "https://d-esign.nl/backup",
+          "status_code": 200,
+          "severity": "medium"
+        },
+        {
+          "type": "discovered_path",
+          "path": "backup.sql",
+          "url": "https://d-esign.nl/backup.sql",
+          "status_code": 200,
+          "severity": "critical"
+        },
+        {
+          "type": "discovered_path",
+          "path": "backup.tar.gz",
+          "url": "https://d-esign.nl/backup.tar.gz",
+          "status_code": 200,
+          "severity": "medium"
+        },
+        {
+          "type": "discovered_path",
+          "path": "backup.zip",
+          "url": "https://d-esign.nl/backup.zip",
+          "status_code": 200,
+          "severity": "medium"
+        },
+        {
+          "type": "discovered_path",
+          "path": "backups",
+          "url": "https://d-esign.nl/backups",
+          "status_code": 200,
+          "severity": "medium"
+        },
+        {
+          "type": "discovered_path",
+          "path": "bak",
+          "url": "https://d-esign.nl/bak",
+          "status_code": 200,
+          "severity": "info"
+        },
+        {
+          "type": "discovered_path",
+          "path": "bin",
+          "url": "https://d-esign.nl/bin",
+          "status_code": 200,
+          "severity": "info"
+        },
+        {
+          "type": "discovered_path",
+          "path": "cgi-bin",
+          "url": "https://d-esign.nl/cgi-bin",
+          "status_code": 200,
+          "severity": "info"
+        },
+        {
+          "type": "discovered_path",
+          "path": "clientaccesspolicy.xml",
+          "url": "https://d-esign.nl/clientaccesspolicy.xml",
+          "status_code": 200,
+          "severity": "info"
+        },
+        {
+          "type": "discovered_path",
+          "path": "composer.json",
+          "url": "https://d-esign.nl/composer.json",
+          "status_code": 200,
+          "severity": "info"
+        },
+        {
+          "type": "discovered_path",
+          "path": "conf",
+          "url": "https://d-esign.nl/conf",
+          "status_code": 200,
+          "severity": "info"
+        },
+        {
+          "type": "discovered_path",
+          "path": "config",
+          "url": "https://d-esign.nl/config",
+          "status_code": 200,
+          "severity": "info"
+        },
+        {
+          "type": "discovered_path",
+          "path": "config.old",
+          "url": "https://d-esign.nl/config.old",
+          "status_code": 200,
+          "severity": "info"
+        },
+        {
+          "type": "discovered_path",
+          "path": "config.php.bak",
+          "url": "https://d-esign.nl/config.php.bak",
+          "status_code": 200,
+          "severity": "high"
+        },
+        {
+          "type": "discovered_path",
+          "path": "config.yml",
+          "url": "https://d-esign.nl/config.yml",
+          "status_code": 200,
+          "severity": "info"
+        },
+        {
+          "type": "discovered_path",
+          "path": "configuration",
+          "url": "https://d-esign.nl/configuration",
+          "status_code": 200,
+          "severity": "info"
+        },
+        {
+          "type": "discovered_path",
+          "path": "console",
+          "url": "https://d-esign.nl/console",
+          "status_code": 200,
+          "severity": "high"
+        },
+        {
+          "type": "discovered_path",
+          "path": "cpanel",
+          "url": "https://d-esign.nl/cpanel",
+          "status_code": 200,
+          "severity": "info"
+        },
+        {
+          "type": "discovered_path",
+          "path": "crossdomain.xml",
+          "url": "https://d-esign.nl/crossdomain.xml",
+          "status_code": 200,
+          "severity": "info"
+        },
+        {
+          "type": "discovered_path",
+          "path": "dashboard",
+          "url": "https://d-esign.nl/dashboard",
+          "status_code": 200,
+          "severity": "info"
+        },
+        {
+          "type": "discovered_path",
+          "path": "database",
+          "url": "https://d-esign.nl/database",
+          "status_code": 200,
+          "severity": "info"
+        },
+        {
+          "type": "discovered_path",
+          "path": "database.sql",
+          "url": "https://d-esign.nl/database.sql",
+          "status_code": 200,
+          "severity": "critical"
+        },
+        {
+          "type": "discovered_path",
+          "path": "db",
+          "url": "https://d-esign.nl/db",
+          "status_code": 200,
+          "severity": "info"
+        },
+        {
+          "type": "discovered_path",
+          "path": "debug",
+          "url": "https://d-esign.nl/debug",
+          "status_code": 200,
+          "severity": "high"
+        },
+        {
+          "type": "discovered_path",
+          "path": "debug/default/view",
+          "url": "https://d-esign.nl/debug/default/view",
+          "status_code": 200,
+          "severity": "high"
+        },
+        {
+          "type": "discovered_path",
+          "path": "demo",
+          "url": "https://d-esign.nl/demo",
+          "status_code": 200,
+          "severity": "info"
+        },
+        {
+          "type": "discovered_path",
+          "path": "desktop.ini",
+          "url": "https://d-esign.nl/desktop.ini",
+          "status_code": 200,
+          "severity": "info"
+        },
+        {
+          "type": "discovered_path",
+          "path": "doc",
+          "url": "https://d-esign.nl/doc",
+          "status_code": 200,
+          "severity": "info"
+        },
+        {
+          "type": "discovered_path",
+          "path": "docker-compose.yml",
+          "url": "https://d-esign.nl/docker-compose.yml",
+          "status_code": 200,
+          "severity": "info"
+        },
+        {
+          "type": "discovered_path",
+          "path": "docs",
+          "url": "https://d-esign.nl/docs",
+          "status_code": 200,
+          "severity": "info"
+        },
+        {
+          "type": "discovered_path",
+          "path": "documentation",
+          "url": "https://d-esign.nl/documentation",
+          "status_code": 200,
+          "severity": "info"
+        },
+        {
+          "type": "discovered_path",
+          "path": "dump",
+          "url": "https://d-esign.nl/dump",
+          "status_code": 200,
+          "severity": "info"
+        },
+        {
+          "type": "discovered_path",
+          "path": "dump.sql",
+          "url": "https://d-esign.nl/dump.sql",
+          "status_code": 200,
+          "severity": "critical"
+        },
+        {
+          "type": "discovered_path",
+          "path": "elmah.axd",
+          "url": "https://d-esign.nl/elmah.axd",
+          "status_code": 200,
+          "severity": "high"
+        },
+        {
+          "type": "discovered_path",
+          "path": "example",
+          "url": "https://d-esign.nl/example",
+          "status_code": 200,
+          "severity": "info"
+        },
+        {
+          "type": "discovered_path",
+          "path": "files",
+          "url": "https://d-esign.nl/files",
+          "status_code": 200,
+          "severity": "info"
+        },
+        {
+          "type": "discovered_path",
+          "path": "graphiql",
+          "url": "https://d-esign.nl/graphiql",
+          "status_code": 200,
+          "severity": "medium"
+        },
+        {
+          "type": "discovered_path",
+          "path": "graphql",
+          "url": "https://d-esign.nl/graphql",
+          "status_code": 200,
+          "severity": "info"
+        },
+        {
+          "type": "discovered_path",
+          "path": "id_rsa",
+          "url": "https://d-esign.nl/id_rsa",
+          "status_code": 200,
+          "severity": "critical"
+        },
+        {
+          "type": "discovered_path",
+          "path": "images",
+          "url": "https://d-esign.nl/images",
+          "status_code": 200,
+          "severity": "info"
+        },
+        {
+          "type": "discovered_path",
+          "path": "info",
+          "url": "https://d-esign.nl/info",
+          "status_code": 200,
+          "severity": "info"
+        },
+        {
+          "type": "discovered_path",
+          "path": "info.php",
+          "url": "https://d-esign.nl/info.php",
+          "status_code": 200,
+          "severity": "medium"
+        },
+        {
+          "type": "discovered_path",
+          "path": "log",
+          "url": "https://d-esign.nl/log",
+          "status_code": 200,
+          "severity": "info"
+        },
+        {
+          "type": "discovered_path",
+          "path": "login",
+          "url": "https://d-esign.nl/login",
+          "status_code": 200,
+          "severity": "medium"
+        },
+        {
+          "type": "discovered_path",
+          "path": "logs",
+          "url": "https://d-esign.nl/logs",
+          "status_code": 200,
+          "severity": "info"
+        },
+        {
+          "type": "discovered_path",
+          "path": "media",
+          "url": "https://d-esign.nl/media",
+          "status_code": 200,
+          "severity": "info"
+        },
+        {
+          "type": "discovered_path",
+          "path": "mysql",
+          "url": "https://d-esign.nl/mysql",
+          "status_code": 200,
+          "severity": "info"
+        },
+        {
+          "type": "discovered_path",
+          "path": "old",
+          "url": "https://d-esign.nl/old",
+          "status_code": 200,
+          "severity": "info"
+        },
+        {
+          "type": "discovered_path",
+          "path": "package.json",
+          "url": "https://d-esign.nl/package.json",
+          "status_code": 200,
+          "severity": "info"
+        },
+        {
+          "type": "discovered_path",
+          "path": "panel",
+          "url": "https://d-esign.nl/panel",
+          "status_code": 200,
+          "severity": "info"
+        },
+        {
+          "type": "discovered_path",
+          "path": "phpinfo.php",
+          "url": "https://d-esign.nl/phpinfo.php",
+          "status_code": 200,
+          "severity": "medium"
+        },
+        {
+          "type": "discovered_path",
+          "path": "phpmyadmin",
+          "url": "https://d-esign.nl/phpmyadmin",
+          "status_code": 200,
+          "severity": "high"
+        },
+        {
+          "type": "discovered_path",
+          "path": "playground",
+          "url": "https://d-esign.nl/playground",
+          "status_code": 200,
+          "severity": "info"
+        },
+        {
+          "type": "discovered_path",
+          "path": "pma",
+          "url": "https://d-esign.nl/pma",
+          "status_code": 200,
+          "severity": "info"
+        },
+        {
+          "type": "discovered_path",
+          "path": "readme",
+          "url": "https://d-esign.nl/readme",
+          "status_code": 200,
+          "severity": "info"
+        },
+        {
+          "type": "discovered_path",
+          "path": "robots.txt",
+          "url": "https://d-esign.nl/robots.txt",
+          "status_code": 200,
+          "severity": "info"
+        },
+        {
+          "type": "discovered_path",
+          "path": "scripts",
+          "url": "https://d-esign.nl/scripts",
+          "status_code": 200,
+          "severity": "info"
+        },
+        {
+          "type": "discovered_path",
+          "path": "server-info",
+          "url": "https://d-esign.nl/server-info",
+          "status_code": 200,
+          "severity": "high"
+        },
+        {
+          "type": "discovered_path",
+          "path": "server-status",
+          "url": "https://d-esign.nl/server-status",
+          "status_code": 200,
+          "severity": "medium"
+        },
+        {
+          "type": "discovered_path",
+          "path": "settings",
+          "url": "https://d-esign.nl/settings",
+          "status_code": 200,
+          "severity": "info"
+        },
+        {
+          "type": "discovered_path",
+          "path": "settings.py~",
+          "url": "https://d-esign.nl/settings.py~",
+          "status_code": 200,
+          "severity": "info"
+        },
+        {
+          "type": "discovered_path",
+          "path": "shell",
+          "url": "https://d-esign.nl/shell",
+          "status_code": 200,
+          "severity": "info"
+        },
+        {
+          "type": "discovered_path",
+          "path": "site.zip",
+          "url": "https://d-esign.nl/site.zip",
+          "status_code": 200,
+          "severity": "info"
+        },
+        {
+          "type": "discovered_path",
+          "path": "sitemap.xml",
+          "url": "https://d-esign.nl/sitemap.xml",
+          "status_code": 200,
+          "severity": "info"
+        },
+        {
+          "type": "discovered_path",
+          "path": "sql",
+          "url": "https://d-esign.nl/sql",
+          "status_code": 200,
+          "severity": "info"
+        },
+        {
+          "type": "discovered_path",
+          "path": "swagger",
+          "url": "https://d-esign.nl/swagger",
+          "status_code": 200,
+          "severity": "medium"
+        },
+        {
+          "type": "discovered_path",
+          "path": "swagger-ui",
+          "url": "https://d-esign.nl/swagger-ui",
+          "status_code": 200,
+          "severity": "medium"
+        },
+        {
+          "type": "discovered_path",
+          "path": "swagger.json",
+          "url": "https://d-esign.nl/swagger.json",
+          "status_code": 200,
+          "severity": "medium"
+        },
+        {
+          "type": "discovered_path",
+          "path": "temp",
+          "url": "https://d-esign.nl/temp",
+          "status_code": 200,
+          "severity": "info"
+        },
+        {
+          "type": "discovered_path",
+          "path": "terminal",
+          "url": "https://d-esign.nl/terminal",
+          "status_code": 200,
+          "severity": "info"
+        },
+        {
+          "type": "discovered_path",
+          "path": "test",
+          "url": "https://d-esign.nl/test",
+          "status_code": 200,
+          "severity": "medium"
+        },
+        {
+          "type": "discovered_path",
+          "path": "test.php",
+          "url": "https://d-esign.nl/test.php",
+          "status_code": 200,
+          "severity": "medium"
+        },
+        {
+          "type": "discovered_path",
+          "path": "testing",
+          "url": "https://d-esign.nl/testing",
+          "status_code": 200,
+          "severity": "medium"
+        },
+        {
+          "type": "discovered_path",
+          "path": "tests",
+          "url": "https://d-esign.nl/tests",
+          "status_code": 200,
+          "severity": "medium"
+        },
+        {
+          "type": "discovered_path",
+          "path": "tmp",
+          "url": "https://d-esign.nl/tmp",
+          "status_code": 200,
+          "severity": "info"
+        },
+        {
+          "type": "discovered_path",
+          "path": "trace",
+          "url": "https://d-esign.nl/trace",
+          "status_code": 200,
+          "severity": "info"
+        },
+        {
+          "type": "discovered_path",
+          "path": "trace.axd",
+          "url": "https://d-esign.nl/trace.axd",
+          "status_code": 200,
+          "severity": "high"
+        },
+        {
+          "type": "discovered_path",
+          "path": "upload",
+          "url": "https://d-esign.nl/upload",
+          "status_code": 200,
+          "severity": "info"
+        },
+        {
+          "type": "discovered_path",
+          "path": "uploads",
+          "url": "https://d-esign.nl/uploads",
+          "status_code": 200,
+          "severity": "info"
+        },
+        {
+          "type": "discovered_path",
+          "path": "web.config",
+          "url": "https://d-esign.nl/web.config",
+          "status_code": 200,
+          "severity": "info"
+        },
+        {
+          "type": "discovered_path",
+          "path": "webmail",
+          "url": "https://d-esign.nl/webmail",
+          "status_code": 200,
+          "severity": "info"
+        },
+        {
+          "type": "discovered_path",
+          "path": "wp-admin",
+          "url": "https://d-esign.nl/wp-admin",
+          "status_code": 200,
+          "severity": "medium"
+        },
+        {
+          "type": "discovered_path",
+          "path": "wp-config.php.bak",
+          "url": "https://d-esign.nl/wp-config.php.bak",
+          "status_code": 200,
+          "severity": "high"
+        },
+        {
+          "type": "discovered_path",
+          "path": "wp-config.php~",
+          "url": "https://d-esign.nl/wp-config.php~",
+          "status_code": 200,
+          "severity": "high"
+        },
+        {
+          "type": "discovered_path",
+          "path": "wp-content",
+          "url": "https://d-esign.nl/wp-content",
+          "status_code": 200,
+          "severity": "info"
+        },
+        {
+          "type": "discovered_path",
+          "path": "wp-includes",
+          "url": "https://d-esign.nl/wp-includes",
+          "status_code": 200,
+          "severity": "info"
+        },
+        {
+          "type": "discovered_path",
+          "path": "wp-login.php",
+          "url": "https://d-esign.nl/wp-login.php",
+          "status_code": 200,
+          "severity": "medium"
+        }
+      ],
+      "raw_output": "Directory enumeration for d-esign.nl\nTesting 120 paths with 10 threads\n  [200] /.DS_Store (info)\n  [200] /.bash_history (critical)\n  [200] /.env (critical)\n  [200] /.env.backup (critical)\n  [200] /.env.local (critical)\n  [200] /.env.production (critical)\n  [200] /.git (critical)\n  [200] /.git/HEAD (critical)\n  [200] /.git/config (critical)\n  [200] /.htaccess (info)\n  [200] /.htpasswd (critical)\n  [200] /.mysql_history (info)\n  [200] /.ssh (critical)\n  [200] /.svn (high)\n  [200] /.svn/entries (high)\n  [200] /.well-known (info)\n  [200] /.well-known/security.txt (info)\n  [200] /Dockerfile (info)\n  [200] /Gemfile (info)\n  [200] /Makefile (info)\n  [200] /README.md (info)\n  [200] /Thumbs.db (info)\n  [200] /actuator (info)\n  [200] /actuator/env (high)\n  [200] /actuator/health (info)\n  [200] /admin (medium)\n  [200] /administrator (medium)\n  [301] /api (info)\n  [200] /api-docs (info)\n  [301] /assets (info)\n  [200] /authorized_keys (critical)\n  [200] /backup (medium)\n  [200] /backup.sql (critical)\n  [200] /backup.tar.gz (medium)\n  [200] /backup.zip (medium)\n  [200] /backups (medium)\n  [200] /bak (info)\n  [200] /bin (info)\n  [200] /cgi-bin (info)\n  [200] /clientaccesspolicy.xml (info)\n  [200] /composer.json (info)\n  [200] /conf (info)\n  [200] /config (info)\n  [200] /config.old (info)\n  [200] /config.php.bak (high)\n  [200] /config.yml (info)\n  [200] /configuration (info)\n  [200] /console (high)\n  [200] /cpanel (info)\n  [200] /crossdomain.xml (info)\n  [200] /dashboard (info)\n  [200] /database (info)\n  [200] /database.sql (critical)\n  [200] /db (info)\n  [200] /debug (high)\n  [200] /debug/default/view (high)\n  [200] /demo (info)\n  [200] /desktop.ini (info)\n  [200] /doc (info)\n  [200] /docker-compose.yml (info)\n  [200] /docs (info)\n  [200] /documentation (info)\n  [200] /dump (info)\n  [200] /dump.sql (critical)\n  [200] /elmah.axd (high)\n  [200] /example (info)\n  [200] /files (info)\n  [200] /graphiql (medium)\n  [200] /graphql (info)\n  [200] /id_rsa (critical)\n  [200] /images (info)\n  [200] /info (info)\n  [200] /info.php (medium)\n  [200] /log (info)\n  [200] /login (medium)\n  [200] /logs (info)\n  [200] /media (info)\n  [200] /mysql (info)\n  [200] /old (info)\n  [200] /package.json (info)\n  [200] /panel (info)\n  [200] /phpinfo.php (medium)\n  [200] /phpmyadmin (high)\n  [200] /playground (info)\n  [200] /pma (info)\n  [200] /readme (info)\n  [200] /robots.txt (info)\n  [200] /scripts (info)\n  [200] /server-info (high)\n  [200] /server-status (medium)\n  [200] /settings (info)\n  [200] /settings.py~ (info)\n  [200] /shell (info)\n  [200] /site.zip (info)\n  [200] /sitemap.xml (info)\n  [200] /sql (info)\n  [200] /swagger (medium)\n  [200] /swagger-ui (medium)\n  [200] /swagger.json (medium)\n  [200] /temp (info)\n  [200] /terminal (info)\n  [200] /test (medium)\n  [200] /test.php (medium)\n  [200] /testing (medium)\n  [200] /tests (medium)\n  [200] /tmp (info)\n  [200] /trace (info)\n  [200] /trace.axd (high)\n  [200] /upload (info)\n  [200] /uploads (info)\n  [200] /web.config (info)\n  [200] /webmail (info)\n  [200] /wp-admin (medium)\n  [200] /wp-config.php.bak (high)\n  [200] /wp-config.php~ (high)\n  [200] /wp-content (info)\n  [200] /wp-includes (info)\n  [200] /wp-login.php (medium)\n\nTotal discovered: 118 paths",
+      "error": null,
+      "duration": 3.31
+    },
+    {
+      "module_id": "10",
+      "name": "OSINT",
+      "phase": "reconnaissance",
+      "success": true,
+      "findings": [],
+      "raw_output": "CVE vulnerability check for d-esign.nl\nLoaded 4 components to check\nNo local CVE data — using built-in patterns only\n\n[Built-in Pattern Matching]\n\nNo known vulnerabilities matched",
+      "error": null,
+      "duration": 0.04
+    },
+    {
+      "module_id": "11",
+      "name": "Headers & Cookies",
+      "phase": "scanning",
+      "success": true,
+      "findings": [],
+      "raw_output": "SQL injection detection for d-esign.nl\nDiscovered 7 testable URLs/forms\n\n[Testing] GET https://d-esign.nl/search\n\n[Testing] GET https://d-esign.nl/login\n\n[Testing] GET https://d-esign.nl/page\n\n[Testing] GET https://d-esign.nl/article\n\n[Testing] GET https://d-esign.nl/product\n\n[Testing] GET https://d-esign.nl/user\n\n[Testing] GET https://d-esign.nl/id\n\nNo SQL injection vulnerabilities detected",
+      "error": null,
+      "duration": 4.21
+    },
+    {
+      "module_id": "12",
+      "name": "Vulnerability Scan",
+      "phase": "scanning",
+      "success": true,
+      "findings": [],
+      "raw_output": "XSS detection for d-esign.nl\nDiscovered 3 testable endpoints\n\n[DOM-based XSS indicators]\n\n[Header-based XSS]\n\nNo XSS vulnerabilities detected",
+      "error": null,
+      "duration": 1.52
+    },
+    {
+      "module_id": "13",
+      "name": "Network Services",
+      "phase": "scanning",
+      "success": true,
+      "findings": [],
+      "raw_output": "CSRF detection for d-esign.nl\nChecking 1 pages for forms\n\n[Cookie SameSite Check]\n\nTotal POST forms: 0, Vulnerable: 0",
+      "error": null,
+      "duration": 0.23
+    },
+    {
+      "module_id": "14",
+      "name": "SMB & LDAP",
+      "phase": "scanning",
+      "success": true,
+      "findings": [],
+      "raw_output": "CORS misconfiguration check for d-esign.nl\n\n[Testing] https://d-esign.nl\n\n[Testing] https://d-esign.nl/api\n\n[Testing] https://d-esign.nl/api/v1\n\n[Testing] https://d-esign.nl/graphql\n\nNo CORS misconfigurations detected",
+      "error": null,
+      "duration": 1.77
+    },
+    {
+      "module_id": "15",
+      "name": "Email Security",
+      "phase": "scanning",
+      "success": true,
+      "findings": [],
+      "raw_output": "Open redirect detection for d-esign.nl\nDiscovered 0 URLs with redirect params\n\n[Testing common redirect paths]\n\nNo open redirect vulnerabilities detected",
+      "error": null,
+      "duration": 7.91
+    },
+    {
+      "module_id": "16",
+      "name": "Cloud Exposure",
+      "phase": "reconnaissance",
+      "success": true,
+      "findings": [
+        {
+          "type": "sensitive_data",
+          "pattern_name": "Email Address",
+          "source_url": "https://d-esign.nl/assets/index-BgVDogWh.js",
+          "match_count": 9,
+          "severity": "medium"
+        },
+        {
+          "type": "exposed_file",
+          "url": "https://d-esign.nl/robots.txt",
+          "filename": "robots.txt",
+          "severity": "medium"
+        },
+        {
+          "type": "exposed_file",
+          "url": "https://d-esign.nl/.env",
+          "filename": ".env",
+          "severity": "high"
+        },
+        {
+          "type": "exposed_file",
+          "url": "https://d-esign.nl/config.json",
+          "filename": "config.json",
+          "severity": "medium"
+        },
+        {
+          "type": "exposed_file",
+          "url": "https://d-esign.nl/wp-config.php",
+          "filename": "wp-config.php",
+          "severity": "high"
+        },
+        {
+          "type": "exposed_file",
+          "url": "https://d-esign.nl/.git/config",
+          "filename": ".git/config",
+          "severity": "high"
+        },
+        {
+          "type": "exposed_file",
+          "url": "https://d-esign.nl/package.json",
+          "filename": "package.json",
+          "severity": "medium"
+        },
+        {
+          "type": "exposed_file",
+          "url": "https://d-esign.nl/composer.json",
+          "filename": "composer.json",
+          "severity": "medium"
+        }
+      ],
+      "raw_output": "Sensitive data exposure scan for d-esign.nl\n\n[JavaScript Files]\nFound 1 JavaScript files\n  [Email Address] 9 match(es) in https://d-esign.nl/assets/index-BgVDogWh.js\n\n[Common Sensitive Files]\n  [FOUND] robots.txt (status 200)\n  [FOUND] .env (status 200)\n  [FOUND] config.json (status 200)\n  [FOUND] wp-config.php (status 200)\n  [FOUND] .git/config (status 200)\n  [FOUND] package.json (status 200)\n  [FOUND] composer.json (status 200)\n\n[HTML Comments]",
+      "error": null,
+      "duration": 6.97
+    },
+    {
+      "module_id": "17",
+      "name": "API Testing",
+      "phase": "scanning",
+      "success": true,
+      "findings": [],
+      "raw_output": "Authentication testing for d-esign.nl\nFound 0 login pages\n\nNo authentication weaknesses detected",
+      "error": null,
+      "duration": 2.64
+    },
+    {
+      "module_id": "18",
+      "name": "Fuzzing",
+      "phase": "exploitation",
+      "success": true,
+      "findings": [],
+      "raw_output": "CMS vulnerability check for d-esign.nl\nDetected CMS: none\nNo known CMS detected — skipping CMS-specific checks",
+      "error": null,
+      "duration": 0.29
+    },
+    {
+      "module_id": "19",
+      "name": "CMS Scanning",
+      "phase": "scanning",
+      "success": true,
+      "findings": [
+        {
+          "type": "api_docs_exposed",
+          "url": "https://d-esign.nl/swagger.json",
+          "detail": "API documentation publicly accessible at /swagger.json",
+          "severity": "medium"
+        },
+        {
+          "type": "api_docs_exposed",
+          "url": "https://d-esign.nl/openapi.json",
+          "detail": "API documentation publicly accessible at /openapi.json",
+          "severity": "medium"
+        },
+        {
+          "type": "api_docs_exposed",
+          "url": "https://d-esign.nl/api-docs",
+          "detail": "API documentation publicly accessible at /api-docs",
+          "severity": "medium"
+        },
+        {
+          "type": "api_docs_exposed",
+          "url": "https://d-esign.nl/swagger-ui",
+          "detail": "API documentation publicly accessible at /swagger-ui",
+          "severity": "medium"
+        },
+        {
+          "type": "api_docs_exposed",
+          "url": "https://d-esign.nl/swagger-ui.html",
+          "detail": "API documentation publicly accessible at /swagger-ui.html",
+          "severity": "medium"
+        },
+        {
+          "type": "api_docs_exposed",
+          "url": "https://d-esign.nl/redoc",
+          "detail": "API documentation publicly accessible at /redoc",
+          "severity": "medium"
+        },
+        {
+          "type": "no_rate_limiting",
+          "detail": "No rate limiting detected on API endpoints",
+          "severity": "medium"
+        }
+      ],
+      "raw_output": "API security testing for d-esign.nl\n\n[API Endpoint Discovery]\n  [200] rest (text/html)\n  [200] rest/v1 (text/html)\n  [200] graphql (text/html)\n  [200] graphiql (text/html)\n  [200] swagger.json (text/html)\n  [200] swagger/v1/swagger.json (text/html)\n  [200] openapi.json (text/html)\n  [200] api-docs (text/html)\n  [200] swagger-ui (text/html)\n  [200] swagger-ui.html (text/html)\n  [200] redoc (text/html)\n  [200] .well-known/openid-configuration (text/html)\n  [200] oauth/token (text/html)\n  [200] oauth2/token (text/html)\n  [200] wp-json/wp/v2 (text/html)\n  [200] wp-json (text/html)\n\nDiscovered 16 API endpoints\n\n[Auth Test] https://d-esign.nl/rest\n\n[Auth Test] https://d-esign.nl/rest/v1\n\n[Auth Test] https://d-esign.nl/graphql\n\n[Auth Test] https://d-esign.nl/graphiql\n\n[Auth Test] https://d-esign.nl/swagger.json\n\n[Auth Test] https://d-esign.nl/swagger/v1/swagger.json\n\n[Auth Test] https://d-esign.nl/openapi.json\n\n[Auth Test] https://d-esign.nl/api-docs\n\n[Auth Test] https://d-esign.nl/swagger-ui\n\n[Auth Test] https://d-esign.nl/swagger-ui.html\n\n[Auth Test] https://d-esign.nl/redoc\n\n[Auth Test] https://d-esign.nl/.well-known/openid-configuration\n\n[Auth Test] https://d-esign.nl/oauth/token\n\n[Auth Test] https://d-esign.nl/oauth2/token\n\n[Auth Test] https://d-esign.nl/wp-json/wp/v2\n\n[Auth Test] https://d-esign.nl/wp-json\n\n[API Documentation Exposure]\n  [FOUND] swagger.json\n  [FOUND] openapi.json\n  [FOUND] api-docs\n  [FOUND] swagger-ui\n  [FOUND] swagger-ui.html\n  [FOUND] redoc\n\n[Rate Limiting]\n  [!] No rate limiting detected\n\n[API CORS]",
+      "error": null,
+      "duration": 5.67
+    },
+    {
+      "module_id": "20",
+      "name": "Breach Check",
+      "phase": "post",
+      "success": true,
+      "findings": [
+        {
+          "type": "no_breaches_found",
+          "detail": "No known breaches found for this domain (limited check without HIBP key)",
+          "severity": "info"
+        }
+      ],
+      "raw_output": "Data breach check for d-esign.nl\nCollected 9 email addresses to check\n\n[HIBP] No API key — skipping HIBP checks\n  Set HIBP_API_KEY in .env for breach checking\n\n[Public Breach Databases]\n\n[Paste Site Check]\n  Skipped (needs HIBP API key)\n\nNo breach data found for this domain",
+      "error": null,
+      "duration": 10.16
+    }
+  ],
+  "total_findings": 253
+}

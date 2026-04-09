@@ -1,0 +1,52 @@
+{
+  "findings": [
+    {
+      "type": "whois_info",
+      "data": {
+        "domain_name": "d-esign.nl",
+        "registrar": "team.blue nl B.V.",
+        "creation_date": "2025-10-31 00:00:00",
+        "expiration_date": "",
+        "updated_date": "2025-10-31 00:00:00",
+        "name_servers": [
+          "",
+          "Creation",
+          "Updated",
+          "ns0.transip.net",
+          "ns1.transip.nl",
+          "ns2.transip.eu"
+        ],
+        "status": [
+          "active"
+        ],
+        "registrant": "",
+        "registrant_org": "",
+        "registrant_country": "",
+        "dnssec": "yes"
+      },
+      "severity": "info"
+    }
+  ],
+  "whois": {
+    "domain_name": "d-esign.nl",
+    "registrar": "team.blue nl B.V.",
+    "creation_date": "2025-10-31 00:00:00",
+    "expiration_date": "",
+    "updated_date": "2025-10-31 00:00:00",
+    "name_servers": [
+      "",
+      "Creation",
+      "Updated",
+      "ns0.transip.net",
+      "ns1.transip.nl",
+      "ns2.transip.eu"
+    ],
+    "status": [
+      "active"
+    ],
+    "registrant": "",
+    "registrant_org": "",
+    "registrant_country": "",
+    "dnssec": "yes"
+  }
+}

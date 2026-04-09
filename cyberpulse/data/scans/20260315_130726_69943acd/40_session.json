@@ -1,0 +1,39 @@
+{
+  "findings": [
+    {
+      "type": "cache_control_missing",
+      "path": "/dashboard",
+      "cache_control": "(empty)",
+      "detail": "Missing no-store/no-cache for /dashboard",
+      "severity": "medium"
+    },
+    {
+      "type": "cache_control_missing",
+      "path": "/profile",
+      "cache_control": "(empty)",
+      "detail": "Missing no-store/no-cache for /profile",
+      "severity": "medium"
+    },
+    {
+      "type": "cache_control_missing",
+      "path": "/account",
+      "cache_control": "(empty)",
+      "detail": "Missing no-store/no-cache for /account",
+      "severity": "medium"
+    },
+    {
+      "type": "cache_control_missing",
+      "path": "/settings",
+      "cache_control": "(empty)",
+      "detail": "Missing no-store/no-cache for /settings",
+      "severity": "medium"
+    },
+    {
+      "type": "cache_control_missing",
+      "path": "/admin",
+      "cache_control": "(empty)",
+      "detail": "Missing no-store/no-cache for /admin",
+      "severity": "medium"
+    }
+  ]
+}

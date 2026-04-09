@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fout {{ status_code }} – CyberPulse</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <style>
+        body { display:flex; align-items:center; justify-content:center; min-height:100vh; padding:24px; }
+        .error-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 48px 40px;
+            max-width: 480px;
+            width: 100%;
+            text-align: center;
+        }
+        .error-icon {
+            width: 72px; height: 72px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 24px;
+        }
+        .error-icon.red  { background: rgba(239,68,68,.12); color: #ef4444; }
+        .error-icon.yellow { background: rgba(251,191,36,.12); color: #fbbf24; }
+        .error-icon.blue { background: rgba(59,130,246,.12); color: #3b82f6; }
+        .error-code {
+            font-size: 4rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #6366f1, #3b82f6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1;
+            margin-bottom: 12px;
+        }
+        .error-title { font-size: 1.25rem; font-weight: 700; margin-bottom: 10px; }
+        .error-message { font-size: .9rem; color: var(--text-muted); line-height: 1.6; margin-bottom: 28px; }
+        .error-actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+        .error-trace {
+            margin-top: 24px;
+            background: rgba(0,0,0,.3);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px 16px;
+            font-size: .75rem;
+            color: var(--text-muted);
+            text-align: left;
+            font-family: monospace;
+            max-height: 160px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+<div class="error-card">
+    <!-- Conditional icon per status code -->
+    {% if status_code == 404 %}
+    <div class="error-icon blue">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    </div>
+    {% elif status_code == 403 %}
+    <div class="error-icon yellow">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+    </div>
+    {% elif status_code == 429 %}
+    <div class="error-icon yellow">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+    </div>
+    {% else %}
+    <div class="error-icon red">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+    </div>
+    {% endif %}
+
+    <div class="error-code">{{ status_code }}</div>
+
+    <div class="error-title">
+        {% if status_code == 400 %}Ongeldige aanvraag
+        {% elif status_code == 401 %}Niet ingelogd
+        {% elif status_code == 403 %}Toegang geweigerd
+        {% elif status_code == 404 %}Pagina niet gevonden
+        {% elif status_code == 422 %}Validatiefout
+        {% elif status_code == 429 %}Te veel verzoeken
+        {% elif status_code == 500 %}Interne serverfout
+        {% elif status_code == 502 %}Bad Gateway
+        {% elif status_code == 503 %}Service tijdelijk onbeschikbaar
+        {% else %}Er is iets misgegaan
+        {% endif %}
+    </div>
+
+    <div class="error-message">
+        {% if detail %}
+            {{ detail }}
+        {% elif status_code == 404 %}
+            De pagina of bron die je zoekt bestaat niet of is verplaatst.
+        {% elif status_code == 403 %}
+            Je hebt geen toegang tot deze bron. Controleer je rechten of log opnieuw in.
+        {% elif status_code == 429 %}
+            Je hebt de aanvraagslimiet bereikt. Wacht even en probeer het opnieuw.
+        {% elif status_code == 500 %}
+            Er is een onverwachte fout opgetreden in de server. Het team is op de hoogte gesteld.
+        {% elif status_code == 503 %}
+            De service is momenteel niet beschikbaar. Probeer het over enkele minuten opnieuw.
+        {% else %}
+            Er is een fout opgetreden. Probeer het opnieuw of neem contact op met support.
+        {% endif %}
+    </div>
+
+    <div class="error-actions">
+        <a href="/app" class="btn btn-primary">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+            Naar dashboard
+        </a>
+        <button class="btn btn-ghost" onclick="history.back()">
+            Terug
+        </button>
+        {% if status_code == 500 %}
+        <a href="mailto:support@cyberpulse.io?subject=Server+Error+500" class="btn btn-ghost">
+            Support contacteren
+        </a>
+        {% endif %}
+    </div>
+
+    {% if trace and debug_mode %}
+    <div class="error-trace">{{ trace }}</div>
+    {% endif %}
+
+    <!-- Brand footer -->
+    <div style="margin-top:32px;padding-top:20px;border-top:1px solid var(--border);">
+        <a href="/" style="display:inline-flex;align-items:center;gap:8px;text-decoration:none;color:var(--text-muted);font-size:.82rem;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            CyberPulse Security Platform
+        </a>
+    </div>
+</div>
+</body>
+</html>

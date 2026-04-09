@@ -1,0 +1,10 @@
+{
+  "findings": [
+    {
+      "type": "no_rate_limiting",
+      "detail": "No rate limiting detected on API endpoints",
+      "severity": "medium"
+    }
+  ],
+  "discovered_endpoints": []
+}

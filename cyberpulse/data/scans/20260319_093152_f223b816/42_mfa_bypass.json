@@ -1,0 +1,44 @@
+{
+  "findings": [
+    {
+      "type": "no_mfa",
+      "detail": "No 2FA/MFA implementation detected",
+      "severity": "medium"
+    },
+    {
+      "type": "otp_no_rate_limit",
+      "endpoint": "/api/2fa/verify",
+      "attempts": 10,
+      "detail": "OTP endpoint /api/2fa/verify not rate-limited (10 attempts)",
+      "severity": "high"
+    },
+    {
+      "type": "otp_no_rate_limit",
+      "endpoint": "/api/otp/verify",
+      "attempts": 10,
+      "detail": "OTP endpoint /api/otp/verify not rate-limited (10 attempts)",
+      "severity": "high"
+    },
+    {
+      "type": "otp_no_rate_limit",
+      "endpoint": "/verify",
+      "attempts": 10,
+      "detail": "OTP endpoint /verify not rate-limited (10 attempts)",
+      "severity": "high"
+    },
+    {
+      "type": "otp_no_rate_limit",
+      "endpoint": "/api/auth/verify",
+      "attempts": 10,
+      "detail": "OTP endpoint /api/auth/verify not rate-limited (10 attempts)",
+      "severity": "high"
+    },
+    {
+      "type": "otp_no_rate_limit",
+      "endpoint": "/login/verify",
+      "attempts": 10,
+      "detail": "OTP endpoint /login/verify not rate-limited (10 attempts)",
+      "severity": "high"
+    }
+  ]
+}

@@ -1,0 +1,80 @@
+{
+  "findings": [
+    {
+      "type": "missing_security_header",
+      "header": "HSTS",
+      "ideal": "max-age >= 31536000, includeSubDomains",
+      "severity": "high"
+    },
+    {
+      "type": "missing_security_header",
+      "header": "CSP",
+      "ideal": "Restrict sources for scripts, styles, images",
+      "severity": "high"
+    },
+    {
+      "type": "missing_security_header",
+      "header": "X-Content-Type-Options",
+      "ideal": "nosniff",
+      "severity": "medium"
+    },
+    {
+      "type": "missing_security_header",
+      "header": "X-Frame-Options",
+      "ideal": "DENY or SAMEORIGIN",
+      "severity": "medium"
+    },
+    {
+      "type": "missing_security_header",
+      "header": "Referrer-Policy",
+      "ideal": "strict-origin-when-cross-origin or no-referrer",
+      "severity": "low"
+    },
+    {
+      "type": "missing_security_header",
+      "header": "Permissions-Policy",
+      "ideal": "Restrict camera, microphone, geolocation, etc.",
+      "severity": "low"
+    },
+    {
+      "type": "missing_security_header",
+      "header": "X-XSS-Protection",
+      "ideal": "0 (rely on CSP instead) or 1; mode=block",
+      "severity": "low"
+    },
+    {
+      "type": "missing_security_header",
+      "header": "COOP",
+      "ideal": "same-origin",
+      "severity": "low"
+    },
+    {
+      "type": "missing_security_header",
+      "header": "CORP",
+      "ideal": "same-origin",
+      "severity": "low"
+    },
+    {
+      "type": "information_leakage",
+      "header": "server",
+      "value": "cloudflare",
+      "detail": "Header 'server' reveals server technology",
+      "severity": "low"
+    }
+  ],
+  "headers": {
+    "date": "Thu, 19 Mar 2026 09:34:49 GMT",
+    "content-type": "text/html; charset=utf-8",
+    "transfer-encoding": "chunked",
+    "connection": "keep-alive",
+    "server": "cloudflare",
+    "nel": "{\"report_to\":\"cf-nel\",\"success_fraction\":0.0,\"max_age\":604800}",
+    "vary": "Cookie, accept-encoding",
+    "x-served-by": "nomadark.net",
+    "report-to": "{\"group\":\"cf-nel\",\"max_age\":604800,\"endpoints\":[{\"url\":\"https://a.nel.cloudflare.com/report/v4?s=0NUObvnNuuYmg3EP%2FADIyJ0X7JurL5YbyhDB%2BPqU6%2B273mg9UQmT19T26KOb%2F1VrurielhGodEVTtl9kFQw6%2FdCZyFN7pcI8CANplg%3D%3D\"}]}",
+    "cf-cache-status": "DYNAMIC",
+    "content-encoding": "zstd",
+    "cf-ray": "9deb7bc8db1cfeb8-AMS",
+    "alt-svc": "h3=\":443\"; ma=86400"
+  }
+}

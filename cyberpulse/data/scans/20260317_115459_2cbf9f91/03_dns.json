@@ -1,0 +1,10 @@
+{
+  "findings": [
+    {
+      "type": "dns_misconfiguration",
+      "detail": "No DMARC record found",
+      "severity": "medium"
+    }
+  ],
+  "records": {}
+}

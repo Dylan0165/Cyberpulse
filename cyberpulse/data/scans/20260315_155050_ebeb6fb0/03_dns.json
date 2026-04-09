@@ -1,0 +1,76 @@
+{
+  "findings": [
+    {
+      "type": "dns_record",
+      "record_type": "A",
+      "value": "37.97.129.233",
+      "severity": "info"
+    },
+    {
+      "type": "dns_record",
+      "record_type": "MX",
+      "value": "10 d-esign.nl.",
+      "severity": "info"
+    },
+    {
+      "type": "dns_record",
+      "record_type": "NS",
+      "value": "ns0.transip.net.",
+      "severity": "info"
+    },
+    {
+      "type": "dns_record",
+      "record_type": "NS",
+      "value": "ns1.transip.nl.",
+      "severity": "info"
+    },
+    {
+      "type": "dns_record",
+      "record_type": "NS",
+      "value": "ns2.transip.eu.",
+      "severity": "info"
+    },
+    {
+      "type": "dns_record",
+      "record_type": "TXT",
+      "value": "\"v=spf1 ~all\"",
+      "severity": "info"
+    },
+    {
+      "type": "dns_misconfiguration",
+      "detail": "SPF record uses ~all (softfail, not strict)",
+      "value": "v=spf1 ~all",
+      "severity": "medium"
+    },
+    {
+      "type": "dns_record",
+      "record_type": "SOA",
+      "value": "ns0.transip.net. hostmaster.transip.nl. 2026021000 86400 1800 2419200 300",
+      "severity": "info"
+    },
+    {
+      "type": "dns_misconfiguration",
+      "detail": "No DMARC record found",
+      "severity": "medium"
+    }
+  ],
+  "records": {
+    "A": [
+      "37.97.129.233"
+    ],
+    "MX": [
+      "10 d-esign.nl."
+    ],
+    "NS": [
+      "ns0.transip.net.",
+      "ns1.transip.nl.",
+      "ns2.transip.eu."
+    ],
+    "TXT": [
+      "\"v=spf1 ~all\""
+    ],
+    "SOA": [
+      "ns0.transip.net. hostmaster.transip.nl. 2026021000 86400 1800 2419200 300"
+    ]
+  }
+}

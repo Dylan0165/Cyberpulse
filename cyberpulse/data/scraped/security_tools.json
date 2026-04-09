@@ -1,0 +1,322 @@
+[
+  {
+    "name": "sqlmap",
+    "description": "SQL injection tool",
+    "latest_version": "1.10",
+    "published": "2026-01-01T18:27:27Z",
+    "url": "https://github.com/sqlmapproject/sqlmap/releases/tag/1.10",
+    "repo": "sqlmapproject/sqlmap",
+    "source": "github",
+    "type": "tool"
+  },
+  {
+    "name": "Gobuster",
+    "description": "Directory/DNS brute-forcer",
+    "latest_version": "v3.8.2",
+    "published": "2025-09-04T08:22:47Z",
+    "url": "https://github.com/OJ/gobuster/releases/tag/v3.8.2",
+    "repo": "OJ/gobuster",
+    "source": "github",
+    "type": "tool"
+  },
+  {
+    "name": "Nuclei",
+    "description": "Vulnerability scanner",
+    "latest_version": "v3.7.1",
+    "published": "2026-03-05T11:00:12Z",
+    "url": "https://github.com/projectdiscovery/nuclei/releases/tag/v3.7.1",
+    "repo": "projectdiscovery/nuclei",
+    "source": "github",
+    "type": "tool"
+  },
+  {
+    "name": "httpx",
+    "description": "HTTP toolkit",
+    "latest_version": "v1.9.0",
+    "published": "2026-03-09T21:21:52Z",
+    "url": "https://github.com/projectdiscovery/httpx/releases/tag/v1.9.0",
+    "repo": "projectdiscovery/httpx",
+    "source": "github",
+    "type": "tool"
+  },
+  {
+    "name": "Subfinder",
+    "description": "Subdomain discovery",
+    "latest_version": "v2.13.0",
+    "published": "2026-03-09T21:00:30Z",
+    "url": "https://github.com/projectdiscovery/subfinder/releases/tag/v2.13.0",
+    "repo": "projectdiscovery/subfinder",
+    "source": "github",
+    "type": "tool"
+  },
+  {
+    "name": "ffuf",
+    "description": "Web fuzzer",
+    "latest_version": "v2.1.0",
+    "published": "2023-09-16T12:23:19Z",
+    "url": "https://github.com/ffuf/ffuf/releases/tag/v2.1.0",
+    "repo": "ffuf/ffuf",
+    "source": "github",
+    "type": "tool"
+  },
+  {
+    "name": "Hydra",
+    "description": "Password brute-forcer",
+    "latest_version": "v9.6",
+    "published": "2025-09-03T08:04:06Z",
+    "url": "https://github.com/vanhauser-thc/thc-hydra/releases/tag/v9.6",
+    "repo": "vanhauser-thc/thc-hydra",
+    "source": "github",
+    "type": "tool"
+  },
+  {
+    "name": "Aquatone",
+    "description": "Domain reconnaissance",
+    "latest_version": "v1.7.0",
+    "published": "2019-05-19T09:10:41Z",
+    "url": "https://github.com/michenriksen/aquatone/releases/tag/v1.7.0",
+    "repo": "michenriksen/aquatone",
+    "source": "github",
+    "type": "tool"
+  },
+  {
+    "name": "[webapps] WordPress Backup Migration 1.3.7 - Remote Command Execution",
+    "description": "WordPress Backup Migration 1.3.7 - Remote Command Execution",
+    "published": "Tue, 03 Mar 2026 00:00:00 +0000",
+    "url": "https://www.exploit-db.com/exploits/52486",
+    "source": "exploit-db",
+    "type": "exploit"
+  },
+  {
+    "name": "[webapps] mailcow 2025-01a - Host Header Password Reset Poisoning",
+    "description": "mailcow 2025-01a - Host Header Password Reset Poisoning",
+    "published": "Tue, 03 Mar 2026 00:00:00 +0000",
+    "url": "https://www.exploit-db.com/exploits/52485",
+    "source": "exploit-db",
+    "type": "exploit"
+  },
+  {
+    "name": "[webapps] Easy File Sharing Web Server v7.2 - Buffer Overflow",
+    "description": "Easy File Sharing Web Server v7.2 - Buffer Overflow",
+    "published": "Tue, 03 Mar 2026 00:00:00 +0000",
+    "url": "https://www.exploit-db.com/exploits/52484",
+    "source": "exploit-db",
+    "type": "exploit"
+  },
+  {
+    "name": "[webapps] WeGIA 3.5.0 - SQL Injection",
+    "description": "WeGIA 3.5.0 - SQL Injection",
+    "published": "Tue, 03 Mar 2026 00:00:00 +0000",
+    "url": "https://www.exploit-db.com/exploits/52483",
+    "source": "exploit-db",
+    "type": "exploit"
+  },
+  {
+    "name": "[webapps] Boss Mini v1.4.0 - Local File Inclusion (LFI)",
+    "description": "Boss Mini v1.4.0 - Local File Inclusion (LFI)",
+    "published": "Tue, 03 Mar 2026 00:00:00 +0000",
+    "url": "https://www.exploit-db.com/exploits/52482",
+    "source": "exploit-db",
+    "type": "exploit"
+  },
+  {
+    "name": "[webapps] motionEye 0.43.1b4 - RCE",
+    "description": "motionEye 0.43.1b4 - RCE",
+    "published": "Wed, 11 Feb 2026 00:00:00 +0000",
+    "url": "https://www.exploit-db.com/exploits/52481",
+    "source": "exploit-db",
+    "type": "exploit"
+  },
+  {
+    "name": "[remote] Windows 10.0.17763.7009 - spoofing vulnerability",
+    "description": "Windows 10.0.17763.7009 - spoofing vulnerability",
+    "published": "Wed, 11 Feb 2026 00:00:00 +0000",
+    "url": "https://www.exploit-db.com/exploits/52480",
+    "source": "exploit-db",
+    "type": "exploit"
+  },
+  {
+    "name": "[local] glibc 2.38 - Buffer Overflow",
+    "description": "glibc 2.38 - Buffer Overflow",
+    "published": "Wed, 11 Feb 2026 00:00:00 +0000",
+    "url": "https://www.exploit-db.com/exploits/52479",
+    "source": "exploit-db",
+    "type": "exploit"
+  },
+  {
+    "name": "[remote] windows 10/11 - NTLM Hash Disclosure Spoofing",
+    "description": "windows 10/11 - NTLM Hash Disclosure Spoofing",
+    "published": "Wed, 04 Feb 2026 00:00:00 +0000",
+    "url": "https://www.exploit-db.com/exploits/52478",
+    "source": "exploit-db",
+    "type": "exploit"
+  },
+  {
+    "name": "[remote] Redis 8.0.2 - RCE",
+    "description": "Redis 8.0.2 - RCE",
+    "published": "Wed, 04 Feb 2026 00:00:00 +0000",
+    "url": "https://www.exploit-db.com/exploits/52477",
+    "source": "exploit-db",
+    "type": "exploit"
+  },
+  {
+    "name": "[webapps] OctoPrint 1.11.2 - File Upload",
+    "description": "OctoPrint 1.11.2 - File Upload",
+    "published": "Wed, 04 Feb 2026 00:00:00 +0000",
+    "url": "https://www.exploit-db.com/exploits/52476",
+    "source": "exploit-db",
+    "type": "exploit"
+  },
+  {
+    "name": "[remote] Ingress-NGINX Admission Controller v1.11.1 - FD Injection to RCE",
+    "description": "Ingress-NGINX Admission Controller v1.11.1 - FD Injection to RCE",
+    "published": "Wed, 04 Feb 2026 00:00:00 +0000",
+    "url": "https://www.exploit-db.com/exploits/52475",
+    "source": "exploit-db",
+    "type": "exploit"
+  },
+  {
+    "name": "[webapps] aiohttp 3.9.1 - directory traversal PoC",
+    "description": "aiohttp 3.9.1 - directory traversal PoC",
+    "published": "Wed, 04 Feb 2026 00:00:00 +0000",
+    "url": "https://www.exploit-db.com/exploits/52474",
+    "source": "exploit-db",
+    "type": "exploit"
+  },
+  {
+    "name": "[webapps] FortiWeb Fabric Connector 7.6.x - SQL Injection to Remote Code Execution",
+    "description": "FortiWeb Fabric Connector 7.6.x - SQL Injection to Remote Code Execution",
+    "published": "Wed, 04 Feb 2026 00:00:00 +0000",
+    "url": "https://www.exploit-db.com/exploits/52473",
+    "source": "exploit-db",
+    "type": "exploit"
+  },
+  {
+    "name": "[local] Docker Desktop 4.44.3 - Unauthenticated  API Exposure",
+    "description": "Docker Desktop 4.44.3 - Unauthenticated  API Exposure",
+    "published": "Wed, 04 Feb 2026 00:00:00 +0000",
+    "url": "https://www.exploit-db.com/exploits/52472",
+    "source": "exploit-db",
+    "type": "exploit"
+  },
+  {
+    "name": "[webapps] Piranha CMS 12.0 - Stored XSS in Text Block",
+    "description": "Piranha CMS 12.0 - Stored XSS in Text Block",
+    "published": "Mon, 02 Feb 2026 00:00:00 +0000",
+    "url": "https://www.exploit-db.com/exploits/52471",
+    "source": "exploit-db",
+    "type": "exploit"
+  },
+  {
+    "name": "[webapps] RPi-Jukebox-RFID 2.8.0 - Stored Cross-Site Scripting (XSS)",
+    "description": "RPi-Jukebox-RFID 2.8.0 - Stored Cross-Site Scripting (XSS)",
+    "published": "Mon, 02 Feb 2026 00:00:00 +0000",
+    "url": "https://www.exploit-db.com/exploits/52470",
+    "source": "exploit-db",
+    "type": "exploit"
+  },
+  {
+    "name": "[hardware] D-Link DIR-825 Rev.B 2.10 - Stack Buffer Overflow (DoS)",
+    "description": "D-Link DIR-825 Rev.B 2.10 - Stack Buffer Overflow (DoS)",
+    "published": "Mon, 02 Feb 2026 00:00:00 +0000",
+    "url": "https://www.exploit-db.com/exploits/52469",
+    "source": "exploit-db",
+    "type": "exploit"
+  },
+  {
+    "name": "[webapps] RPi-Jukebox-RFID 2.8.0 - Remote Command Execution",
+    "description": "RPi-Jukebox-RFID 2.8.0 - Remote Command Execution",
+    "published": "Sat, 17 Jan 2026 00:00:00 +0000",
+    "url": "https://www.exploit-db.com/exploits/52468",
+    "source": "exploit-db",
+    "type": "exploit"
+  },
+  {
+    "name": "[webapps] Siklu EtherHaul Series EH-8010 - Arbitrary File Upload",
+    "description": "Siklu EtherHaul Series EH-8010 - Arbitrary File Upload",
+    "published": "Sat, 17 Jan 2026 00:00:00 +0000",
+    "url": "https://www.exploit-db.com/exploits/52467",
+    "source": "exploit-db",
+    "type": "exploit"
+  },
+  {
+    "name": "[webapps] Siklu EtherHaul Series EH-8010 - Remote Command Execution",
+    "description": "Siklu EtherHaul Series EH-8010 - Remote Command Execution",
+    "published": "Sat, 17 Jan 2026 00:00:00 +0000",
+    "url": "https://www.exploit-db.com/exploits/52466",
+    "source": "exploit-db",
+    "type": "exploit"
+  },
+  {
+    "name": "[webapps] WordPress Quiz Maker 6.7.0.56 - SQL Injection",
+    "description": "WordPress Quiz Maker 6.7.0.56 - SQL Injection",
+    "published": "Thu, 25 Dec 2025 00:00:00 +0000",
+    "url": "https://www.exploit-db.com/exploits/52465",
+    "source": "exploit-db",
+    "type": "exploit"
+  },
+  {
+    "name": "[webapps] Chained Quiz  1.3.5 - Unauthenticated Insecure Direct Object Reference via Cookie",
+    "description": "Chained Quiz  1.3.5 - Unauthenticated Insecure Direct Object Reference via Cookie",
+    "published": "Thu, 25 Dec 2025 00:00:00 +0000",
+    "url": "https://www.exploit-db.com/exploits/52464",
+    "source": "exploit-db",
+    "type": "exploit"
+  },
+  {
+    "name": "[webapps] FreeBSD rtsold 15.x - Remote Code Execution via DNSSL",
+    "description": "FreeBSD rtsold 15.x - Remote Code Execution via DNSSL",
+    "published": "Thu, 25 Dec 2025 00:00:00 +0000",
+    "url": "https://www.exploit-db.com/exploits/52463",
+    "source": "exploit-db",
+    "type": "exploit"
+  },
+  {
+    "name": "[webapps] Summar Employee Portal  3.98.0 - Authenticated SQL Injection",
+    "description": "Summar Employee Portal  3.98.0 - Authenticated SQL Injection",
+    "published": "Tue, 16 Dec 2025 00:00:00 +0000",
+    "url": "https://www.exploit-db.com/exploits/52462",
+    "source": "exploit-db",
+    "type": "exploit"
+  },
+  {
+    "name": "[webapps] esm-dev 136 - Path Traversal",
+    "description": "esm-dev 136 - Path Traversal",
+    "published": "Tue, 16 Dec 2025 00:00:00 +0000",
+    "url": "https://www.exploit-db.com/exploits/52461",
+    "source": "exploit-db",
+    "type": "exploit"
+  },
+  {
+    "name": "[webapps] Pluck 4.7.7-dev2 -  PHP Code Execution",
+    "description": "Pluck 4.7.7-dev2 -  PHP Code Execution",
+    "published": "Mon, 08 Dec 2025 00:00:00 +0000",
+    "url": "https://www.exploit-db.com/exploits/52460",
+    "source": "exploit-db",
+    "type": "exploit"
+  },
+  {
+    "name": "[webapps] phpMyFAQ 2.9.8 - Cross-Site Request Forgery(CSRF)",
+    "description": "phpMyFAQ 2.9.8 - Cross-Site Request Forgery(CSRF)",
+    "published": "Wed, 03 Dec 2025 00:00:00 +0000",
+    "url": "https://www.exploit-db.com/exploits/52459",
+    "source": "exploit-db",
+    "type": "exploit"
+  },
+  {
+    "name": "[webapps] phpMyFAQ  2.9.8 - Cross-Site Request Forgery (CSRF)",
+    "description": "phpMyFAQ  2.9.8 - Cross-Site Request Forgery (CSRF)",
+    "published": "Wed, 03 Dec 2025 00:00:00 +0000",
+    "url": "https://www.exploit-db.com/exploits/52458",
+    "source": "exploit-db",
+    "type": "exploit"
+  },
+  {
+    "name": "[webapps] MaNGOSWebV4  4.0.6 - Reflected XSS",
+    "description": "MaNGOSWebV4  4.0.6 - Reflected XSS",
+    "published": "Wed, 03 Dec 2025 00:00:00 +0000",
+    "url": "https://www.exploit-db.com/exploits/52457",
+    "source": "exploit-db",
+    "type": "exploit"
+  }
+]
