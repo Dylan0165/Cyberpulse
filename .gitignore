@@ -1,47 +1,89 @@
-# Dependencies
+# ── Dependencies ─────────────────────────────────────────────────────────────
 node_modules/
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
 .venv/
 venv/
+env/
+.env/
+*.egg-info/
+.eggs/
+pip-wheel-metadata/
 
-# Environment — never commit secrets to a public repo
+# ── Environment & Secrets ─────────────────────────────────────────────────────
 .env
 .env.local
 .env.production
+.env.staging
 **/.env
 **/.env.local
 **/.env.production
 *.env
+!.env.example
+!.env.local.example
 
-# Build artifacts
+# ── Build Artifacts ───────────────────────────────────────────────────────────
 .next/
 dist/
 build/
-*.egg-info/
+out/
+.svelte-kit/
+.turbo/
 
-# Rust build output
+# ── Rust / Tauri ──────────────────────────────────────────────────────────────
 target/
 **/target/
+cyberpulse/src-tauri/target/
 
-# Docker volumes
+# ── Scan & Runtime Data ───────────────────────────────────────────────────────
+cyberpulse/data/scans/
+cyberpulse/data/scraped/
+cyberpulse/data/*.log
+data/scans/
+data/scraped/
+reports/
+scan_output/
+
+# ── Logs ─────────────────────────────────────────────────────────────────────
+*.log
+logs/
+celerybeat-schedule
+celerybeat.pid
+
+# ── Docker Volumes ────────────────────────────────────────────────────────────
 pgdata/
 redisdata/
+scan_data/
 
-# IDE
+# ── IDE & Editor ──────────────────────────────────────────────────────────────
 .vscode/
 .idea/
 *.swp
 *.swo
+*.suo
+*.user
+.vs/
 
-# OS
+# ── OS ───────────────────────────────────────────────────────────────────────
 .DS_Store
 Thumbs.db
+desktop.ini
+ehthumbs.db
 
-# Logs
-*.log
-celerybeat-schedule
+# ── Skill / Agent Prompt Files ────────────────────────────────────────────────
+autopentest-ai.skill
 
-# Reports (never commit scan data)
-reports/
-scan_output/
+# ── Python Misc ───────────────────────────────────────────────────────────────
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+htmlcov/
+.coverage
+coverage.xml
+
+# ── Node Misc ─────────────────────────────────────────────────────────────────
+.npm/
+.pnpm-store/
+*.tsbuildinfo

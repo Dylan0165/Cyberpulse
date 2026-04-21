@@ -1,9 +1,0 @@
-{
-  "findings": [
-    {
-      "type": "ipv6_not_enabled",
-      "detail": "No AAAA record \u2014 IPv6 not configured",
-      "severity": "info"
-    }
-  ]
-}

@@ -54,10 +54,18 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title="CyberPulse", version="3.0", lifespan=lifespan)
 
 
-# CORS for Svelte dev server and Tauri
+# CORS — allow Svelte dev, Tauri, and the FastAPI backend container
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "tauri://localhost", "https://tauri.localhost"],
+    allow_origins=[
+        "http://localhost:5173",
+        "tauri://localhost",
+        "https://tauri.localhost",
+        "http://localhost:8000",
+        "http://backend:8000",
+        "http://localhost:3000",
+        "http://frontend:3000",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -426,6 +434,14 @@ class ToolScanRequest(BaseModel):
     target: str
     tools: list[str] | None = None
     profile: str | None = None
+    scan_mode: str = "blackbox"   # blackbox | graybox | whitebox
+
+
+# Extra tools unlocked per scan mode on top of the selected profile/tool list
+_MODE_EXTRA_TOOLS: dict[str, list[str]] = {
+    "graybox": ["crackmapexec", "evil-winrm", "impacket", "nikto", "wpscan"],
+    "whitebox": ["lynis", "trivy", "grype", "chkrootkit", "binwalk", "exiftool"],
+}
 
 
 @app.get("/api/tools/available")
@@ -445,21 +461,34 @@ async def list_tool_profiles():
 
 @app.post("/api/tools/scan")
 async def start_tool_scan(body: ToolScanRequest):
-    """Start a standalone Kali tool scan."""
+    """Start a standalone Kali tool scan.
+
+    scan_mode controls which extra tools are appended:
+      - blackbox : only the selected tools / profile (external attacker view)
+      - graybox  : adds internal/authenticated tools (crackmapexec, evil-winrm …)
+      - whitebox : adds source/config analysis tools (lynis, trivy, grype …)
+    """
     target = body.target.strip()
     if not target:
         raise HTTPException(status_code=400, detail="Target is verplicht")
 
+    scan_mode = body.scan_mode if body.scan_mode in ("blackbox", "graybox", "whitebox") else "blackbox"
+
     from tools.tool_runner import ToolRunner, TOOL_SCAN_PROFILES
     import uuid
 
-    # Determine which tools to run
+    # Determine base tool list
     if body.tools:
-        tool_names = body.tools
+        tool_names = list(body.tools)
     elif body.profile and body.profile in TOOL_SCAN_PROFILES:
-        tool_names = TOOL_SCAN_PROFILES[body.profile]
+        tool_names = list(TOOL_SCAN_PROFILES[body.profile])
     else:
-        tool_names = TOOL_SCAN_PROFILES.get("web_quick", ["nikto", "gobuster", "nuclei"])
+        tool_names = list(TOOL_SCAN_PROFILES.get("web_quick", ["nikto", "gobuster", "nuclei"]))
+
+    # Append mode-specific extra tools (no duplicates)
+    for extra in _MODE_EXTRA_TOOLS.get(scan_mode, []):
+        if extra not in tool_names:
+            tool_names.append(extra)
 
     scan_id = f"tool_{int(time.time())}_{uuid.uuid4().hex[:6]}"
     scan_dir = Config.SCANS_DIR / scan_id
@@ -475,7 +504,7 @@ async def start_tool_scan(body: ToolScanRequest):
     )
     thread.start()
 
-    return {"scan_id": scan_id, "status": "started", "tools": tool_names}
+    return {"scan_id": scan_id, "status": "started", "tools": tool_names, "scan_mode": scan_mode}
 
 
 def _run_tool_scan_thread(scan_id: str, target: str, tool_names: list[str], scan_dir: Path):

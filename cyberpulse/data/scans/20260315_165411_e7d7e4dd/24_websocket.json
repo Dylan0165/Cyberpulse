@@ -1,9 +1,0 @@
-{
-  "findings": [
-    {
-      "type": "no_websocket",
-      "detail": "No WebSocket endpoints detected",
-      "severity": "info"
-    }
-  ]
-}

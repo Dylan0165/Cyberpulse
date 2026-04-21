@@ -1,9 +1,0 @@
-{
-  "findings": [
-    {
-      "type": "no_upload_endpoints",
-      "detail": "No file upload functionality detected",
-      "severity": "info"
-    }
-  ]
-}

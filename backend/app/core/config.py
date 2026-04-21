@@ -62,6 +62,9 @@ class Settings(BaseSettings):
     scan_container_memory_limit: str = "2g"
     scan_container_cpu_limit: float = 2.0
 
+    # CyberPulse engine (separate container on port 7823)
+    cyberpulse_url: str = "http://cyberpulse-web:7823"
+
     # External APIs
     shodan_api_key: str = ""
     haveibeenpwned_api_key: str = ""

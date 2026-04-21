@@ -1,9 +1,0 @@
-{
-  "findings": [
-    {
-      "type": "no_graphql",
-      "detail": "No GraphQL endpoints detected",
-      "severity": "info"
-    }
-  ]
-}

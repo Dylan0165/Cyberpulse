@@ -1,133 +1,126 @@
 """Backend API endpoints for Kali tool management.
 
-Proxies tool info from the CyberPulse scanner to the SaaS frontend.
+Proxies all tool requests to the CyberPulse engine (cyberpulse-web:7823).
+The CyberPulse container has direct access to Kali binaries and its own
+ToolRunner registry — the backend never checks shutil.which() itself.
 """
 
-import shutil
-from fastapi import APIRouter
+import json
+import logging
+from typing import AsyncGenerator
+
+import httpx
+from fastapi import APIRouter, HTTPException
+from fastapi.responses import StreamingResponse
+from pydantic import BaseModel
+
+from app.core.config import get_settings
 
 router = APIRouter(prefix="/tools", tags=["tools"])
+logger = logging.getLogger(__name__)
 
-# Category → tool list (mirrors what's in cyberpulse/tools)
-_ALL_TOOLS = {
-    "password": [
-        {"name": "john", "display_name": "John the Ripper"},
-        {"name": "hashcat", "display_name": "Hashcat"},
-        {"name": "hydra", "display_name": "Hydra"},
-        {"name": "crackmapexec", "display_name": "CrackMapExec"},
-        {"name": "medusa", "display_name": "Medusa"},
-        {"name": "fcrackzip", "display_name": "Fcrackzip"},
-        {"name": "ophcrack", "display_name": "Ophcrack"},
-        {"name": "pdfcrack", "display_name": "PDFCrack"},
-    ],
-    "network_scanning": [
-        {"name": "masscan", "display_name": "Masscan"},
-        {"name": "zmap", "display_name": "ZMap"},
-        {"name": "netdiscover", "display_name": "Netdiscover"},
-        {"name": "arpscan", "display_name": "ARP-scan"},
-        {"name": "hping3", "display_name": "Hping3"},
-        {"name": "unicornscan", "display_name": "Unicornscan"},
-    ],
-    "web": [
-        {"name": "sqlmap", "display_name": "SQLmap"},
-        {"name": "nikto", "display_name": "Nikto"},
-        {"name": "wpscan", "display_name": "WPScan"},
-        {"name": "gobuster", "display_name": "Gobuster"},
-        {"name": "nuclei", "display_name": "Nuclei"},
-        {"name": "wfuzz", "display_name": "Wfuzz"},
-        {"name": "xsstrike", "display_name": "XSStrike"},
-        {"name": "commix", "display_name": "Commix"},
-        {"name": "arjun", "display_name": "Arjun"},
-        {"name": "skipfish", "display_name": "Skipfish"},
-    ],
-    "wireless": [
-        {"name": "aireplay-ng", "display_name": "Aireplay-ng"},
-        {"name": "reaver", "display_name": "Reaver"},
-        {"name": "wash", "display_name": "Wash"},
-        {"name": "kismet", "display_name": "Kismet"},
-    ],
-    "sniffing": [
-        {"name": "tshark", "display_name": "Tshark"},
-        {"name": "tcpdump", "display_name": "Tcpdump"},
-        {"name": "bettercap", "display_name": "Bettercap"},
-        {"name": "responder", "display_name": "Responder"},
-        {"name": "arpspoof", "display_name": "Arpspoof"},
-        {"name": "ettercap", "display_name": "Ettercap"},
-        {"name": "macchanger", "display_name": "Macchanger"},
-    ],
-    "osint": [
-        {"name": "theharvester", "display_name": "theHarvester"},
-        {"name": "amass", "display_name": "Amass"},
-        {"name": "dnsrecon", "display_name": "DNSrecon"},
-        {"name": "fierce", "display_name": "Fierce"},
-        {"name": "spiderfoot", "display_name": "SpiderFoot"},
-        {"name": "shodan", "display_name": "Shodan"},
-        {"name": "recon-ng", "display_name": "Recon-ng"},
-        {"name": "maltego", "display_name": "Maltego"},
-    ],
-    "exploitation": [
-        {"name": "searchsploit", "display_name": "SearchSploit"},
-        {"name": "impacket", "display_name": "Impacket"},
-        {"name": "evil-winrm", "display_name": "Evil-WinRM"},
-        {"name": "certipy", "display_name": "Certipy"},
-    ],
-    "post_exploit": [
-        {"name": "bloodhound-reader", "display_name": "BloodHound Reader"},
-        {"name": "linpeas-parser", "display_name": "LinPEAS Parser"},
-        {"name": "mimikatz", "display_name": "Mimikatz"},
-        {"name": "winpeas-parser", "display_name": "WinPEAS Parser"},
-    ],
-    "forensics": [
-        {"name": "volatility3", "display_name": "Volatility 3"},
-        {"name": "binwalk", "display_name": "Binwalk"},
-        {"name": "exiftool", "display_name": "ExifTool"},
-        {"name": "strings", "display_name": "Strings"},
-        {"name": "foremost", "display_name": "Foremost"},
-        {"name": "steghide", "display_name": "Steghide"},
-    ],
-    "reversing": [
-        {"name": "radare2", "display_name": "Radare2"},
-        {"name": "objdump", "display_name": "Objdump"},
-        {"name": "strace", "display_name": "Strace"},
-        {"name": "ghidra", "display_name": "Ghidra"},
-        {"name": "pwntools", "display_name": "Pwntools"},
-        {"name": "ropper", "display_name": "Ropper"},
-    ],
-    "vuln_analysis": [
-        {"name": "lynis", "display_name": "Lynis"},
-        {"name": "trivy", "display_name": "Trivy"},
-        {"name": "grype", "display_name": "Grype"},
-        {"name": "chkrootkit", "display_name": "Chkrootkit"},
-        {"name": "openvas", "display_name": "OpenVAS"},
-    ],
-    "crypto": [
-        {"name": "hashid", "display_name": "hashID"},
-        {"name": "hash_identifier", "display_name": "Hash Identifier"},
-        {"name": "cyberchef", "display_name": "CyberChef"},
-        {"name": "stegseek", "display_name": "Stegseek"},
-        {"name": "featherduster", "display_name": "FeatherDuster"},
-    ],
-}
+
+def _cp_url() -> str:
+    return get_settings().cyberpulse_url
+
+
+async def _proxy_get(path: str) -> dict:
+    url = f"{_cp_url()}{path}"
+    try:
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            resp = await client.get(url)
+            resp.raise_for_status()
+            return resp.json()
+    except httpx.ConnectError:
+        raise HTTPException(status_code=503, detail="CyberPulse engine niet bereikbaar. Controleer of de container draait.")
+    except httpx.HTTPStatusError as e:
+        raise HTTPException(status_code=e.response.status_code, detail=str(e))
+    except Exception as e:
+        logger.error("CyberPulse proxy GET %s failed: %s", path, e)
+        raise HTTPException(status_code=502, detail=str(e))
 
 
 @router.get("/available")
 async def list_tools():
-    """Return all Kali tools with local availability check."""
-    results = {}
-    for category, tools in _ALL_TOOLS.items():
-        for tool in tools:
-            available = shutil.which(tool["name"]) is not None
-            results[tool["name"]] = {
-                **tool,
-                "category": category,
-                "available": available,
-            }
-    return results
+    """Return all Kali tools with real availability — sourced from CyberPulse ToolRunner registry."""
+    return await _proxy_get("/api/tools/available")
+
+
+@router.get("/profiles")
+async def list_profiles():
+    """Return all scan profiles defined in CyberPulse config."""
+    return await _proxy_get("/api/tools/profiles")
 
 
 @router.get("/check")
 async def check_tools():
-    """Quick availability check for common pentest tools."""
-    tool_names = ["nmap", "nikto", "sqlmap", "gobuster", "nuclei", "masscan",
-                  "hydra", "john", "hashcat", "wpscan", "amass", "tshark"]
-    return {name: shutil.which(name) is not None for name in tool_names}
+    """Quick availability check for common tools — proxied from CyberPulse."""
+    try:
+        return await _proxy_get("/api/tools/check")
+    except HTTPException:
+        return {}
+
+
+# ── Tool Scan ──────────────────────────────────────────────────────
+
+class ToolScanRequest(BaseModel):
+    target: str
+    tools: list[str] | None = None
+    profile: str | None = None
+    scan_mode: str = "blackbox"   # blackbox | graybox | whitebox
+
+
+@router.post("/scan")
+async def start_tool_scan(body: ToolScanRequest):
+    """Start a Kali tool scan via the CyberPulse engine.
+
+    Returns {scan_id, status, tools} immediately. Stream live output from
+    GET /api/tools/scan/{scan_id}/stream.
+    """
+    url = f"{_cp_url()}/api/tools/scan"
+    try:
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            resp = await client.post(url, json=body.model_dump())
+            resp.raise_for_status()
+            return resp.json()
+    except httpx.ConnectError:
+        raise HTTPException(status_code=503, detail="CyberPulse engine niet bereikbaar")
+    except httpx.HTTPStatusError as e:
+        raise HTTPException(status_code=e.response.status_code, detail=str(e))
+    except Exception as e:
+        logger.error("Tool scan proxy failed: %s", e)
+        raise HTTPException(status_code=502, detail=str(e))
+
+
+@router.get("/scan/{scan_id}/stream")
+async def stream_tool_scan(scan_id: str):
+    """Proxy the SSE event stream from CyberPulse to the frontend.
+
+    Events: tool_start, tool_done, tool_skipped, tool_error, tools_complete, all_done
+    """
+    safe_id = "".join(c for c in scan_id if c.isalnum() or c in "-_")
+    if safe_id != scan_id or not safe_id:
+        raise HTTPException(status_code=400, detail="Ongeldig scan ID")
+
+    upstream = f"{_cp_url()}/api/scan/{safe_id}/stream"
+
+    async def event_stream() -> AsyncGenerator[bytes, None]:
+        try:
+            async with httpx.AsyncClient(timeout=None) as client:
+                async with client.stream("GET", upstream) as resp:
+                    async for chunk in resp.aiter_bytes():
+                        if chunk:
+                            yield chunk
+        except httpx.ConnectError:
+            msg = json.dumps({"type": "error", "message": "CyberPulse engine verbinding verbroken"})
+            yield f"data: {msg}\n\n".encode()
+        except Exception as e:
+            logger.error("SSE proxy for %s failed: %s", safe_id, e)
+            msg = json.dumps({"type": "error", "message": str(e)})
+            yield f"data: {msg}\n\n".encode()
+
+    return StreamingResponse(
+        event_stream(),
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    )

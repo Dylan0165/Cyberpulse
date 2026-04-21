@@ -156,48 +156,49 @@
 <style>
   .chat-page { padding: 2rem; height: calc(100vh - 4rem); display: flex; flex-direction: column; }
   .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; }
-  .page-header h1 { font-size: 1.5rem; font-weight: 700; margin: 0; }
-  .scan-select-wrap { display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem; color: var(--text-muted, #888); }
+  .page-header h1 { font-size: 1.5rem; font-weight: 700; margin: 0; color: var(--text); }
+  .scan-select-wrap { display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem; color: var(--text-2); }
   .scan-select-wrap select {
-    background: var(--surface, #111); border: 1px solid var(--border, #333);
-    color: var(--text, #fff); padding: 0.3rem 0.75rem; font-size: 0.875rem; max-width: 360px;
+    background: var(--bg-2); border: 1px solid var(--border);
+    color: var(--text); padding: 0.3rem 0.75rem; font-size: 0.875rem; max-width: 360px;
   }
   .chat-layout { display: flex; gap: 1.5rem; flex: 1; overflow: hidden; }
   .suggestions { width: 220px; flex-shrink: 0; display: flex; flex-direction: column; gap: 0.5rem; }
-  .suggestions h3 { font-size: 0.8rem; text-transform: uppercase; color: var(--text-muted, #888); margin: 0 0 0.5rem; }
+  .suggestions h3 { font-size: 0.8rem; text-transform: uppercase; color: var(--text-3); margin: 0 0 0.5rem; }
   .suggestion-btn {
-    text-align: left; background: var(--surface, #111); border: 1px solid var(--border, #333);
-    color: var(--text, #ccc); padding: 0.5rem 0.75rem; font-size: 0.8rem; cursor: pointer; line-height: 1.4;
+    text-align: left; background: var(--bg-2); border: 1px solid var(--border);
+    color: var(--text-2); padding: 0.5rem 0.75rem; font-size: 0.8rem; cursor: pointer; line-height: 1.4;
   }
-  .suggestion-btn:hover { border-color: var(--highlight, #0ff); color: var(--text, #fff); }
+  .suggestion-btn:hover { border-color: var(--border-2); color: var(--text); background: var(--bg-3); }
   .chat-area { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
   .messages { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 0.75rem;
-              padding: 0.5rem; background: var(--bg, #0a0a0a); border: 1px solid var(--border, #222); }
+              padding: 0.5rem; background: var(--bg-3); border: 1px solid var(--border); }
   .message { display: flex; }
   .message.user { justify-content: flex-end; }
   .message.assistant { justify-content: flex-start; }
   .bubble {
     max-width: 72%; padding: 0.6rem 1rem; font-size: 0.875rem; line-height: 1.6;
-    white-space: pre-wrap; word-break: break-word; position: relative;
+    white-space: pre-wrap; word-break: break-word; position: relative; color: var(--text);
   }
-  .message.user .bubble { background: var(--accent, #1a3a3a); border: 1px solid #0ff4; }
-  .message.assistant .bubble { background: var(--surface, #1a1a1a); border: 1px solid var(--border, #333); }
-  .ts { display: block; font-size: 0.7rem; color: var(--text-muted, #666); margin-top: 0.25rem; text-align: right; }
-  .thinking span { animation: pulse 1s infinite; display: inline-block; margin-right: 2px; }
+  .message.user .bubble { background: var(--bg-2); border: 1px solid var(--border-2); }
+  .message.assistant .bubble { background: var(--bg); border: 1px solid var(--border); }
+  .ts { display: block; font-size: 0.7rem; color: var(--text-3); margin-top: 0.25rem; text-align: right; }
+  .thinking span { animation: pulse 1s infinite; display: inline-block; margin-right: 2px; color: var(--text-2); }
   .thinking span:nth-child(2) { animation-delay: 0.2s; }
   .thinking span:nth-child(3) { animation-delay: 0.4s; }
   @keyframes pulse { 0%, 100% { opacity: 0.2; } 50% { opacity: 1; } }
   .input-area { display: flex; gap: 0.5rem; margin-top: 0.75rem; }
   .input-area textarea {
-    flex: 1; background: var(--surface, #111); border: 1px solid var(--border, #333);
-    color: var(--text, #fff); padding: 0.5rem 0.75rem; font-size: 0.875rem; resize: none; outline: none;
+    flex: 1; background: var(--bg-2); border: 1px solid var(--border);
+    color: var(--text); padding: 0.5rem 0.75rem; font-size: 0.875rem; resize: none; outline: none;
     font-family: inherit;
   }
-  .input-area textarea:focus { border-color: var(--highlight, #0ff); }
+  .input-area textarea:focus { border-color: var(--border-2); }
   .send-btn {
-    background: var(--accent, #1a1a1a); border: 1px solid var(--highlight, #0ff);
-    color: var(--highlight, #0ff); padding: 0.5rem 1.25rem; cursor: pointer; font-size: 1.1rem;
+    background: var(--accent); border: 1px solid var(--accent);
+    color: var(--bg); padding: 0.5rem 1.25rem; cursor: pointer; font-size: 1.1rem;
   }
   .send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-  .loading, .empty-state, .intro { color: var(--text-muted, #888); text-align: center; padding: 2rem; font-size: 0.9rem; }
+  .loading, .empty-state, .intro { color: var(--text-3); text-align: center; padding: 2rem; font-size: 0.9rem; }
+  .intro strong { color: var(--text); }
 </style>
