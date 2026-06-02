@@ -18,6 +18,13 @@ jobs:
           cd /home/student/cyberpulse
           docker compose -f docker-compose.netlab.yml up -d --build
 
+      - name: Show container logs on failure
+        if: failure()
+        run: |
+          cd /home/student/cyberpulse
+          docker compose -f docker-compose.netlab.yml ps
+          docker compose -f docker-compose.netlab.yml logs --tail=50
+
       - name: Run database migrations
         run: |
           cd /home/student/cyberpulse

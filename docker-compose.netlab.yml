@@ -49,9 +49,10 @@ services:
       CYBERPULSE_PORT: "7823"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:7823/health"]
-      interval: 15s
+      interval: 10s
       timeout: 5s
-      retries: 3
+      retries: 6
+      start_period: 30s
 
   # ── FastAPI Backend ──────────────────────────────────────
   backend:
