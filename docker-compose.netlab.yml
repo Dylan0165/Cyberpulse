@@ -69,7 +69,7 @@ services:
       redis:
         condition: service_healthy
       cyberpulse-web:
-        condition: service_healthy
+        condition: service_started
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000
