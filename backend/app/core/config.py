@@ -43,9 +43,10 @@ class Settings(BaseSettings):
     clerk_secret_key: str = ""
     clerk_webhook_secret: str = ""
 
-    # Anthropic
-    anthropic_api_key: str = ""
-    claude_model: str = "claude-opus-4-20250514"
+    # DeepSeek AI
+    deepseek_api_key: str = ""
+    deepseek_base_url: str = "https://api.deepseek.com/v1"
+    deepseek_model: str = "deepseek-chat"
 
     # Scanner
     scanner_image: str = "autopentest-scanner:latest"

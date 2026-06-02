@@ -19,19 +19,29 @@ class Scan(Base):
     # Scan configuration
     scan_type: Mapped[str] = mapped_column(String(50), nullable=False)  # quick, full, custom
     phases: Mapped[list] = mapped_column(JSONB, default=list)
-    # ["recon", "vulnerability", "webapp", "network", "auth", "ssl", "cloud", "osint"]
     config: Mapped[dict] = mapped_column(JSONB, default=dict)
+
+    # Extended scan context (added in migration 0002)
+    scan_mode: Mapped[str] = mapped_column(String(20), server_default="blackbox")
+    target_type: Mapped[str] = mapped_column(String(50), server_default="web")
+    credentials: Mapped[dict | None] = mapped_column(JSONB)          # username, password, ssh_key, bearer_token
+    phases_enabled: Mapped[list | None] = mapped_column(JSONB)        # phases the user opted into
+    phases_completed: Mapped[list | None] = mapped_column(JSONB, default=list)
+    findings: Mapped[list | None] = mapped_column(JSONB, default=list)
+    ai_analysis: Mapped[dict | None] = mapped_column(JSONB)           # DeepSeek structured output
+    tool_outputs: Mapped[dict | None] = mapped_column(JSONB, default=dict)  # {phase: {tool: stdout}}
 
     # Status tracking
     status: Mapped[str] = mapped_column(String(50), default="pending")
-    # pending -> nda_required -> verified -> running -> analyzing -> completed / failed / cancelled
-    current_phase: Mapped[str | None] = mapped_column(String(50))
-    progress: Mapped[int] = mapped_column(Integer, default=0)  # 0-100
+    # pending → nda_required → verified → running → analyzing → completed / failed / cancelled
+    current_phase: Mapped[str | None] = mapped_column(String(50))    # phase name
+    current_phase_num: Mapped[int] = mapped_column(Integer, default=0)  # phase number 1–8
+    progress: Mapped[int] = mapped_column(Integer, default=0)         # 0–100
 
-    # Results (only stored if user opted in)
+    # Results
     save_report: Mapped[bool] = mapped_column(Boolean, default=False)
-    report_data: Mapped[dict | None] = mapped_column(JSONB)  # AI-analyzed report (if saved)
-    security_score: Mapped[float | None] = mapped_column(Float)  # 0-100
+    report_data: Mapped[dict | None] = mapped_column(JSONB)
+    security_score: Mapped[float | None] = mapped_column(Float)
 
     # Finding counts
     critical_count: Mapped[int] = mapped_column(Integer, default=0)
@@ -40,19 +50,19 @@ class Scan(Base):
     low_count: Mapped[int] = mapped_column(Integer, default=0)
     info_count: Mapped[int] = mapped_column(Integer, default=0)
 
-    # Container tracking
+    # Container / job tracking (legacy, kept for compat)
     container_id: Mapped[str | None] = mapped_column(String(100))
 
     # NDA reference
     nda_acceptance_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("nda_acceptances.id"))
 
-    # Credits consumed
+    # Credits (unused in school project but kept for compat)
     credits_used: Mapped[int] = mapped_column(Integer, default=0)
 
     # Scheduling
     scheduled_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     is_recurring: Mapped[bool] = mapped_column(Boolean, default=False)
-    recurrence_pattern: Mapped[str | None] = mapped_column(String(50))  # weekly, monthly
+    recurrence_pattern: Mapped[str | None] = mapped_column(String(50))
 
     # Timestamps
     started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))

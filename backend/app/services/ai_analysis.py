@@ -1,192 +1,232 @@
-"""Claude AI analysis pipeline — processes raw scan output into structured reports."""
+"""DeepSeek AI analysis pipeline — processes raw scan output into structured reports.
+
+Replaces the previous Anthropic/Claude implementation.
+Uses the OpenAI-compatible SDK pointed at DeepSeek's base URL.
+"""
 
 import json
 import logging
-from typing import AsyncIterator
 
-import anthropic
+from openai import OpenAI
 
 from app.core.config import get_settings
-from app.schemas.report import ReportSchema
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
 
-SYSTEM_PROMPT = """You are an expert penetration tester with OSCP, CISSP, and CEH certifications.
-Analyze the provided scan output and produce a structured security report.
+SYSTEM_PROMPT = """You are a certified penetration tester (OSCP, CEH, CISSP).
+Analyze the provided security scan output and produce a structured JSON report.
 
-For each finding, provide:
-- CVE IDs where applicable
-- CVSS v3.1 score (calculate if not present)
-- Risk level: CRITICAL / HIGH / MEDIUM / LOW / INFO
-- Business impact (plain English, no jargon)
-- Proof of concept description (no actual exploit code)
-- Remediation steps (specific, actionable, with code examples where helpful)
-- OWASP category if applicable
-- Estimated fix time
+For EACH finding include:
+- id: unique string
+- title: short descriptive title
+- severity: CRITICAL | HIGH | MEDIUM | LOW | INFO
+- cvss: CVSS v3.1 score (0.0-10.0, calculate if not given)
+- cve: CVE-ID if known, else null
+- description: technical explanation
+- impact: business impact in plain language
+- recommendation: specific, actionable remediation steps
+- owasp: OWASP Top 10 category if applicable
+- phase: which scan phase found this
+- tool: which tool found this
 
-At the end, provide:
-- Executive summary (for non-technical CEO/CFO audience, max 3 paragraphs)
-- Technical summary (for IT team)
-- Prioritized remediation roadmap:
-  - Quick wins (< 1 day)
-  - Short term (< 1 week)
-  - Long term (< 1 month)
-- Overall security score 0-100 with breakdown per category
-
-Format output as structured JSON matching this schema:
+Top-level JSON structure:
 {
-  "executive_summary": "string",
-  "technical_summary": "string",
-  "findings": [
-    {
-      "id": "string",
-      "title": "string",
-      "description": "string",
-      "cve_ids": ["string"],
-      "cvss_score": number_or_null,
-      "risk_level": "CRITICAL|HIGH|MEDIUM|LOW|INFO",
-      "owasp_category": "string_or_null",
-      "affected_asset": "string",
-      "evidence": "string",
-      "business_impact": "string",
-      "poc_description": "string",
-      "remediation_steps": ["string"],
-      "estimated_fix_time": "string",
-      "phase": "string",
-      "tool": "string"
-    }
-  ],
-  "overall_score": number,
-  "category_scores": [
-    {"category": "string", "score": number, "max_score": number, "findings_count": number}
-  ],
+  "risk_score": <0-100>,
+  "risk_level": "CRITICAL|HIGH|MEDIUM|LOW",
+  "management_summary": "<2-3 paragraph executive summary for non-technical audience>",
+  "technical_summary": "<technical summary for IT team>",
+  "findings": [ <finding objects> ],
+  "finding_counts": {"critical": 0, "high": 0, "medium": 0, "low": 0, "info": 0},
   "remediation_roadmap": {
-    "quick_wins": [{"finding_id": "string", "title": "string", "priority": "quick_win", "estimated_effort": "string", "steps": ["string"]}],
-    "short_term": [...],
-    "long_term": [...]
+    "quick_wins": [ {"title":"...", "effort":"<1 day", "steps":["..."]} ],
+    "short_term": [ {"title":"...", "effort":"<1 week", "steps":["..."]} ],
+    "long_term":  [ {"title":"...", "effort":"<1 month", "steps":["..."]} ]
   },
-  "scan_id": "string",
-  "target": "string",
-  "scan_type": "string",
-  "phases_completed": ["string"],
-  "total_findings": number,
-  "critical_count": number,
-  "high_count": number,
-  "medium_count": number,
-  "low_count": number,
-  "info_count": number,
-  "compliance": {
-    "iso27001": ["string"],
-    "nis2": ["string"],
-    "soc2": ["string"],
-    "gdpr": ["string"]
-  }
+  "compliance_mapping": {
+    "owasp_top10": ["A01:2021 - ..."],
+    "iso27001": ["A.12.6.1 - ..."],
+    "nis2": ["Article 21 - ..."]
+  },
+  "scan_id": "<scan_id>",
+  "target": "<target>",
+  "scan_type": "<scan_type>"
 }
 
-IMPORTANT RULES:
-- Never include actual working exploit code. Focus on education and remediation.
-- Be precise with CVSS scores — calculate them properly using CVSS v3.1 vectors.
-- Provide actionable remediation with specific configuration changes or code snippets.
-- Map findings to compliance frameworks where applicable.
-- If scan output shows no vulnerabilities for a tool, note it under INFO findings.
-- Return ONLY valid JSON, no markdown code fences or extra text."""
+RULES:
+- Return ONLY valid JSON, no markdown fences, no extra text.
+- Never include working exploit code.
+- If a phase produced no output or only errors, note it as INFO finding.
+- Be precise with CVSS scores.
+"""
 
 
-async def analyze_phase_output(
-    scan_id: str,
-    target: str,
-    scan_type: str,
-    phase: str,
-    tool_outputs: dict[str, str],
-) -> AsyncIterator[str]:
-    """Stream Claude's analysis of scan phase output."""
-    client = anthropic.AsyncAnthropic(api_key=settings.anthropic_api_key)
-
-    # Build the user message with all tool outputs for this phase
-    tool_sections = []
-    for tool_name, output in tool_outputs.items():
-        # Truncate very large outputs to stay within context limits
-        truncated = output[:50000] if len(output) > 50000 else output
-        tool_sections.append(f"=== {tool_name} ===\n{truncated}")
-
-    user_message = f"""Analyze the following penetration test results.
-
-Target: {target}
-Scan Type: {scan_type}
-Phase: {phase}
-Scan ID: {scan_id}
-Phases completed: ["{phase}"]
-
---- SCAN OUTPUT ---
-{"\\n\\n".join(tool_sections)}
---- END SCAN OUTPUT ---
-
-Produce the structured JSON security report."""
-
-    async with client.messages.stream(
-        model=settings.claude_model,
-        max_tokens=16000,
-        system=SYSTEM_PROMPT,
-        messages=[{"role": "user", "content": user_message}],
-    ) as stream:
-        async for text in stream.text_stream:
-            yield text
+def _get_client() -> OpenAI:
+    return OpenAI(
+        api_key=settings.deepseek_api_key or "no-key",
+        base_url=settings.deepseek_base_url,
+    )
 
 
-async def analyze_full_scan(
+def analyze_scan_sync(
     scan_id: str,
     target: str,
     scan_type: str,
     phases_completed: list[str],
     all_outputs: dict[str, dict[str, str]],
-) -> AsyncIterator[str]:
-    """Stream Claude's analysis of a complete multi-phase scan."""
-    client = anthropic.AsyncAnthropic(api_key=settings.anthropic_api_key)
+) -> dict:
+    """
+    Synchronous DeepSeek analysis — used by Celery workers.
 
-    # Build comprehensive output
+    Args:
+        scan_id:          UUID string of the scan
+        target:           target value (IP or hostname)
+        scan_type:        "quick" | "full" | …
+        phases_completed: list of phase names that ran
+        all_outputs:      {phase_name: {tool_name: stdout_string}}
+
+    Returns:
+        Parsed JSON dict from DeepSeek (or an error dict on failure).
+    """
+    client = _get_client()
+
     sections = []
     for phase, tools in all_outputs.items():
         sections.append(f"\n{'='*60}\nPHASE: {phase.upper()}\n{'='*60}")
         for tool_name, output in tools.items():
-            truncated = output[:30000] if len(output) > 30000 else output
+            truncated = output[:25000] if len(output) > 25000 else output
             sections.append(f"\n--- {tool_name} ---\n{truncated}")
 
-    user_message = f"""Analyze the following complete penetration test results.
+    user_message = (
+        f"Analyze the following penetration test results.\n\n"
+        f"Target: {target}\n"
+        f"Scan Type: {scan_type}\n"
+        f"Scan ID: {scan_id}\n"
+        f"Phases completed: {json.dumps(phases_completed)}\n\n"
+        f"--- FULL SCAN OUTPUT ---\n"
+        f"{''.join(sections)}\n"
+        f"--- END SCAN OUTPUT ---\n\n"
+        f"Produce the comprehensive structured JSON security report."
+    )
 
-Target: {target}
-Scan Type: {scan_type}
-Scan ID: {scan_id}
-Phases completed: {json.dumps(phases_completed)}
-
---- FULL SCAN OUTPUT ---
-{"\\n".join(sections)}
---- END SCAN OUTPUT ---
-
-Produce the comprehensive structured JSON security report covering all phases."""
-
-    async with client.messages.stream(
-        model=settings.claude_model,
-        max_tokens=32000,
-        system=SYSTEM_PROMPT,
-        messages=[{"role": "user", "content": user_message}],
-    ) as stream:
-        async for text in stream.text_stream:
-            yield text
-
-
-def parse_report_json(raw_json: str) -> ReportSchema | None:
-    """Parse Claude's JSON output into our report schema."""
     try:
-        # Strip markdown code fences if present
-        cleaned = raw_json.strip()
-        if cleaned.startswith("```"):
-            lines = cleaned.split("\n")
-            cleaned = "\n".join(lines[1:])
-            if cleaned.endswith("```"):
-                cleaned = cleaned[:-3]
+        response = client.chat.completions.create(
+            model=settings.deepseek_model,
+            messages=[
+                {"role": "system", "content": SYSTEM_PROMPT},
+                {"role": "user",   "content": user_message},
+            ],
+            max_tokens=16000,
+            temperature=0.1,
+        )
+        raw = response.choices[0].message.content or ""
+        return _parse_json(raw, scan_id, target, scan_type)
+    except Exception as exc:
+        logger.error("DeepSeek analysis failed for scan %s: %s", scan_id, exc)
+        return _error_report(scan_id, target, scan_type, str(exc))
+
+
+def analyze_scan_sync_streaming(
+    scan_id: str,
+    target: str,
+    scan_type: str,
+    phases_completed: list[str],
+    all_outputs: dict[str, dict[str, str]],
+    redis_client=None,
+) -> dict:
+    """
+    Like analyze_scan_sync but streams tokens to Redis channel
+    `scan:{scan_id}:analysis` for live WebSocket updates.
+    """
+    client = _get_client()
+
+    sections = []
+    for phase, tools in all_outputs.items():
+        sections.append(f"\n{'='*60}\nPHASE: {phase.upper()}\n{'='*60}")
+        for tool_name, output in tools.items():
+            truncated = output[:25000] if len(output) > 25000 else output
+            sections.append(f"\n--- {tool_name} ---\n{truncated}")
+
+    user_message = (
+        f"Target: {target}\nScan Type: {scan_type}\nScan ID: {scan_id}\n"
+        f"Phases: {json.dumps(phases_completed)}\n\n"
+        f"--- SCAN OUTPUT ---\n{''.join(sections)}\n--- END ---\n\n"
+        f"Produce the structured JSON security report."
+    )
+
+    accumulated = ""
+    try:
+        with client.chat.completions.stream(
+            model=settings.deepseek_model,
+            messages=[
+                {"role": "system", "content": SYSTEM_PROMPT},
+                {"role": "user",   "content": user_message},
+            ],
+            max_tokens=16000,
+            temperature=0.1,
+        ) as stream:
+            for chunk in stream:
+                delta = chunk.choices[0].delta.content or ""
+                accumulated += delta
+                if redis_client and delta:
+                    try:
+                        redis_client.publish(
+                            f"scan:{scan_id}:analysis",
+                            json.dumps({"type": "token", "token": delta}),
+                        )
+                    except Exception:
+                        pass
+
+        result = _parse_json(accumulated, scan_id, target, scan_type)
+        if redis_client:
+            try:
+                redis_client.publish(
+                    f"scan:{scan_id}:analysis",
+                    json.dumps({"type": "analysis_complete", "risk_score": result.get("risk_score", 0)}),
+                )
+            except Exception:
+                pass
+        return result
+
+    except Exception as exc:
+        logger.error("DeepSeek streaming failed for scan %s: %s", scan_id, exc)
+        return _error_report(scan_id, target, scan_type, str(exc))
+
+
+def _parse_json(raw: str, scan_id: str, target: str, scan_type: str) -> dict:
+    cleaned = raw.strip()
+    # Strip markdown code fences if present
+    if cleaned.startswith("```"):
+        lines = cleaned.split("\n")
+        cleaned = "\n".join(lines[1:])
+        if cleaned.rstrip().endswith("```"):
+            cleaned = cleaned.rstrip()[:-3]
+    try:
         data = json.loads(cleaned)
-        return ReportSchema(**data)
-    except (json.JSONDecodeError, Exception) as e:
-        logger.error(f"Failed to parse report JSON: {e}")
-        return None
+        # Ensure required top-level keys are present
+        data.setdefault("scan_id",   scan_id)
+        data.setdefault("target",    target)
+        data.setdefault("scan_type", scan_type)
+        data.setdefault("risk_score", 0)
+        data.setdefault("risk_level", "LOW")
+        data.setdefault("findings", [])
+        return data
+    except json.JSONDecodeError as exc:
+        logger.error("Failed to parse DeepSeek JSON: %s | raw=%s", exc, cleaned[:200])
+        return _error_report(scan_id, target, scan_type, f"JSON parse error: {exc}")
+
+
+def _error_report(scan_id: str, target: str, scan_type: str, error: str) -> dict:
+    return {
+        "scan_id":            scan_id,
+        "target":             target,
+        "scan_type":          scan_type,
+        "risk_score":         0,
+        "risk_level":         "INFO",
+        "management_summary": f"AI analysis could not complete: {error}",
+        "technical_summary":  f"DeepSeek API error: {error}",
+        "findings":           [],
+        "finding_counts":     {"critical":0,"high":0,"medium":0,"low":0,"info":0},
+        "remediation_roadmap": {"quick_wins":[],"short_term":[],"long_term":[]},
+        "compliance_mapping":  {"owasp_top10":[],"iso27001":[],"nis2":[]},
+    }
