@@ -32,7 +32,7 @@ jobs:
       - name: Run database migrations
         run: |
           cd /home/student/cyberpulse
-          docker compose -f docker-compose.netlab.yml exec -T backend alembic upgrade head
+          docker compose -f docker-compose.netlab.yml exec -T -e PYTHONPATH=/app backend alembic upgrade head
 
       - name: Health check
         run: curl -f http://localhost:8000/health || exit 1
