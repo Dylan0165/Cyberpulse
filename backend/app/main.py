@@ -51,7 +51,7 @@ app.add_middleware(
 if settings.app_env == "production":
     app.add_middleware(
         TrustedHostMiddleware,
-        allowed_hosts=["autopentest.ai", "*.autopentest.ai", "localhost"],
+        allowed_hosts=["autopentest.ai", "*.autopentest.ai", "localhost", "127.0.0.1"],
     )
 
 # API Routes

@@ -35,7 +35,7 @@ jobs:
           docker compose -f docker-compose.netlab.yml exec -T -e PYTHONPATH=/app backend alembic upgrade head
 
       - name: Health check
-        run: curl -f http://localhost:8000/health || exit 1
+        run: curl -f http://localhost:8000/api/health || exit 1
 
       - name: Confirm deployment
         run: echo "Deploy successful"
