@@ -1,0 +1,15 @@
+[Unit]
+Description=CyberPulse Tool API
+After=network.target
+
+[Service]
+User=student
+WorkingDirectory=/home/student/cyberpulse/kali
+ExecStart=/usr/bin/python3 /home/student/cyberpulse/kali/tool_api.py
+Restart=always
+RestartSec=5
+Environment=TOOL_API_HOST=192.168.121.28
+Environment=TOOL_API_PORT=5001
+
+[Install]
+WantedBy=multi-user.target
