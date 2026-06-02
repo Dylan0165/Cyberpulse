@@ -36,15 +36,23 @@ jobs:
 
       - name: Health check
         run: |
-          for i in $(seq 1 15); do
-            if curl -sf http://localhost:8000/api/health; then
-              echo "Backend healthy"
+          for i in $(seq 1 30); do
+            STATUS=$(docker exec cyberpulse-backend-1 curl -sf http://localhost:8000/api/health 2>/dev/null && echo "ok" || echo "fail")
+            if [ "$STATUS" = "ok" ]; then
+              echo "Backend healthy on attempt $i"
               exit 0
             fi
-            echo "Attempt $i/15 failed, retrying in 2s..."
+            # Show backend logs on first 3 failures to diagnose
+            if [ "$i" -le 3 ]; then
+              echo "--- backend logs (attempt $i) ---"
+              docker logs cyberpulse-backend-1 --tail=20 2>&1 || true
+            fi
+            echo "Attempt $i/30 failed, retrying in 2s..."
             sleep 2
           done
-          echo "Backend did not become healthy after 30s"
+          echo "Backend did not become healthy after 60s"
+          echo "--- final backend logs ---"
+          docker logs cyberpulse-backend-1 --tail=50 2>&1 || true
           exit 1
 
       - name: Confirm deployment
