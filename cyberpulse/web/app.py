@@ -1,5 +1,12 @@
 """CyberPulse — FastAPI JSON API for the Tauri desktop app."""
 
+import sys
+from pathlib import Path
+# Ensure /app (cyberpulse root) is in sys.path so 'reports', 'engine', etc. are importable
+_ROOT = Path(__file__).resolve().parent.parent
+if str(_ROOT) not in sys.path:
+    sys.path.insert(0, str(_ROOT))
+
 import json
 import logging
 import secrets
