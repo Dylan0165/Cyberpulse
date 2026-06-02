@@ -9,8 +9,8 @@ from jinja2 import Environment, BaseLoader
 
 try:
     from weasyprint import HTML as _HTML
-except ImportError:
-    _HTML = None  # type: ignore
+except Exception:
+    _HTML = None  # type: ignore — weasyprint requires system GTK/GLib libs
 
 logger = logging.getLogger(__name__)
 
