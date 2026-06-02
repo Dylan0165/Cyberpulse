@@ -43,14 +43,6 @@ class Settings(BaseSettings):
     clerk_secret_key: str = ""
     clerk_webhook_secret: str = ""
 
-    # Stripe
-    stripe_secret_key: str = ""
-    stripe_webhook_secret: str = ""
-    stripe_starter_price_id: str = ""
-    stripe_professional_price_id: str = ""
-    stripe_business_price_id: str = ""
-    stripe_single_scan_price_id: str = ""
-
     # Anthropic
     anthropic_api_key: str = ""
     claude_model: str = "claude-opus-4-20250514"

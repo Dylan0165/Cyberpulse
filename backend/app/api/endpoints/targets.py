@@ -51,16 +51,6 @@ async def create_target(
     if not validate_target_value(body.target_type, body.value):
         raise HTTPException(status_code=400, detail="Invalid target value for the specified type")
 
-    # Check plan domain limits
-    from app.services.billing import PLANS
-    plan_config = PLANS.get(user.plan, {})
-    max_domains = plan_config.get("max_domains", 1)
-    existing_count = await db.scalar(
-        select(func.count(Target.id)).where(Target.user_id == user.id)
-    )
-    if existing_count >= max_domains:
-        raise HTTPException(status_code=403, detail=f"Plan limit: maximum {max_domains} targets allowed")
-
     # Generate verification token
     token = await generate_verification_token()
 

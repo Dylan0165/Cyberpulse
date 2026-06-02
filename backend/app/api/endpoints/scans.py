@@ -25,7 +25,6 @@ from app.schemas.scan import (
     FULL_PHASES,
 )
 from app.services.audit import log_action
-from app.services.billing import SCAN_CREDIT_COST, SCAN_CREDIT_COST as CREDIT_COSTS
 
 router = APIRouter(prefix="/scans", tags=["scans"])
 
@@ -59,31 +58,6 @@ async def create_scan(
     if not target.is_verified:
         raise HTTPException(status_code=403, detail="Target must be verified before scanning")
 
-    # Check credit balance
-    credit_cost = CREDIT_COSTS.get(body.scan_type, 1)
-    if user.credits < credit_cost and user.plan == "free":
-        raise HTTPException(status_code=402, detail=f"Insufficient credits. Need {credit_cost}, have {user.credits}")
-
-    # Check concurrent scan limit
-    active_scans = await db.scalar(
-        select(func.count(Scan.id)).where(
-            Scan.user_id == user.id,
-            Scan.status.in_(["running", "analyzing"]),
-        )
-    )
-    if active_scans >= user.max_concurrent_scans:
-        raise HTTPException(
-            status_code=429,
-            detail=f"Maximum {user.max_concurrent_scans} concurrent scans for your plan"
-        )
-
-    # Check plan features
-    from app.services.billing import PLANS
-    plan_config = PLANS.get(user.plan, {})
-    features = plan_config.get("features", [])
-    if body.scan_type == "full" and "full_scan" not in features:
-        raise HTTPException(status_code=403, detail="Full scans require Professional plan or higher")
-
     # Determine phases
     if body.scan_type == "quick":
         phases = QUICK_PHASES
@@ -100,13 +74,8 @@ async def create_scan(
         config=body.config,
         save_report=body.save_report,
         status="nda_required",
-        credits_used=credit_cost,
     )
     db.add(scan)
-
-    # Deduct credits
-    if user.plan != "business":
-        user.credits -= credit_cost
 
     await db.commit()
     await db.refresh(scan)
@@ -225,9 +194,6 @@ async def cancel_scan(
 
     scan.status = "cancelled"
     scan.completed_at = datetime.now(timezone.utc)
-
-    # Refund credits
-    user.credits += scan.credits_used
     await db.commit()
 
     ip = await get_client_ip(request)

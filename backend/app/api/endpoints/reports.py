@@ -56,10 +56,6 @@ async def export_pdf(
 ):
     user = await _get_user(db, current_user["clerk_id"])
 
-    # White-label requires Business plan
-    if white_label and user.plan != "business":
-        raise HTTPException(status_code=403, detail="White-label reports require Business plan")
-
     result = await db.execute(
         select(Scan).where(Scan.id == scan_id, Scan.user_id == user.id)
     )

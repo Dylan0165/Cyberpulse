@@ -1,4 +1,4 @@
-"""Pydantic schemas for user accounts and billing."""
+"""Pydantic schemas for user accounts."""
 
 from datetime import datetime
 from uuid import UUID
@@ -18,25 +18,3 @@ class UserResponse(BaseModel):
     created_at: datetime
 
     model_config = {"from_attributes": True}
-
-
-class BillingInfo(BaseModel):
-    plan: str
-    credits: int
-    stripe_customer_id: str | None
-    subscription_status: str | None
-
-
-class CreateCheckoutRequest(BaseModel):
-    price_id: str
-    success_url: str
-    cancel_url: str
-
-
-class PurchaseCreditsRequest(BaseModel):
-    quantity: int  # Number of credits to purchase
-
-
-class WebhookEvent(BaseModel):
-    type: str
-    data: dict
