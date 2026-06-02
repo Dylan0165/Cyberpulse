@@ -27,7 +27,7 @@ jobs:
           echo "=== cyberpulse-web logs ==="
           docker logs cyberpulse-cyberpulse-web-1 --tail=40 2>&1 || true
           echo "=== backend logs ==="
-          docker logs cyberpulse-backend-1 --tail=20 2>&1 || true
+          docker logs cyberpulse-backend-1 --tail=40 2>&1 || true
 
       - name: Run database migrations
         run: |
