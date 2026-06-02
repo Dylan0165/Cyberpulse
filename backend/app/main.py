@@ -9,7 +9,7 @@ from fastapi.middleware.trustedhost import TrustedHostMiddleware
 
 from app.core.config import get_settings
 from app.core.database import engine, Base
-from app.api.endpoints import targets, scans, legal, users, reports, websocket, tools
+from app.api.endpoints import targets, scans, legal, users, reports, websocket, tools, scanner
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -61,6 +61,7 @@ app.include_router(scans.router, prefix="/api")
 app.include_router(legal.router, prefix="/api")
 app.include_router(reports.router, prefix="/api")
 app.include_router(tools.router, prefix="/api")
+app.include_router(scanner.router, prefix="/api")
 
 # WebSocket Routes
 app.include_router(websocket.router)

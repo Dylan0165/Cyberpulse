@@ -57,6 +57,11 @@ class Settings(BaseSettings):
     # CyberPulse engine (separate container on port 7823)
     cyberpulse_url: str = "http://cyberpulse-web:7823"
 
+    # Kali VM scanner
+    kali_vm_host: str = "192.168.121.28"
+    kali_vm_port: int = 5001
+    scanner_api_key: str = ""
+
     # External APIs
     shodan_api_key: str = ""
     haveibeenpwned_api_key: str = ""
