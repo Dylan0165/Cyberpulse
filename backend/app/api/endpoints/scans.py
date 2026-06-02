@@ -66,12 +66,20 @@ async def create_scan(
     else:
         phases = body.phases or QUICK_PHASES
 
+    # Merge scan_mode, target_type, credentials into config
+    config = dict(body.config)
+    config["scan_mode"]   = body.scan_mode
+    config["target_type"] = body.target_type
+    # Credentials stored in config — never logged or exposed in responses
+    if body.credentials:
+        config["credentials"] = body.credentials
+
     scan = Scan(
         user_id=user.id,
         target_id=body.target_id,
         scan_type=body.scan_type,
         phases=phases,
-        config=body.config,
+        config=config,
         save_report=body.save_report,
         status="nda_required",
     )

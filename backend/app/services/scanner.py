@@ -66,6 +66,15 @@ def get_redis_client() -> sync_redis.Redis:
     return sync_redis.from_url(settings.redis_url, decode_responses=True)
 
 
+def _inject_credentials(args_template: str, credentials: dict) -> str:
+    """Substitute credential placeholders into tool arg templates."""
+    result = args_template
+    result = result.replace("{username}", credentials.get("username", "admin"))
+    result = result.replace("{password}", credentials.get("password", ""))
+    result = result.replace("{bearer_token}", credentials.get("bearer_token", ""))
+    return result
+
+
 def run_phase(
     phase: str,
     target: str,
@@ -88,9 +97,11 @@ def run_phase(
     runner = get_tool_runner()
     r = get_redis_client()
     outputs: dict[str, str] = {}
+    credentials = (config or {}).get("credentials", {})
 
     for tool_name, args_template, timeout in tools:
         args = args_template.format(target=target)
+        args = _inject_credentials(args, credentials)
         logger.info("[scan:%s] phase=%s tool=%s target=%s", scan_id, phase, tool_name, target)
 
         try:

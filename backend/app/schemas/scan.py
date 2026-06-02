@@ -18,6 +18,10 @@ class ScanCreate(BaseModel):
     phases: list[str] = []
     save_report: bool = False
     config: dict = {}
+    # Scan context — stored inside config JSONB, no extra DB column needed
+    scan_mode: str = "blackbox"    # blackbox | graybox | whitebox
+    target_type: str = "web"       # web | api | network | windows | linux
+    credentials: dict = {}         # username, password, ssh_key, bearer_token, custom_headers
 
     @field_validator("scan_type")
     @classmethod

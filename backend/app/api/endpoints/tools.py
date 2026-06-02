@@ -1,13 +1,12 @@
 """Backend API endpoints for Kali tool management.
 
-Proxies all tool requests to the CyberPulse engine (cyberpulse-web:7823).
-The CyberPulse container has direct access to Kali binaries and its own
-ToolRunner registry — the backend never checks shutil.which() itself.
+GET /api/tools/available proxies directly to the Kali VM scanner API
+and enriches the response with phase/category metadata from the registry.
 """
 
 import json
 import logging
-from typing import AsyncGenerator
+from typing import AsyncGenerator, Optional
 
 import httpx
 from fastapi import APIRouter, HTTPException
@@ -20,11 +19,42 @@ router = APIRouter(prefix="/tools", tags=["tools"])
 logger = logging.getLogger(__name__)
 
 
+def _kali_url() -> str:
+    s = get_settings()
+    return f"http://{s.kali_vm_host}:{s.kali_vm_port}"
+
+
+def _kali_headers() -> dict:
+    key = get_settings().scanner_api_key
+    return {"x-api-key": key} if key else {}
+
+
+async def _kali_get(path: str, timeout: float = 15.0) -> dict:
+    url = f"{_kali_url()}{path}"
+    try:
+        async with httpx.AsyncClient(timeout=timeout) as client:
+            resp = await client.get(url, headers=_kali_headers())
+            resp.raise_for_status()
+            return resp.json()
+    except httpx.ConnectError:
+        raise HTTPException(
+            status_code=503,
+            detail=f"Kali VM niet bereikbaar op {_kali_url()}. "
+                   "Controleer of tool_api.py draait als service op de Kali VM.",
+        )
+    except httpx.HTTPStatusError as e:
+        raise HTTPException(status_code=e.response.status_code, detail=str(e))
+    except Exception as e:
+        logger.error("Kali VM GET %s failed: %s", path, e)
+        raise HTTPException(status_code=502, detail=str(e))
+
+
 def _cp_url() -> str:
     return get_settings().cyberpulse_url
 
 
-async def _proxy_get(path: str) -> dict:
+async def _proxy_cp_get(path: str) -> dict:
+    """Fallback proxy to the cyberpulse engine for scan SSE streams."""
     url = f"{_cp_url()}{path}"
     try:
         async with httpx.AsyncClient(timeout=30.0) as client:
@@ -32,7 +62,7 @@ async def _proxy_get(path: str) -> dict:
             resp.raise_for_status()
             return resp.json()
     except httpx.ConnectError:
-        raise HTTPException(status_code=503, detail="CyberPulse engine niet bereikbaar. Controleer of de container draait.")
+        raise HTTPException(status_code=503, detail="CyberPulse engine niet bereikbaar.")
     except httpx.HTTPStatusError as e:
         raise HTTPException(status_code=e.response.status_code, detail=str(e))
     except Exception as e:
@@ -40,43 +70,79 @@ async def _proxy_get(path: str) -> dict:
         raise HTTPException(status_code=502, detail=str(e))
 
 
+# ── Endpoints ─────────────────────────────────────────────────────────────────
+
 @router.get("/available")
-async def list_tools():
-    """Return all Kali tools with real availability — sourced from CyberPulse ToolRunner registry."""
-    return await _proxy_get("/api/tools/available")
+async def list_available_tools():
+    """
+    Return all tools on the Kali VM with availability + phase/category metadata.
+
+    The frontend tools page renders this directly: each tool shows
+    name, available (bool), category, phase, description, and resource profile.
+    """
+    raw = await _kali_get("/tools")
+
+    # raw is already enriched with metadata from tool_registry.py on the Kali VM
+    # Shape:  { "nmap": { "available": true, "category": "recon", "phase": 1, ... } }
+    # Reformat to match the ToolInfo interface expected by the frontend:
+    result = {}
+    for name, info in raw.items():
+        result[name] = {
+            "name":         name,
+            "display_name": info.get("display_name") or name.replace("-", " ").title(),
+            "category":     info.get("category", "recon"),
+            "phase":        info.get("phase", 1),
+            "available":    info.get("available", False),
+            "description":  info.get("description", ""),
+            "implementation": "subprocess",
+            "default_timeout": info.get("estimated_duration_s", 120),
+            "resource_profile": {
+                "estimated_ram_mb":    info.get("estimated_ram_mb", 64),
+                "estimated_duration_s": info.get("estimated_duration_s", 120),
+                "requires_gpu":        info.get("requires_gpu", False),
+                "cpu_intensive":       info.get("cpu_intensive", False),
+            },
+        }
+    return result
 
 
 @router.get("/profiles")
 async def list_profiles():
-    """Return all scan profiles defined in CyberPulse config."""
-    return await _proxy_get("/api/tools/profiles")
+    """Scan profiles grouped by use-case."""
+    return {
+        "quick_recon":      ["nmap", "whatweb", "httpx", "subfinder"],
+        "web_full":         ["nmap", "nikto", "nuclei", "gobuster", "sqlmap", "xsstrike", "dalfox"],
+        "network_audit":    ["nmap", "masscan", "enum4linux", "smbmap", "snmpwalk"],
+        "auth_test":        ["hydra", "medusa", "kerbrute", "crackmapexec"],
+        "ssl_tls":          ["testssl.sh", "sslyze", "sslscan"],
+        "osint_secrets":    ["theharvester", "gitleaks", "trufflehog", "subfinder"],
+        "full_pentest":     ["nmap", "nuclei", "nikto", "gobuster", "sqlmap", "hydra", "testssl.sh", "theharvester"],
+    }
 
 
 @router.get("/check")
 async def check_tools():
-    """Quick availability check for common tools — proxied from CyberPulse."""
+    """Quick reachability check for the Kali VM."""
     try:
-        return await _proxy_get("/api/tools/check")
-    except HTTPException:
-        return {}
+        url = f"{_kali_url()}/health"
+        async with httpx.AsyncClient(timeout=5.0) as client:
+            resp = await client.get(url, headers=_kali_headers())
+        return {"kali_vm": _kali_url(), "reachable": resp.ok}
+    except Exception:
+        return {"kali_vm": _kali_url(), "reachable": False}
 
 
-# ── Tool Scan ──────────────────────────────────────────────────────
+# ── Tool scan (proxied to cyberpulse engine for SSE) ──────────────────────────
 
 class ToolScanRequest(BaseModel):
     target: str
     tools: list[str] | None = None
     profile: str | None = None
-    scan_mode: str = "blackbox"   # blackbox | graybox | whitebox
+    scan_mode: str = "blackbox"
 
 
 @router.post("/scan")
 async def start_tool_scan(body: ToolScanRequest):
-    """Start a Kali tool scan via the CyberPulse engine.
-
-    Returns {scan_id, status, tools} immediately. Stream live output from
-    GET /api/tools/scan/{scan_id}/stream.
-    """
     url = f"{_cp_url()}/api/tools/scan"
     try:
         async with httpx.AsyncClient(timeout=30.0) as client:
@@ -88,16 +154,11 @@ async def start_tool_scan(body: ToolScanRequest):
     except httpx.HTTPStatusError as e:
         raise HTTPException(status_code=e.response.status_code, detail=str(e))
     except Exception as e:
-        logger.error("Tool scan proxy failed: %s", e)
         raise HTTPException(status_code=502, detail=str(e))
 
 
 @router.get("/scan/{scan_id}/stream")
 async def stream_tool_scan(scan_id: str):
-    """Proxy the SSE event stream from CyberPulse to the frontend.
-
-    Events: tool_start, tool_done, tool_skipped, tool_error, tools_complete, all_done
-    """
     safe_id = "".join(c for c in scan_id if c.isalnum() or c in "-_")
     if safe_id != scan_id or not safe_id:
         raise HTTPException(status_code=400, detail="Ongeldig scan ID")
@@ -111,11 +172,7 @@ async def stream_tool_scan(scan_id: str):
                     async for chunk in resp.aiter_bytes():
                         if chunk:
                             yield chunk
-        except httpx.ConnectError:
-            msg = json.dumps({"type": "error", "message": "CyberPulse engine verbinding verbroken"})
-            yield f"data: {msg}\n\n".encode()
         except Exception as e:
-            logger.error("SSE proxy for %s failed: %s", safe_id, e)
             msg = json.dumps({"type": "error", "message": str(e)})
             yield f"data: {msg}\n\n".encode()
 

@@ -87,6 +87,7 @@ def run_scan(self, scan_id: str):
                     phase=phase,
                     target=target.value,
                     scan_id=str(scan.id),
+                    config=scan.config or {},
                 )
                 tool_count = len(outputs)
             except Exception as exc:
