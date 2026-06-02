@@ -1,0 +1,30 @@
+name: Deploy CyberPulse
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+
+    steps:
+      - name: Pull latest code
+        run: cd /home/student/cyberpulse && git pull origin main
+
+      - name: Build and start containers
+        run: |
+          cd /home/student/cyberpulse
+          docker compose -f docker-compose.netlab.yml up -d --build
+
+      - name: Run database migrations
+        run: |
+          cd /home/student/cyberpulse
+          docker compose -f docker-compose.netlab.yml exec -T backend alembic upgrade head
+
+      - name: Health check
+        run: curl -f http://localhost:8000/health || exit 1
+
+      - name: Confirm deployment
+        run: echo "Deploy successful"
