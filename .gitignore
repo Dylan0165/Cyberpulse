@@ -43,7 +43,6 @@ cyberpulse/data/scraped/
 cyberpulse/data/*.log
 data/scans/
 data/scraped/
-reports/
 scan_output/
 
 # ── Logs ─────────────────────────────────────────────────────────────────────

@@ -1,0 +1,316 @@
+﻿<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<title>CyberPulse Rapport — {{ target }}</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Crimson+Pro:wght@400;600&display=swap');
+
+  :root {
+    --black: #000000;
+    --white: #ffffff;
+    --gray-1: #111111;
+    --gray-2: #333333;
+    --gray-3: #666666;
+    --gray-4: #999999;
+    --gray-5: #cccccc;
+    --gray-6: #eeeeee;
+    --critical: #cc0000;
+    --high:     #cc6600;
+    --medium:   #999900;
+    --low:      #666666;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Crimson Pro', Georgia, serif;
+    font-size: 11pt;
+    color: var(--black);
+    background: var(--white);
+    line-height: 1.6;
+  }
+
+  /* ── COVERPAGE ── */
+  .cover {
+    height: 297mm;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 40mm 30mm;
+    border-bottom: 3px solid var(--black);
+    page-break-after: always;
+  }
+  .cover-brand {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10pt;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--gray-3);
+  }
+  .cover-target {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 32pt;
+    font-weight: 700;
+    line-height: 1.1;
+    word-break: break-all;
+  }
+  .cover-meta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9pt;
+    color: var(--gray-3);
+    line-height: 2;
+  }
+  .cover-score {
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+    margin-top: 24px;
+  }
+  .score-number {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 96pt;
+    font-weight: 700;
+    line-height: 1;
+  }
+  .score-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12pt;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+  .score-number.critical { color: var(--critical); }
+  .score-number.high     { color: var(--high); }
+  .score-number.medium   { color: var(--medium); }
+  .score-number.low      { color: var(--gray-3); }
+
+  /* ── PAGINA LAYOUT ── */
+  @page {
+    size: A4;
+    margin: 20mm 25mm;
+  }
+
+  /* ── SECTIES ── */
+  .section { margin-bottom: 20mm; page-break-inside: avoid; }
+  .section-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 8pt;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--gray-3);
+    border-top: 1px solid var(--black);
+    padding-top: 4px;
+    margin-bottom: 8px;
+  }
+  .section-title {
+    font-size: 16pt;
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+
+  /* ── BEVINDINGEN TABEL ── */
+  table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+  th {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 8pt;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    text-align: left;
+    padding: 6px 8px;
+    border-bottom: 2px solid var(--black);
+    font-weight: 700;
+  }
+  td {
+    font-size: 10pt;
+    padding: 8px;
+    border-bottom: 1px solid var(--gray-5);
+    vertical-align: top;
+  }
+  tr:last-child td { border-bottom: none; }
+
+  /* ── SEVERITY BADGES ── */
+  .sev {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 8pt;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    padding: 2px 5px;
+    text-transform: uppercase;
+    display: inline-block;
+  }
+  .sev-critical { border: 1.5px solid var(--critical); color: var(--critical); }
+  .sev-high     { border: 1.5px solid var(--high); color: var(--high); }
+  .sev-medium   { border: 1.5px solid var(--medium); color: var(--medium); }
+  .sev-low      { border: 1.5px solid var(--gray-4); color: var(--gray-4); }
+  .sev-info     { border: 1.5px solid var(--gray-5); color: var(--gray-5); }
+
+  /* ── FINDING DETAIL BLOCK ── */
+  .finding-block {
+    border: 1px solid var(--gray-5);
+    padding: 12px;
+    margin-bottom: 8px;
+    page-break-inside: avoid;
+  }
+  .finding-block-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 8px;
+    border-bottom: 1px solid var(--gray-6);
+    padding-bottom: 8px;
+  }
+  .finding-name { font-size: 12pt; font-weight: 600; }
+  .finding-section { margin-top: 8px; }
+  .finding-section-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 8pt;
+    color: var(--gray-3);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+
+  /* ── CODE BLOCKS ── */
+  code, pre {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9pt;
+    background: var(--gray-6);
+    padding: 2px 4px;
+  }
+  pre { padding: 8px; display: block; overflow-x: auto; }
+
+  /* ── AANBEVELINGEN ── */
+  .rec { display: flex; gap: 12px; margin-bottom: 12px; }
+  .rec-number {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 24pt;
+    font-weight: 700;
+    color: var(--gray-5);
+    line-height: 1;
+    min-width: 40px;
+  }
+  .rec-content { flex: 1; }
+  .rec-actie { font-size: 12pt; font-weight: 600; margin-bottom: 4px; }
+  .rec-meta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 8pt;
+    color: var(--gray-3);
+  }
+
+  .footer-line {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 8pt;
+    color: var(--gray-4);
+    text-align: center;
+    margin-top: 20mm;
+    padding-top: 8px;
+    border-top: 1px solid var(--gray-5);
+  }
+</style>
+</head>
+<body>
+
+<!-- COVER -->
+<div class="cover">
+  <div class="cover-brand">CyberPulse — Penetratietestrapport — Vertrouwelijk</div>
+  <div>
+    <div class="cover-target">{{ target }}</div>
+    <div class="cover-score">
+      <div class="score-number {{ risk_class }}">{{ risicoscore }}</div>
+      <div>
+        <div class="score-label">{{ niveau }}</div>
+        <div style="font-family: 'JetBrains Mono'; font-size: 9pt; color: #999; margin-top: 4px;">Risicoscore / 100</div>
+      </div>
+    </div>
+  </div>
+  <div class="cover-meta">
+    Gegenereerd op: {{ generated_at }}<br>
+    Scantype: {{ scan_type }}<br>
+    Modules uitgevoerd: {{ modules_count }}<br>
+    Bevindingen: {{ findings_count }} ({{ critical_count }} kritiek, {{ high_count }} hoog)
+  </div>
+</div>
+
+<!-- MANAGEMENT SAMENVATTING -->
+<div class="section">
+  <div class="section-label">01 — Managementsamenvatting</div>
+  <p style="font-size: 12pt; line-height: 1.8;">{{ management_samenvatting }}</p>
+</div>
+
+<!-- BEVINDINGEN OVERZICHT -->
+<div class="section">
+  <div class="section-label">02 — Bevindingen overzicht</div>
+  <table>
+    <thead>
+      <tr><th>Ernst</th><th>Bevinding</th><th>Module</th><th>CVE</th></tr>
+    </thead>
+    <tbody>
+      {% for f in bevindingen %}
+      <tr>
+        <td><span class="sev sev-{{ f.ernst }}">{{ f.ernst }}</span></td>
+        <td>{{ f.titel }}</td>
+        <td style="font-family: 'JetBrains Mono'; font-size: 9pt; color: #666;">{{ f.module }}</td>
+        <td style="font-family: 'JetBrains Mono'; font-size: 9pt; color: #666;">{{ f.cve or '—' }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- BEVINDINGEN DETAIL -->
+<div class="section">
+  <div class="section-label">03 — Bevindingen detail</div>
+  {% for f in bevindingen %}
+  <div class="finding-block">
+    <div class="finding-block-header">
+      <div class="finding-name">{{ f.titel }}</div>
+      <span class="sev sev-{{ f.ernst }}">{{ f.ernst }}</span>
+    </div>
+    <div class="finding-section">
+      <div class="finding-section-label">Beschrijving</div>
+      <p>{{ f.beschrijving }}</p>
+    </div>
+    <div class="finding-section">
+      <div class="finding-section-label">Impact</div>
+      <p>{{ f.impact }}</p>
+    </div>
+    <div class="finding-section">
+      <div class="finding-section-label">Aanbeveling</div>
+      <p>{{ f.aanbeveling }}</p>
+    </div>
+    {% if f.referenties %}
+    <div class="finding-section">
+      <div class="finding-section-label">Referenties</div>
+      <p style="font-family: 'JetBrains Mono'; font-size: 9pt;">{{ f.referenties | join(' · ') }}</p>
+    </div>
+    {% endif %}
+  </div>
+  {% endfor %}
+</div>
+
+<!-- AANBEVELINGEN -->
+<div class="section">
+  <div class="section-label">04 — Prioriteiten</div>
+  {% for r in aanbevelingen_prioriteit %}
+  <div class="rec">
+    <div class="rec-number">{{ r.prioriteit }}</div>
+    <div class="rec-content">
+      <div class="rec-actie">{{ r.actie }}</div>
+      <div style="margin: 4px 0 6px; font-size: 10pt; color: #333;">{{ r.reden }}</div>
+      <div class="rec-meta">Complexiteit: {{ r.complexiteit }}</div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<!-- TECHNISCHE DETAILS -->
+<div class="section">
+  <div class="section-label">05 — Technische details</div>
+  <pre>{{ technische_details }}</pre>
+</div>
+
+<div class="footer-line">
+  CyberPulse — Vertrouwelijk — {{ generated_at }}
+</div>
+
+</body>
+</html>
