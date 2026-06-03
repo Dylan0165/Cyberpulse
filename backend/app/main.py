@@ -5,7 +5,6 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.middleware.trustedhost import TrustedHostMiddleware
 
 from app.core.config import get_settings
 from app.core.database import engine, Base
@@ -34,25 +33,18 @@ app = FastAPI(
     description="AI-powered penetration testing SaaS platform",
     version="1.0.0",
     lifespan=lifespan,
-    docs_url="/api/docs" if settings.app_env == "development" else None,
-    redoc_url="/api/redoc" if settings.app_env == "development" else None,
+    docs_url="/api/docs",
+    redoc_url="/api/redoc",
 )
 
-# CORS
+# CORS — allow all origins (school project on closed netlab, no public exposure)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[settings.frontend_url],
-    allow_credentials=True,
+    allow_origins=["*"],
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-# Trusted hosts
-if settings.app_env == "production":
-    app.add_middleware(
-        TrustedHostMiddleware,
-        allowed_hosts=["autopentest.ai", "*.autopentest.ai", "localhost", "127.0.0.1"],
-    )
 
 # API Routes
 app.include_router(users.router, prefix="/api")
