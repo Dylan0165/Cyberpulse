@@ -105,9 +105,9 @@ export function Sidebar() {
                     ? pathname === "/scans" || (pathname.startsWith("/scans/") && !pathname.startsWith("/scans/new"))
                     : pathname === item.href || pathname.startsWith(item.href + "/");
                 const Icon = item.icon;
-                const count = item.badge === "tools_count" ? toolsCount : null;
+                const count = (item as any).badge === "tools_count" ? toolsCount : null;
 
-                if (item.highlight) {
+                if ((item as any).highlight) {
                   return (
                     <Link
                       key={item.name}
