@@ -54,16 +54,24 @@ export default function ToolsPage() {
   const [selectedPhase, setSelectedPhase] = useState<number | null>(null);
 
   useEffect(() => {
+    console.log("[Tools] fetching /api/tools/available");
     fetch("/api/tools/available", { cache: "no-store" })
       .then((r) => {
-        if (!r.ok) throw new Error(`HTTP ${r.status} — controleer of de Kali VM (192.168.121.28:5001) bereikbaar is`);
+        console.log("[Tools] response status:", r.status, r.statusText);
+        if (!r.ok) {
+          return r.text().then((body) => {
+            throw new Error(`HTTP ${r.status} ${r.statusText} — body: ${body.slice(0, 200)}`);
+          });
+        }
         return r.json();
       })
       .then((d: ToolsResponse) => {
+        console.log("[Tools] data received:", d.total, "tools,", d.available_count, "available");
         setData(d);
         setLoading(false);
       })
       .catch((e) => {
+        console.error("[Tools] fetch error:", e);
         setError(String(e));
         setLoading(false);
       });
@@ -120,9 +128,17 @@ export default function ToolsPage() {
           )}
           <div className="flex-1">
             {error ? (
-              <p className="text-[14px] font-medium" style={{ color: "#ff3b30" }}>
-                Kali VM niet bereikbaar
-              </p>
+              <div>
+                <p className="text-[14px] font-semibold" style={{ color: "#ff3b30" }}>
+                  Kali VM niet bereikbaar
+                </p>
+                <p className="text-[12px] mt-1 font-mono break-all" style={{ color: "#ff3b30", opacity: 0.8 }}>
+                  {error}
+                </p>
+                <p className="text-[11px] mt-1 text-muted-foreground">
+                  Controleer de browser console (F12) voor meer details.
+                </p>
+              </div>
             ) : (
               <>
                 <p className="text-[14px] font-semibold" style={{ color: "#1d1d1f" }}>

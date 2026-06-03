@@ -62,7 +62,8 @@ export function Sidebar() {
         setKaliVm(d.kali_vm || "");
         setToolsCount(d.available_count ?? null);
       })
-      .catch(() => {
+      .catch((e) => {
+        console.error("[Sidebar] tools/available fetch error:", e);
         setKaliOnline(false);
       });
   }, []);
