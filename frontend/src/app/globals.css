@@ -2,76 +2,68 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
 @layer base {
   :root {
-    /* CyberPulse design tokens — match desktop */
-    --background: 0 0% 96%;
-    --foreground: 0 0% 7%;
-    --card: 0 0% 100%;
-    --card-foreground: 0 0% 7%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 7%;
-    --primary: 0 0% 10%;
-    --primary-foreground: 0 0% 96%;
-    --secondary: 0 0% 92%;
-    --secondary-foreground: 0 0% 7%;
-    --muted: 0 0% 92%;
-    --muted-foreground: 0 0% 33%;
-    --accent: 0 0% 92%;
-    --accent-foreground: 0 0% 7%;
-    --destructive: 0 80% 60%;
+    /* Dark theme */
+    --background: 0 0% 4%;
+    --foreground: 210 17% 95%;
+    --card: 0 0% 7%;
+    --card-foreground: 210 17% 95%;
+    --popover: 0 0% 7%;
+    --popover-foreground: 210 17% 95%;
+    --primary: 239 84% 67%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 0 0% 11%;
+    --secondary-foreground: 210 17% 95%;
+    --muted: 0 0% 11%;
+    --muted-foreground: 220 9% 46%;
+    --accent: 0 0% 11%;
+    --accent-foreground: 210 17% 95%;
+    --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-    --border: 0 0% 83%;
-    --input: 0 0% 83%;
-    --ring: 0 0% 10%;
-    --radius: 0px;
+    --border: 0 0% 15%;
+    --input: 0 0% 15%;
+    --ring: 239 84% 67%;
+    --radius: 6px;
 
-    /* Severity palette */
-    --critical: #ff3333;
-    --high: #ff8800;
-    --medium: #ffcc00;
-    --low: #888888;
-    --info: #aaaaaa;
+    --critical: #ef4444;
+    --high: #f97316;
+    --medium: #f59e0b;
+    --low: #6b7280;
+    --info: #3b82f6;
+    --success: #10b981;
   }
 
   * {
     @apply border-border;
+    box-sizing: border-box;
   }
+
   body {
     @apply bg-background text-foreground;
-    font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
-    font-size: 13px;
-    line-height: 1.6;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
-}
 
-/* No border-radius on cards */
-.rounded-lg, .rounded-xl, .rounded-md {
-  border-radius: 0px !important;
-}
-.rounded-full {
-  border-radius: 2px !important;
+  h1, h2, h3, h4, h5, h6 {
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1.3;
+  }
 }
 
 /* Scrollbar */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-::-webkit-scrollbar-track {
-  background: hsl(var(--muted));
-}
-::-webkit-scrollbar-thumb {
-  background: hsl(var(--muted-foreground) / 0.3);
-}
-::-webkit-scrollbar-thumb:hover {
-  background: hsl(var(--muted-foreground) / 0.5);
-}
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: hsl(var(--border)); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: hsl(var(--muted-foreground) / 0.4); }
 
-/* Terminal output styling */
+/* Terminal output */
 .terminal-output {
   font-family: "JetBrains Mono", "Fira Code", monospace;
   font-size: 12px;
@@ -80,16 +72,13 @@
 
 /* Severity badges */
 .badge-critical { background: var(--critical); color: #fff; }
-.badge-high     { background: var(--high); color: #000; }
+.badge-high     { background: var(--high); color: #fff; }
 .badge-medium   { background: var(--medium); color: #000; }
 .badge-low      { background: transparent; border: 1px solid var(--low); color: var(--low); }
 .badge-info     { background: transparent; border: 1px solid var(--info); color: var(--info); }
 
-/* Scan phase animation */
 @keyframes pulse-scan {
   0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
+  50%       { opacity: 0.4; }
 }
-.animate-pulse-scan {
-  animation: pulse-scan 2s ease-in-out infinite;
-}
+.animate-pulse-scan { animation: pulse-scan 2s ease-in-out infinite; }
