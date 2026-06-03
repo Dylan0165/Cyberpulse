@@ -2,38 +2,36 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
-
 @layer base {
   :root {
-    /* Dark theme */
-    --background: 0 0% 4%;
-    --foreground: 210 17% 95%;
-    --card: 0 0% 7%;
-    --card-foreground: 210 17% 95%;
-    --popover: 0 0% 7%;
-    --popover-foreground: 210 17% 95%;
-    --primary: 239 84% 67%;
+    /* Apple-inspired light theme */
+    --background: 0 0% 100%;
+    --foreground: 240 2% 12%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 2% 12%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 2% 12%;
+    --primary: 210 100% 44%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 0 0% 11%;
-    --secondary-foreground: 210 17% 95%;
-    --muted: 0 0% 11%;
-    --muted-foreground: 220 9% 46%;
-    --accent: 0 0% 11%;
-    --accent-foreground: 210 17% 95%;
-    --destructive: 0 84% 60%;
+    --secondary: 240 5% 96%;
+    --secondary-foreground: 240 2% 12%;
+    --muted: 240 5% 96%;
+    --muted-foreground: 240 2% 44%;
+    --accent: 240 5% 96%;
+    --accent-foreground: 240 2% 12%;
+    --destructive: 3 100% 59%;
     --destructive-foreground: 0 0% 100%;
-    --border: 0 0% 15%;
-    --input: 0 0% 15%;
-    --ring: 239 84% 67%;
-    --radius: 6px;
+    --border: 240 5% 91%;
+    --input: 240 5% 91%;
+    --ring: 210 100% 44%;
+    --radius: 12px;
 
-    --critical: #ef4444;
-    --high: #f97316;
-    --medium: #f59e0b;
-    --low: #6b7280;
-    --info: #3b82f6;
-    --success: #10b981;
+    --critical: #ff3b30;
+    --high: #ff9500;
+    --medium: #ffcc00;
+    --low: #34c759;
+    --info: #007aff;
+    --success: #34c759;
   }
 
   * {
@@ -43,29 +41,29 @@
 
   body {
     @apply bg-background text-foreground;
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
-    font-size: 14px;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", "Inter", sans-serif;
+    font-size: 15px;
     line-height: 1.5;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
 
   h1, h2, h3, h4, h5, h6 {
-    font-weight: 600;
-    letter-spacing: -0.02em;
-    line-height: 1.3;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", "Inter", sans-serif;
+    font-weight: 700;
+    letter-spacing: -0.022em;
   }
 }
 
 /* Scrollbar */
-::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: hsl(var(--border)); border-radius: 4px; }
-::-webkit-scrollbar-thumb:hover { background: hsl(var(--muted-foreground) / 0.4); }
+::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.25); }
 
 /* Terminal output */
 .terminal-output {
-  font-family: "JetBrains Mono", "Fira Code", monospace;
+  font-family: "SF Mono", "Fira Code", "JetBrains Mono", monospace;
   font-size: 12px;
   line-height: 1.5;
 }
@@ -74,8 +72,8 @@
 .badge-critical { background: var(--critical); color: #fff; }
 .badge-high     { background: var(--high); color: #fff; }
 .badge-medium   { background: var(--medium); color: #000; }
-.badge-low      { background: transparent; border: 1px solid var(--low); color: var(--low); }
-.badge-info     { background: transparent; border: 1px solid var(--info); color: var(--info); }
+.badge-low      { background: var(--low); color: #fff; }
+.badge-info     { background: var(--info); color: #fff; }
 
 @keyframes pulse-scan {
   0%, 100% { opacity: 1; }

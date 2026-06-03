@@ -40,6 +40,11 @@ module.exports = {
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
       },
+      boxShadow: {
+        apple: "0 2px 20px rgba(0,0,0,0.08)",
+        "apple-md": "0 4px 30px rgba(0,0,0,0.10)",
+        "apple-lg": "0 8px 40px rgba(0,0,0,0.12)",
+      },
     },
   },
   plugins: [],

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Loader2, Search, CheckCircle2, XCircle, Wifi, WifiOff } from "lucide-react";
+import { Search, Wifi, WifiOff, CheckCircle2, XCircle } from "lucide-react";
 
 interface KaliTool {
   name: string;
@@ -28,15 +28,22 @@ const PHASE_LABELS: Record<number, string> = {
   0: "Other",
 };
 
-const PHASE_COLORS: Record<number, string> = {
-  1: "text-blue-400 bg-blue-400/10 border-blue-400/20",
-  2: "text-orange-400 bg-orange-400/10 border-orange-400/20",
-  3: "text-purple-400 bg-purple-400/10 border-purple-400/20",
-  4: "text-cyan-400 bg-cyan-400/10 border-cyan-400/20",
-  5: "text-yellow-400 bg-yellow-400/10 border-yellow-400/20",
-  6: "text-green-400 bg-green-400/10 border-green-400/20",
-  7: "text-pink-400 bg-pink-400/10 border-pink-400/20",
-  0: "text-muted-foreground bg-muted border-border",
+const TOOL_DESCRIPTIONS: Record<string, string> = {
+  nmap: "Netwerkpoorten en diensten scannen",
+  httpx: "HTTP-diensten verkennen en analyseren",
+  subfinder: "Subdomeinen ontdekken",
+  whatweb: "Web technologieën identificeren",
+  masscan: "Snelle massale poortscanner",
+  nuclei: "Kwetsbaarheden detecteren met templates",
+  nikto: "Webserver kwetsbaarheden scannen",
+  sqlmap: "SQL-injectie testen en exploiteren",
+  ffuf: "Verborgen webpagina's en parameters vinden",
+  gobuster: "Directory en bestanden brute-force",
+  feroxbuster: "Snelle recursieve content discovery",
+  hydra: "Wachtwoord brute-force aanvallen",
+  "testssl.sh": "SSL/TLS configuratie analyseren",
+  theharvester: "E-mails en domeinen verzamelen",
+  gitleaks: "Geheimen in Git repositories zoeken",
 };
 
 export default function ToolsPage() {
@@ -63,7 +70,6 @@ export default function ToolsPage() {
   }, []);
 
   const tools = data?.tools ?? [];
-
   const filtered = tools.filter((t) => {
     const q = search.toLowerCase();
     const matchSearch =
@@ -81,81 +87,83 @@ export default function ToolsPage() {
     byPhase.get(t.phase)!.push(t);
   });
   const phases = Array.from(byPhase.keys()).sort((a, b) => (a === 0 ? 1 : b === 0 ? -1 : a - b));
-
   const allPhases = Array.from(new Set(tools.map((t) => t.phase))).sort(
     (a, b) => (a === 0 ? 1 : b === 0 ? -1 : a - b)
   );
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-5 w-5 animate-spin text-primary mr-3" />
-        <span className="text-sm text-muted-foreground">Verbinding met Kali VM...</span>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-6">
-      {/* Page header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-semibold tracking-tight">Kali Tools</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">
-            Beveiligingstools beschikbaar op de Kali VM
-          </p>
-        </div>
+      {/* Header */}
+      <div>
+        <h1 className="text-[28px] font-bold" style={{ letterSpacing: "-0.03em" }}>
+          Kali Tools
+        </h1>
+        <p className="text-[15px] text-muted-foreground mt-0.5">
+          Beveiligingstools beschikbaar op de Kali VM
+        </p>
       </div>
 
       {/* Connection banner */}
-      <div
-        className={`flex items-center gap-3 rounded-lg border px-4 py-3 text-sm ${
-          error
-            ? "border-red-500/30 bg-red-500/5 text-red-400"
-            : data
-            ? "border-emerald-500/30 bg-emerald-500/5 text-emerald-400"
-            : "border-border bg-card text-muted-foreground"
-        }`}
-      >
-        {error ? (
-          <WifiOff className="h-4 w-4 flex-shrink-0" />
-        ) : (
-          <Wifi className="h-4 w-4 flex-shrink-0" />
-        )}
-        <span>
-          {error
-            ? `Kali VM niet bereikbaar — ${error}`
-            : data
-            ? `Kali VM verbonden · ${data.kali_vm} · `
-            : "Verbinden..."}
-          {data && (
-            <strong>
-              {data.available_count}/{data.total} tools beschikbaar
-            </strong>
+      {!loading && (
+        <div
+          className="flex items-center gap-3 rounded-2xl border px-5 py-4"
+          style={
+            error
+              ? { borderColor: "rgba(255,59,48,0.3)", background: "rgba(255,59,48,0.04)" }
+              : { borderColor: "rgba(52,199,89,0.3)", background: "rgba(52,199,89,0.04)" }
+          }
+        >
+          {error ? (
+            <WifiOff className="h-5 w-5 flex-shrink-0" style={{ color: "#ff3b30" }} />
+          ) : (
+            <Wifi className="h-5 w-5 flex-shrink-0" style={{ color: "#34c759" }} />
           )}
-        </span>
-      </div>
+          <div className="flex-1">
+            {error ? (
+              <p className="text-[14px] font-medium" style={{ color: "#ff3b30" }}>
+                Kali VM niet bereikbaar
+              </p>
+            ) : (
+              <>
+                <p className="text-[14px] font-semibold" style={{ color: "#1d1d1f" }}>
+                  Kali VM verbonden
+                  <span className="font-normal text-muted-foreground ml-2 font-mono text-[13px]">
+                    {data?.kali_vm}
+                  </span>
+                </p>
+                <p className="text-[13px] text-muted-foreground mt-0.5">
+                  <span className="font-semibold" style={{ color: "#34c759" }}>
+                    {data?.available_count}
+                  </span>
+                  /{data?.total} tools beschikbaar
+                </p>
+              </>
+            )}
+          </div>
+        </div>
+      )}
 
-      {/* Search + Phase filter */}
+      {/* Search + filter */}
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Zoek tool of categorie..."
-            className="w-full rounded-md border border-border bg-card pl-9 pr-4 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+            className="w-full rounded-xl border border-border bg-card pl-10 pr-4 py-2.5 text-[14px] placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
           />
         </div>
         <div className="flex gap-1.5 flex-wrap">
           <button
             onClick={() => setSelectedPhase(null)}
-            className={`rounded-md px-3 py-1.5 text-xs font-medium border transition-colors ${
-              selectedPhase === null
-                ? "bg-primary text-primary-foreground border-primary"
-                : "bg-card border-border text-muted-foreground hover:text-foreground hover:border-primary/50"
-            }`}
+            className="rounded-xl px-3.5 py-2 text-[13px] font-medium border transition-colors"
+            style={{
+              background: selectedPhase === null ? "#0071e3" : "#fff",
+              color: selectedPhase === null ? "#fff" : "#6e6e73",
+              borderColor: selectedPhase === null ? "#0071e3" : "#e5e5ea",
+            }}
           >
             Alle
           </button>
@@ -163,75 +171,102 @@ export default function ToolsPage() {
             <button
               key={ph}
               onClick={() => setSelectedPhase(selectedPhase === ph ? null : ph)}
-              className={`rounded-md px-3 py-1.5 text-xs font-medium border transition-colors ${
-                selectedPhase === ph
-                  ? "bg-primary text-primary-foreground border-primary"
-                  : "bg-card border-border text-muted-foreground hover:text-foreground hover:border-primary/50"
-              }`}
+              className="rounded-xl px-3.5 py-2 text-[13px] font-medium border transition-colors"
+              style={{
+                background: selectedPhase === ph ? "#0071e3" : "#fff",
+                color: selectedPhase === ph ? "#fff" : "#6e6e73",
+                borderColor: selectedPhase === ph ? "#0071e3" : "#e5e5ea",
+              }}
             >
-              {ph > 0 ? `Phase ${ph}` : "Other"}
+              {ph > 0 ? PHASE_LABELS[ph] : "Other"}
             </button>
           ))}
         </div>
       </div>
 
+      {/* Loading */}
+      {loading && (
+        <div className="grid grid-cols-3 gap-4">
+          {[...Array(12)].map((_, i) => (
+            <div key={i} className="rounded-2xl border border-border bg-card p-5 shadow-apple animate-pulse">
+              <div className="h-4 w-24 rounded bg-muted mb-3" />
+              <div className="h-3 w-16 rounded bg-muted mb-2" />
+              <div className="h-3 w-full rounded bg-muted" />
+            </div>
+          ))}
+        </div>
+      )}
+
       {/* Tools per phase */}
-      {phases.length === 0 && !loading && (
-        <div className="text-center py-16 text-muted-foreground text-sm">
+      {!loading && phases.length === 0 && (
+        <div className="text-center py-16 text-muted-foreground text-[14px]">
           {error ? "Kan tools niet laden." : "Geen tools gevonden."}
         </div>
       )}
 
-      {phases.map((ph) => {
-        const phaseTools = byPhase.get(ph) ?? [];
-        const avail = phaseTools.filter((t) => t.available).length;
-        const phaseColor = PHASE_COLORS[ph] ?? PHASE_COLORS[0];
+      {!loading &&
+        phases.map((ph) => {
+          const phaseTools = byPhase.get(ph) ?? [];
+          const avail = phaseTools.filter((t) => t.available).length;
 
-        return (
-          <div key={ph} className="space-y-3">
-            {/* Phase header */}
-            <div className="flex items-center gap-3">
-              <span className={`inline-flex items-center rounded border px-2 py-0.5 text-xs font-medium ${phaseColor}`}>
-                {ph > 0 ? `Phase ${ph}` : "Other"}
-              </span>
-              <h2 className="text-sm font-semibold text-foreground">
-                {PHASE_LABELS[ph] ?? "Other"}
-              </h2>
-              <span className="text-xs text-muted-foreground">
-                {avail}/{phaseTools.length} beschikbaar
-              </span>
-            </div>
+          return (
+            <div key={ph} className="space-y-3">
+              {/* Phase header */}
+              <div className="flex items-center gap-3">
+                <h2 className="text-[17px] font-semibold">
+                  {ph > 0 ? `Phase ${ph} — ${PHASE_LABELS[ph]}` : PHASE_LABELS[0]}
+                </h2>
+                <span className="text-[13px] text-muted-foreground">
+                  {avail}/{phaseTools.length} beschikbaar
+                </span>
+              </div>
 
-            {/* Tool cards */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-2">
-              {phaseTools.map((tool) => (
-                <div
-                  key={tool.name}
-                  className={`rounded-md border p-3 flex items-start gap-2.5 transition-colors ${
-                    tool.available
-                      ? "border-border bg-card hover:border-primary/40"
-                      : "border-border bg-card opacity-40"
-                  }`}
-                >
-                  <span
-                    className={`mt-0.5 h-2 w-2 rounded-full flex-shrink-0 ${
-                      tool.available ? "bg-emerald-500" : "bg-red-500"
-                    }`}
-                  />
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium text-foreground leading-tight truncate">
-                      {tool.name}
-                    </p>
-                    <p className="text-[11px] text-muted-foreground mt-0.5 truncate">
-                      {tool.category}
-                    </p>
+              {/* Cards grid */}
+              <div className="grid grid-cols-3 gap-4">
+                {phaseTools.map((tool) => (
+                  <div
+                    key={tool.name}
+                    className="rounded-2xl border border-border bg-card p-5 shadow-apple hover:shadow-apple-md transition-shadow"
+                    style={tool.available ? {} : { opacity: 0.5 }}
+                  >
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="min-w-0">
+                        <p className="text-[15px] font-semibold truncate">{tool.name}</p>
+                        <p className="text-[12px] text-muted-foreground mt-0.5">{tool.category}</p>
+                      </div>
+                      {tool.available ? (
+                        <CheckCircle2 className="h-5 w-5 flex-shrink-0 mt-0.5" style={{ color: "#34c759" }} />
+                      ) : (
+                        <XCircle className="h-5 w-5 flex-shrink-0 mt-0.5" style={{ color: "#ff3b30" }} />
+                      )}
+                    </div>
+
+                    {TOOL_DESCRIPTIONS[tool.name] && (
+                      <p className="text-[13px] text-muted-foreground leading-relaxed">
+                        {TOOL_DESCRIPTIONS[tool.name]}
+                      </p>
+                    )}
+
+                    <div className="flex items-center justify-between mt-4">
+                      <span
+                        className="rounded-full px-2.5 py-1 text-[11px] font-semibold"
+                        style={{ background: "rgba(0,113,227,0.08)", color: "#0071e3" }}
+                      >
+                        Phase {ph > 0 ? ph : "—"}
+                      </span>
+                      <span
+                        className="text-[12px] font-medium"
+                        style={{ color: tool.available ? "#34c759" : "#ff3b30" }}
+                      >
+                        {tool.available ? "Beschikbaar" : "Niet geïnstalleerd"}
+                      </span>
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
-        );
-      })}
+          );
+        })}
     </div>
   );
 }
