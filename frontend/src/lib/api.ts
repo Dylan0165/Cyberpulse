@@ -42,7 +42,7 @@ export const toolsApi = {
   startScan: (data: { target: string; tools?: string[]; profile?: string; scan_mode?: string }) =>
     api.post("/tools/scan", data),
   streamUrl: (scanId: string) => `/api/tools/scan/${scanId}/stream`,
-  check: () => api.get("/tools/check"),
+  check: () => api.get("/tools/available"),
 };
 
 export default api;

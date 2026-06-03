@@ -51,18 +51,20 @@ export function Sidebar() {
   const [toolsCount, setToolsCount] = useState<number | null>(null);
 
   useEffect(() => {
-    fetch("/api/tools/check")
-      .then((r) => r.json())
-      .then((d) => {
-        setKaliOnline(d.reachable === true);
-        setKaliVm(d.kali_vm || "");
+    fetch("/api/tools/available", { cache: "no-store" })
+      .then((r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
       })
-      .catch(() => setKaliOnline(false));
-
-    fetch("/api/tools/available")
-      .then((r) => r.json())
-      .then((d) => setToolsCount(d.available_count ?? null))
-      .catch(() => {});
+      .then((d) => {
+        // Response: { tools: [...], total, available_count, kali_vm }
+        setKaliOnline(Array.isArray(d.tools) && d.tools.length >= 0);
+        setKaliVm(d.kali_vm || "");
+        setToolsCount(d.available_count ?? null);
+      })
+      .catch(() => {
+        setKaliOnline(false);
+      });
   }, []);
 
   return (

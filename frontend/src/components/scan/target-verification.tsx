@@ -64,7 +64,7 @@ export function TargetVerification({ targetId, domain, onVerified }: TargetVerif
       const jwt = await getToken();
       const res = await fetch(`${apiUrl}/api/v1/targets/${targetId}/verification-token`, {
         method: "POST",
-        headers: { Authorization: `Bearer ${jwt}` },
+        headers: jwt ? { Authorization: `Bearer ${jwt}` } : {},
       });
       if (!res.ok) throw new Error("Token ophalen mislukt");
       const data = await res.json();
@@ -84,7 +84,7 @@ export function TargetVerification({ targetId, domain, onVerified }: TargetVerif
       const res = await fetch(`${apiUrl}/api/v1/targets/${targetId}/verify`, {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${jwt}`,
+          ...(jwt ? { Authorization: `Bearer ${jwt}` } : {}),
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ method }),
