@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<title>CyberPulse Secure Solution — {{ target }}</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Arial, Helvetica, sans-serif; font-size: 11pt; color: #111; background: #fff; }
+  h1 { font-size: 22pt; font-weight: bold; }
+  h2 { font-size: 15pt; font-weight: bold; margin-bottom: 8px; color: #1a5c2a; border-bottom: 2px solid #1a5c2a; padding-bottom: 4px; }
+  h3 { font-size: 12pt; font-weight: bold; margin-bottom: 6px; color: #333; }
+  p  { margin-bottom: 8px; line-height: 1.5; }
+  ul { margin: 6px 0 6px 18px; }
+  li { margin-bottom: 5px; line-height: 1.5; }
+  table { width: 100%; border-collapse: collapse; margin-bottom: 16px; }
+  th { background: #1a5c2a; color: #fff; padding: 7px 10px; text-align: left; font-size: 10pt; }
+  td { padding: 6px 10px; border-bottom: 1px solid #ddd; font-size: 10pt; vertical-align: top; }
+  tr:nth-child(even) td { background: #f9f9f9; }
+  .page-break { page-break-before: always; }
+  .cover { text-align: center; padding: 80px 40px; background: #1a5c2a; color: #fff; }
+  .cover h1 { color: #fff; font-size: 28pt; margin-bottom: 12px; }
+  .cover .subtitle { font-size: 14pt; color: #a0d4a8; margin-bottom: 30px; }
+  .cmd { background: #1e1e1e; color: #4ade80; font-family: Courier, monospace; font-size: 9pt; padding: 10px 14px; margin: 6px 0 10px 0; white-space: pre-wrap; word-break: break-all; }
+  .verify-cmd { background: #0d2b40; color: #7ec8e3; font-family: Courier, monospace; font-size: 9pt; padding: 8px 14px; margin: 6px 0; white-space: pre-wrap; }
+  .badge { display: inline-block; padding: 3px 10px; border-radius: 3px; font-size: 9pt; font-weight: bold; color: #fff; }
+  .badge-critical { background: #cc0000; }
+  .badge-high     { background: #cc6600; }
+  .badge-medium   { background: #997700; }
+  .badge-low      { background: #666666; }
+  .badge-info     { background: #336699; }
+  .win-card { border-left: 4px solid #1a5c2a; padding: 10px 14px; margin-bottom: 12px; background: #f0f8f1; }
+  .win-card h4 { font-size: 11pt; color: #1a5c2a; margin-bottom: 4px; }
+  .short-card { border-left: 4px solid #997700; padding: 10px 14px; margin-bottom: 12px; background: #fdf8ec; }
+  .short-card h4 { font-size: 11pt; color: #997700; margin-bottom: 4px; }
+  .long-card { border-left: 4px solid #336699; padding: 10px 14px; margin-bottom: 12px; background: #f0f4f9; }
+  .long-card h4 { font-size: 11pt; color: #336699; margin-bottom: 4px; }
+  .time-badge { display: inline-block; padding: 2px 8px; font-size: 9pt; border: 1px solid #999; color: #555; margin-bottom: 6px; }
+  .section { margin-bottom: 30px; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════ COVER PAGE ═══════════════════ -->
+<div class="cover">
+  <p style="font-size:11pt; color:#a0d4a8; margin-bottom:8px;">VERTROUWELIJK — BEVEILIGINGSOPLOSSINGEN</p>
+  <h1>CyberPulse<br>Secure Solution</h1>
+  <p class="subtitle">Beveiligingsaanbevelingen voor {{ target }}</p>
+  <div style="margin-top:40px;">
+    <table style="width:60%; margin:0 auto; border:none;">
+      <tr><td style="color:#a0d4a8; border:none; padding:4px 0;">Doelwit:</td><td style="color:#fff; border:none;">{{ target }}</td></tr>
+      <tr><td style="color:#a0d4a8; border:none; padding:4px 0;">Datum:</td><td style="color:#fff; border:none;">{{ generated_at }}</td></tr>
+      <tr><td style="color:#a0d4a8; border:none; padding:4px 0;">Quick wins:</td><td style="color:#fff; border:none;">{{ quick_wins|length }}</td></tr>
+      <tr><td style="color:#a0d4a8; border:none; padding:4px 0;">Short-term:</td><td style="color:#fff; border:none;">{{ short_term|length }}</td></tr>
+      <tr><td style="color:#a0d4a8; border:none; padding:4px 0;">Long-term:</td><td style="color:#fff; border:none;">{{ long_term|length }}</td></tr>
+    </table>
+  </div>
+</div>
+
+<!-- ═══════════════════ QUICK WINS ═══════════════════ -->
+<div class="page-break section" style="padding:40px 50px;">
+  <h2>1. Quick Wins — Fix in &lt; 1 dag</h2>
+  <p>De volgende beveiligingsmaatregelen kunnen snel worden doorgevoerd en hebben de grootste directe impact.</p>
+  {% for item in quick_wins %}
+  <div class="win-card">
+    <div class="time-badge">&lt; 1 dag</div>
+    <h4>{{ item.title }}</h4>
+    <p>{{ item.description }}</p>
+    {% if item.command %}
+    <p><strong>Oplossingscommando:</strong></p>
+    <div class="cmd">{{ item.command }}</div>
+    {% endif %}
+    {% if item.verify %}
+    <p><strong>Verificatie:</strong></p>
+    <div class="verify-cmd">{{ item.verify }}</div>
+    {% endif %}
+    {% if item.estimated_time %}
+    <p style="color:#666; font-size:9pt;">Geschatte tijd: {{ item.estimated_time }}</p>
+    {% endif %}
+  </div>
+  {% else %}
+  <p style="color:#666;">Geen quick wins geïdentificeerd.</p>
+  {% endfor %}
+</div>
+
+<!-- ═══════════════════ SHORT TERM ═══════════════════ -->
+<div class="page-break section" style="padding:40px 50px;">
+  <h2>2. Korte termijn — Fix in &lt; 1 week</h2>
+  <p>Configuratiewijzigingen en patches die binnen een werkweek doorgevoerd kunnen worden.</p>
+  {% for item in short_term %}
+  <div class="short-card">
+    <div class="time-badge">&lt; 1 week</div>
+    <h4>{{ item.title }}</h4>
+    <p>{{ item.description }}</p>
+    {% if item.command %}
+    <p><strong>Stappen:</strong></p>
+    <div class="cmd">{{ item.command }}</div>
+    {% endif %}
+    {% if item.verify %}
+    <p><strong>Verificatie:</strong></p>
+    <div class="verify-cmd">{{ item.verify }}</div>
+    {% endif %}
+    {% if item.estimated_time %}
+    <p style="color:#666; font-size:9pt;">Geschatte tijd: {{ item.estimated_time }}</p>
+    {% endif %}
+  </div>
+  {% else %}
+  <p style="color:#666;">Geen short-term acties geïdentificeerd.</p>
+  {% endfor %}
+</div>
+
+<!-- ═══════════════════ LONG TERM ═══════════════════ -->
+<div class="page-break section" style="padding:40px 50px;">
+  <h2>3. Lange termijn — Architecturele verbeteringen</h2>
+  {% for item in long_term %}
+  <div class="long-card">
+    <div class="time-badge">1 week+</div>
+    <h4>{{ item.title }}</h4>
+    <p>{{ item.description }}</p>
+    {% if item.estimated_time %}
+    <p style="color:#666; font-size:9pt;">Geschatte tijd: {{ item.estimated_time }}</p>
+    {% endif %}
+  </div>
+  {% else %}
+  <p style="color:#666;">Geen lange-termijn acties geïdentificeerd.</p>
+  {% endfor %}
+</div>
+
+<!-- ═══════════════════ PER-FINDING REMEDIATION ═══════════════════ -->
+<div class="page-break section" style="padding:40px 50px;">
+  <h2>4. Gedetailleerde Oplossingen per Bevinding</h2>
+  {% for finding in remediation_findings %}
+  <div style="border:1px solid #ddd; padding:14px; margin-bottom:18px;">
+    <p>
+      <span class="badge badge-{{ finding.ernst|lower }}">{{ finding.ernst|upper }}</span>
+      &nbsp;<strong>{{ finding.titel }}</strong>
+    </p>
+    <table style="margin-top:8px;">
+      <tr>
+        <td style="width:130px; color:#666; font-size:9pt; text-transform:uppercase; font-weight:bold;">Oorzaak</td>
+        <td>{{ finding.get('root_cause') or finding.beschrijving }}</td>
+      </tr>
+      <tr>
+        <td style="color:#666; font-size:9pt; text-transform:uppercase; font-weight:bold;">Oplossing</td>
+        <td>{{ finding.aanbeveling }}</td>
+      </tr>
+      {% if finding.get('fix_command') %}
+      <tr>
+        <td style="color:#666; font-size:9pt; text-transform:uppercase; font-weight:bold;">Commando</td>
+        <td><div class="cmd">{{ finding.get('fix_command') }}</div></td>
+      </tr>
+      {% endif %}
+      {% if finding.get('verify_command') %}
+      <tr>
+        <td style="color:#666; font-size:9pt; text-transform:uppercase; font-weight:bold;">Verificatie</td>
+        <td><div class="verify-cmd">{{ finding.get('verify_command') }}</div></td>
+      </tr>
+      {% endif %}
+      {% if finding.get('estimated_time') %}
+      <tr>
+        <td style="color:#666; font-size:9pt; text-transform:uppercase; font-weight:bold;">Tijd</td>
+        <td>{{ finding.get('estimated_time') }}</td>
+      </tr>
+      {% endif %}
+    </table>
+  </div>
+  {% else %}
+  <p>Geen bevindingen met gedetailleerde oplossingen.</p>
+  {% endfor %}
+</div>
+
+</body>
+</html>

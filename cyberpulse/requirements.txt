@@ -54,3 +54,6 @@ python-whois==0.9.5
 
 # ── Compression (CVE feed gzip) ──────────────────────────
 # stdlib gzip — no extra dependency needed
+
+# ── Visual Recon (optional — install separately on Kali VM) ──────────────────
+# playwright>=1.40.0  # uncomment after: pip install playwright && playwright install chromium

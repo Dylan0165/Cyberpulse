@@ -341,6 +341,88 @@ async def download_pdf_report(scan_id: str):
                         filename=f"cyberpulse-{scan_id}.pdf")
 
 
+@app.get("/api/scans/{scan_id}/pentest-report/html")
+async def download_pentest_report_html(scan_id: str):
+    """Download the full pentest report as HTML."""
+    from reports.generator import generate_pentest_report
+    scan_id = _sanitize_scan_id(scan_id)
+    if not scan_id:
+        raise HTTPException(status_code=404)
+    scan_dir = Config.SCANS_DIR / scan_id
+    html_path = scan_dir / "pentest_report.html"
+    if not html_path.exists():
+        result = generate_pentest_report(scan_id)
+        if not result:
+            raise HTTPException(status_code=404, detail="Rapport generatie mislukt")
+        html_path = result if result.suffix == ".html" else result.with_suffix(".html")
+    if not html_path.exists():
+        raise HTTPException(status_code=404)
+    return FileResponse(str(html_path), media_type="text/html",
+                        filename=f"pentest-report-{scan_id}.html")
+
+
+@app.get("/api/scans/{scan_id}/pentest-report/pdf")
+async def download_pentest_report_pdf(scan_id: str):
+    """Download the full pentest report as PDF."""
+    from reports.generator import generate_pentest_report
+    scan_id = _sanitize_scan_id(scan_id)
+    if not scan_id:
+        raise HTTPException(status_code=404)
+    scan_dir = Config.SCANS_DIR / scan_id
+    pdf_path = scan_dir / "pentest_report.pdf"
+    if not pdf_path.exists():
+        result = generate_pentest_report(scan_id)
+        if not result:
+            raise HTTPException(status_code=404, detail="Rapport generatie mislukt")
+        if result.suffix == ".html":
+            return FileResponse(str(result), media_type="text/html",
+                                filename=f"pentest-report-{scan_id}.html")
+        pdf_path = result
+    return FileResponse(str(pdf_path), media_type="application/pdf",
+                        filename=f"pentest-report-{scan_id}.pdf")
+
+
+@app.get("/api/scans/{scan_id}/secure-solution/html")
+async def download_secure_solution_html(scan_id: str):
+    """Download the secure solution document as HTML."""
+    from reports.generator import generate_secure_solution
+    scan_id = _sanitize_scan_id(scan_id)
+    if not scan_id:
+        raise HTTPException(status_code=404)
+    scan_dir = Config.SCANS_DIR / scan_id
+    html_path = scan_dir / "secure_solution.html"
+    if not html_path.exists():
+        result = generate_secure_solution(scan_id)
+        if not result:
+            raise HTTPException(status_code=404, detail="Secure solution generatie mislukt")
+        html_path = result if result.suffix == ".html" else result.with_suffix(".html")
+    if not html_path.exists():
+        raise HTTPException(status_code=404)
+    return FileResponse(str(html_path), media_type="text/html",
+                        filename=f"secure-solution-{scan_id}.html")
+
+
+@app.get("/api/scans/{scan_id}/secure-solution/pdf")
+async def download_secure_solution_pdf(scan_id: str):
+    """Download the secure solution document as PDF."""
+    from reports.generator import generate_secure_solution
+    scan_id = _sanitize_scan_id(scan_id)
+    if not scan_id:
+        raise HTTPException(status_code=404)
+    scan_dir = Config.SCANS_DIR / scan_id
+    pdf_path = scan_dir / "secure_solution.pdf"
+    if not pdf_path.exists():
+        result = generate_secure_solution(scan_id)
+        if not result:
+            raise HTTPException(status_code=404, detail="Secure solution generatie mislukt")
+        if result.suffix == ".html":
+            return FileResponse(str(result), media_type="text/html",
+                                filename=f"secure-solution-{scan_id}.html")
+        pdf_path = result
+    return FileResponse(str(pdf_path), media_type="application/pdf",
+                        filename=f"secure-solution-{scan_id}.pdf")
+
+
 @app.get("/api/scan/{scan_id}/analysis/stream")
 async def analysis_stream(scan_id: str):
     """SSE endpoint — streams AI analysis to the frontend."""

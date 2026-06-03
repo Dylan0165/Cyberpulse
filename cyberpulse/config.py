@@ -84,6 +84,16 @@ class Config:
     QUICK_MODULES: list = ["01", "02", "03", "07", "08", "11", "09", "17"]
     ALL_MODULES: list = [f"{i:02d}" for i in range(1, 71)] + [str(i) for i in range(91, 102)]
 
+    # Custom post-processing modules (run after standard phases)
+    CUSTOM_MODULES: list = [
+        "09_business_logic",
+        "10_cve_correlator",
+        "11_visual_recon",
+        "12_smart_wordlist",
+        "13_ai_adaptive",
+        "14_report_diff",
+    ]
+
     # Gray-box modules (require web/API credentials)
     GRAYBOX_MODULES: list = ["71", "72", "73", "74", "75", "76", "77", "78", "79", "80"]
 
@@ -210,6 +220,13 @@ class Config:
         "99": {"name": "Metasploit Auxiliary Scanner",   "phase": "vulnerability_scan", "cost": "€1.20"},
         "100": {"name": "Shodan API Intelligence",       "phase": "reconnaissance",     "cost": "€0.30"},
         "101": {"name": "Desktop Binary Analysis",       "phase": "analysis",           "cost": "€0.80", "mode": "desktop"},
+        # ── Custom Post-Processing Modules (run after standard 8 phases) ──
+        "09_business_logic": {"name": "Business Logic Tester",    "phase": "custom", "cost": "€0.50"},
+        "10_cve_correlator":  {"name": "CVE Correlator",           "phase": "custom", "cost": "€0.30"},
+        "11_visual_recon":    {"name": "Visual Recon",             "phase": "custom", "cost": "€0.20"},
+        "12_smart_wordlist":  {"name": "Smart Credential Attack",  "phase": "custom", "cost": "€0.60"},
+        "13_ai_adaptive":     {"name": "AI Adaptive Scanner",      "phase": "custom", "cost": "€1.00"},
+        "14_report_diff":     {"name": "Scan Comparator",          "phase": "custom", "cost": "€0.10"},
     }
 
     @classmethod
