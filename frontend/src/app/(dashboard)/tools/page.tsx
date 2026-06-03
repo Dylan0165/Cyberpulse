@@ -54,9 +54,9 @@ export default function ToolsPage() {
   const [selectedPhase, setSelectedPhase] = useState<number | null>(null);
 
   useEffect(() => {
-    fetch("/api/tools/available")
+    fetch("/api/tools/available", { cache: "no-store" })
       .then((r) => {
-        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        if (!r.ok) throw new Error(`HTTP ${r.status} — controleer of de Kali VM (192.168.121.28:5001) bereikbaar is`);
         return r.json();
       })
       .then((d: ToolsResponse) => {

@@ -23,7 +23,7 @@ const NAV_SECTIONS = [
     title: "TOOLS & ANALYSE",
     items: [
       { name: "Kali Tools",   href: "/tools",   icon: Terminal,  badge: "tools_count" },
-      { name: "AI Analyse",   href: "/reports", icon: Sparkles },
+      { name: "AI Analyse",   href: "/ai-analysis", icon: Sparkles },
     ],
   },
   {
