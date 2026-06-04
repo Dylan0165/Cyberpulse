@@ -156,7 +156,7 @@ def analyze_scan_sync_streaming(
 
     accumulated = ""
     try:
-        with client.chat.completions.stream(
+        stream = client.chat.completions.create(
             model=settings.deepseek_model,
             messages=[
                 {"role": "system", "content": SYSTEM_PROMPT},
@@ -164,18 +164,21 @@ def analyze_scan_sync_streaming(
             ],
             max_tokens=16000,
             temperature=0.1,
-        ) as stream:
-            for chunk in stream:
-                delta = chunk.choices[0].delta.content or ""
-                accumulated += delta
-                if redis_client and delta:
-                    try:
-                        redis_client.publish(
-                            f"scan:{scan_id}:analysis",
-                            json.dumps({"type": "token", "token": delta}),
-                        )
-                    except Exception:
-                        pass
+            stream=True,
+        )
+        for chunk in stream:
+            if not chunk.choices:
+                continue
+            delta = chunk.choices[0].delta.content or ""
+            accumulated += delta
+            if redis_client and delta:
+                try:
+                    redis_client.publish(
+                        f"scan:{scan_id}:analysis",
+                        json.dumps({"type": "token", "token": delta}),
+                    )
+                except Exception:
+                    pass
 
         result = _parse_json(accumulated, scan_id, target, scan_type)
         if redis_client:
@@ -190,7 +193,9 @@ def analyze_scan_sync_streaming(
 
     except Exception as exc:
         logger.error("DeepSeek streaming failed for scan %s: %s", scan_id, exc)
-        return _error_report(scan_id, target, scan_type, str(exc))
+        # Fall back to non-streaming on error
+        logger.info("Falling back to non-streaming DeepSeek call for scan %s", scan_id)
+        return analyze_scan_sync(scan_id, target, scan_type, phases_completed, all_outputs)
 
 
 def _parse_json(raw: str, scan_id: str, target: str, scan_type: str) -> dict:

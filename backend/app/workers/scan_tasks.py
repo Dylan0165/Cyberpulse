@@ -194,6 +194,10 @@ def run_scan(self, scan_id: str):
                         f"-t 4 {target} ssh"
                     )
 
+                logger.info(
+                    "[%s] %s/%s → command: %s %s",
+                    scan_id, phase_name, tool_name, tool_name, args[:300],
+                )
                 _pub(r, scan_id, {
                     "type": "tool_start", "phase": phase_name,
                     "tool": tool_name, "timestamp": time.time(),
@@ -205,6 +209,18 @@ def run_scan(self, scan_id: str):
                 if not result.success and result.error:
                     output = f"[ERROR] {result.error}\n{output}"
 
+                logger.info(
+                    "[%s] %s/%s done — success=%s duration=%.1fs output_bytes=%d",
+                    scan_id, phase_name, tool_name,
+                    result.success, result.duration_s, len(output),
+                )
+                if output:
+                    logger.info("[%s] %s/%s output[:1000]:\n%s",
+                                scan_id, phase_name, tool_name, output[:1000])
+                else:
+                    logger.warning("[%s] %s/%s produced NO output (tool missing on Kali VM?)",
+                                   scan_id, phase_name, tool_name)
+
                 phase_outputs[tool_name] = output
 
                 _pub(r, scan_id, {
@@ -213,7 +229,7 @@ def run_scan(self, scan_id: str):
                     "tool":     tool_name,
                     "success":  result.success,
                     "duration": result.duration_s,
-                    "output":   output[:2000],   # first 2 KB for live display
+                    "output":   output[:2000],
                     "timestamp": time.time(),
                 })
 
@@ -237,6 +253,27 @@ def run_scan(self, scan_id: str):
                 "type": "phase_complete", "phase": phase_name, "phase_num": phase_num,
                 "progress": int((phase_num / len(PHASES)) * 80), "timestamp": time.time(),
             })
+
+        # ── Summary before AI analysis ────────────────────────────────────────
+        total_output_bytes = sum(
+            len(out)
+            for phase_data in all_outputs.values()
+            for out in phase_data.values()
+        )
+        phases_with_output = [
+            phase for phase, tools in all_outputs.items()
+            if any(len(o) > 10 for o in tools.values())
+        ]
+        logger.info(
+            "[%s] Scan phases complete — %d phases ran, %d had output, %d total bytes collected",
+            scan_id, len(all_outputs), len(phases_with_output), total_output_bytes,
+        )
+        if total_output_bytes == 0:
+            logger.warning(
+                "[%s] ALL TOOLS RETURNED EMPTY OUTPUT — check Kali VM tools are installed "
+                "and tool_api.py is running on %s:%s",
+                scan_id, settings.kali_vm_host, settings.kali_vm_port,
+            )
 
         # ── Phase 8: AI Analysis ──────────────────────────────────────────────
         scan.status   = "analyzing"
