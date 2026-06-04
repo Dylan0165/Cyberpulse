@@ -93,10 +93,9 @@ PHASE_DISPLAY  = {
 
 
 def _should_run_phase(phase_name: str, scan_mode: str, phases_enabled: list | None) -> bool:
-    # Auth phase requires credentials
-    if phase_name == "auth" and scan_mode == "blackbox":
-        return False
-    # If user specified custom phases, only run those
+    # Auth phase runs in ALL modes — blackbox uses default wordlists,
+    # graybox/whitebox use provided credentials (substituted in args template).
+    # If user specified custom phases, only run those.
     if phases_enabled:
         return phase_name in phases_enabled
     return True
