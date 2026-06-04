@@ -2,199 +2,222 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { targetsApi } from "@/lib/api";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import Link from "next/link";
 import { useState } from "react";
-import { toast } from "sonner";
-import {
-  Target,
-  Plus,
-  Globe,
-  Server,
-  ExternalLink,
-} from "lucide-react";
+import { Target, Plus, Globe, Server, Network, ExternalLink, Trash2, Loader2 } from "lucide-react";
+
+const TYPE_ICON: Record<string, React.ElementType> = {
+  url: Globe, domain: Globe,
+  ip: Server, ip_range: Network,
+  web_application: Globe, network: Network, api: Globe,
+};
+
+const TYPE_OPTIONS = [
+  { value: "url",      label: "Web Application / URL" },
+  { value: "domain",   label: "Domain" },
+  { value: "ip",       label: "IP-adres (server)" },
+  { value: "ip_range", label: "IP-range / Netwerk" },
+];
 
 export default function TargetsPage() {
   const queryClient = useQueryClient();
   const [showAdd, setShowAdd] = useState(false);
-  const [form, setForm] = useState({
-    hostname: "",
-    target_type: "web_application",
-    scope: "",
-  });
+  const [form, setForm] = useState({ value: "", target_type: "url", name: "" });
+  const [errorMsg, setErrorMsg] = useState("");
 
-  const { data: targets, isLoading } = useQuery({
+  const { data: raw, isLoading } = useQuery({
     queryKey: ["targets"],
     queryFn: () => targetsApi.list().then((r) => r.data),
   });
+
+  // Normalise: backend returns array, guard against other shapes
+  const targets: any[] = Array.isArray(raw) ? raw : [];
 
   const createMutation = useMutation({
     mutationFn: (data: any) => targetsApi.create(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["targets"] });
       setShowAdd(false);
-      setForm({ hostname: "", target_type: "web_application", scope: "" });
-      toast.success("Target added successfully");
+      setForm({ value: "", target_type: "url", name: "" });
+      setErrorMsg("");
     },
     onError: (err: any) => {
-      toast.error(err?.response?.data?.detail ?? "Failed to create target");
+      const detail = err?.response?.data?.detail;
+      setErrorMsg(
+        typeof detail === "string" ? detail :
+        Array.isArray(detail) ? detail.map((d: any) => d.msg ?? String(d)).join(", ") :
+        "Aanmaken mislukt"
+      );
     },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => targetsApi.delete(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["targets"] }),
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const scopeItems = form.scope
-      .split(",")
-      .map((s) => s.trim())
-      .filter(Boolean);
+    setErrorMsg("");
+    if (!form.value.trim()) { setErrorMsg("Voer een target-adres in"); return; }
     createMutation.mutate({
-      hostname: form.hostname,
+      value:       form.value.trim(),
+      name:        form.name.trim() || form.value.trim(),
       target_type: form.target_type,
-      scope: scopeItems.length > 0 ? scopeItems : [form.hostname],
+      hostname:    form.value.trim(),  // backend accepts either field
     });
   };
 
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Targets</h1>
-          <p className="text-muted-foreground">
-            Manage your penetration testing targets
-          </p>
+          <h1 className="text-[28px] font-bold" style={{ letterSpacing: "-0.03em" }}>Targets</h1>
+          <p className="text-[15px] text-muted-foreground mt-0.5">Beheer penetratietest doelwitten</p>
         </div>
-        <Button onClick={() => setShowAdd(!showAdd)}>
-          <Plus className="mr-2 h-4 w-4" />
-          Add Target
-        </Button>
+        <button
+          onClick={() => { setShowAdd(!showAdd); setErrorMsg(""); }}
+          className="inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-[14px] font-semibold transition-opacity hover:opacity-90"
+          style={{ background: "#0071e3", color: "#fff" }}
+        >
+          <Plus className="h-4 w-4" />
+          Target toevoegen
+        </button>
       </div>
 
-      {/* Add Target Form */}
+      {/* Add form */}
       {showAdd && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Add New Target</CardTitle>
-            <CardDescription>
-              Add a target for penetration testing. You&apos;ll need to verify
-              ownership before scanning.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="text-sm font-medium">
-                  Hostname / IP
-                </label>
-                <Input
-                  placeholder="example.com or 192.168.1.0/24"
-                  value={form.hostname}
-                  onChange={(e) =>
-                    setForm({ ...form, hostname: e.target.value })
-                  }
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="text-sm font-medium">Target Type</label>
-                <select
-                  value={form.target_type}
-                  onChange={(e) =>
-                    setForm({ ...form, target_type: e.target.value })
-                  }
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                >
-                  <option value="web_application">Web Application</option>
-                  <option value="network">Network / Infrastructure</option>
-                  <option value="api">API</option>
-                  <option value="cloud">Cloud Infrastructure</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="text-sm font-medium">
-                  Scope (comma-separated)
-                </label>
-                <Input
-                  placeholder="*.example.com, api.example.com"
-                  value={form.scope}
-                  onChange={(e) => setForm({ ...form, scope: e.target.value })}
-                />
-                <p className="text-xs text-muted-foreground mt-1">
-                  Domains/IPs the scanner is allowed to test. Leave empty to use
-                  hostname only.
-                </p>
-              </div>
-
-              <div className="flex gap-2">
-                <Button type="submit" disabled={createMutation.isPending}>
-                  {createMutation.isPending ? "Creating..." : "Create Target"}
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setShowAdd(false)}
-                >
-                  Cancel
-                </Button>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
+        <div className="rounded-2xl border border-border bg-card shadow-apple p-6">
+          <h2 className="text-[17px] font-semibold mb-4">Nieuw target</h2>
+          {errorMsg && (
+            <p className="mb-4 rounded-xl border px-4 py-3 text-[13px]"
+               style={{ borderColor: "rgba(255,59,48,0.3)", background: "rgba(255,59,48,0.04)", color: "#ff3b30" }}>
+              {errorMsg}
+            </p>
+          )}
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-[13px] font-medium mb-1.5">Adres (URL, IP, domein)</label>
+              <input
+                type="text"
+                placeholder="https://example.com  of  192.168.1.0/24"
+                value={form.value}
+                onChange={(e) => setForm({ ...form, value: e.target.value })}
+                required
+                className="w-full rounded-xl border border-border bg-secondary px-4 py-2.5 text-[14px] placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+              />
+            </div>
+            <div>
+              <label className="block text-[13px] font-medium mb-1.5">Naam (optioneel)</label>
+              <input
+                type="text"
+                placeholder="Bijv. Productie webserver"
+                value={form.name}
+                onChange={(e) => setForm({ ...form, name: e.target.value })}
+                className="w-full rounded-xl border border-border bg-secondary px-4 py-2.5 text-[14px] placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+              />
+            </div>
+            <div>
+              <label className="block text-[13px] font-medium mb-1.5">Type</label>
+              <select
+                value={form.target_type}
+                onChange={(e) => setForm({ ...form, target_type: e.target.value })}
+                className="w-full rounded-xl border border-border bg-secondary px-4 py-2.5 text-[14px] focus:outline-none focus:ring-2 focus:ring-primary/30"
+              >
+                {TYPE_OPTIONS.map((o) => (
+                  <option key={o.value} value={o.value}>{o.label}</option>
+                ))}
+              </select>
+            </div>
+            <div className="flex gap-3 pt-2">
+              <button
+                type="submit"
+                disabled={createMutation.isPending}
+                className="inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-[14px] font-semibold transition-opacity hover:opacity-90 disabled:opacity-50"
+                style={{ background: "#0071e3", color: "#fff" }}
+              >
+                {createMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                {createMutation.isPending ? "Aanmaken..." : "Aanmaken"}
+              </button>
+              <button
+                type="button"
+                onClick={() => { setShowAdd(false); setErrorMsg(""); }}
+                className="rounded-xl border border-border px-5 py-2.5 text-[14px] font-medium text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Annuleren
+              </button>
+            </div>
+          </form>
+        </div>
       )}
 
-      {/* Target List */}
+      {/* Target list */}
       {isLoading ? (
-        <div className="text-center py-12 text-muted-foreground">
-          Loading targets...
+        <div className="flex items-center justify-center py-16 text-muted-foreground text-[14px]">
+          <Loader2 className="h-5 w-5 animate-spin mr-2" /> Laden...
         </div>
-      ) : targets?.length === 0 ? (
-        <Card>
-          <CardContent className="py-12 text-center">
-            <Target className="h-12 w-12 mx-auto mb-4 opacity-30" />
-            <p className="text-muted-foreground">
-              No targets yet. Add your first target to get started.
-            </p>
-          </CardContent>
-        </Card>
+      ) : targets.length === 0 ? (
+        <div className="rounded-2xl border border-border bg-card shadow-apple p-16 text-center">
+          <Target className="h-12 w-12 text-muted-foreground/20 mx-auto mb-4" />
+          <p className="text-[17px] font-semibold mb-2">Nog geen targets</p>
+          <p className="text-[14px] text-muted-foreground mb-6">
+            Voeg je eerste target toe om een penetratietest te starten.
+          </p>
+          <button
+            onClick={() => setShowAdd(true)}
+            className="inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-[14px] font-semibold transition-opacity hover:opacity-90"
+            style={{ background: "#0071e3", color: "#fff" }}
+          >
+            <Plus className="h-4 w-4" /> Target toevoegen
+          </button>
+        </div>
       ) : (
-        <div className="grid gap-4">
-          {targets?.map((target: any) => (
-            <Link key={target.id} href={`/targets/${target.id}`}>
-              <Card className="hover:bg-muted/30 transition-colors cursor-pointer">
-                <CardContent className="flex items-center justify-between p-6">
-                  <div className="flex items-center gap-4">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-                      {target.target_type === "web_application" ? (
-                        <Globe className="h-6 w-6 text-primary" />
-                      ) : (
-                        <Server className="h-6 w-6 text-primary" />
-                      )}
+        <div className="grid gap-3">
+          {targets.map((target: any) => {
+            const Icon = TYPE_ICON[target.target_type] ?? Server;
+            const display = target.hostname ?? target.value ?? target.name ?? "—";
+            return (
+              <div
+                key={target.id}
+                className="rounded-2xl border border-border bg-card shadow-apple hover:shadow-apple-md transition-shadow"
+              >
+                <div className="flex items-center justify-between p-5">
+                  <Link href={`/targets/${target.id}`} className="flex items-center gap-4 min-w-0 flex-1">
+                    <div className="h-11 w-11 rounded-xl flex items-center justify-center flex-shrink-0"
+                         style={{ background: "rgba(0,113,227,0.08)" }}>
+                      <Icon className="h-5 w-5" style={{ color: "#0071e3" }} />
                     </div>
-                    <div>
-                      <p className="font-medium text-lg">{target.hostname}</p>
-                      <p className="text-sm text-muted-foreground capitalize">
-                        {target.target_type.replace("_", " ")}
+                    <div className="min-w-0">
+                      <p className="text-[15px] font-semibold truncate">{display}</p>
+                      <p className="text-[13px] text-muted-foreground mt-0.5 capitalize">
+                        {(target.target_type ?? "").replace(/_/g, " ")}
+                        {target.is_verified && (
+                          <span className="ml-2 text-[11px] font-medium"
+                                style={{ color: "#34c759" }}>✓ Geverifieerd</span>
+                        )}
                       </p>
                     </div>
-                  </div>
+                  </Link>
 
-                  <div className="flex items-center gap-4">
-                    <ExternalLink className="h-4 w-4 text-muted-foreground" />
+                  <div className="flex items-center gap-3 flex-shrink-0">
+                    <Link href={`/scans/new?target=${target.id}`}
+                      className="rounded-lg border border-border px-3 py-1.5 text-[12px] font-medium text-muted-foreground hover:text-foreground transition-colors">
+                      Scan starten
+                    </Link>
+                    <button
+                      onClick={() => deleteMutation.mutate(target.id)}
+                      disabled={deleteMutation.isPending}
+                      className="h-8 w-8 rounded-lg flex items-center justify-center transition-colors hover:bg-secondary text-muted-foreground hover:text-red-500"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                    <ExternalLink className="h-4 w-4 text-muted-foreground/40" />
                   </div>
-                </CardContent>
-              </Card>
-            </Link>
-          ))}
+                </div>
+              </div>
+            );
+          })}
         </div>
       )}
     </div>
