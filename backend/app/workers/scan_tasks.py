@@ -10,7 +10,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
-from app.models.user import User  # must load before Scan to resolve relationship("User")
+import app.models  # registers all models with SQLAlchemy before any query runs
 from app.models.scan import Scan
 from app.models.target import Target
 from app.services.tool_runner import ToolRunner, ScannerUnavailableError
