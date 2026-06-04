@@ -185,6 +185,20 @@ _jobs: dict[str, Job] = {}
 
 app = FastAPI(title="CyberPulse Scanner API", version="2.0")
 
+# Write a small demo password wordlist on startup so hydra can always find it.
+# Contains common defaults including root:toor used on the school pentest target.
+_CYBER_PASSWORDS = "\n".join([
+    "root", "toor", "admin", "password", "password123",
+    "123456", "12345678", "test", "kali", "ubuntu",
+    "changeme", "letmein", "qwerty", "abc123", "default",
+    "1234", "P@ssw0rd", "Admin123", "welcome",
+])
+try:
+    with open("/tmp/cyber_passwords.txt", "w") as _f:
+        _f.write(_CYBER_PASSWORDS + "\n")
+except Exception:
+    pass
+
 
 class RunToolRequest(BaseModel):
     tool:    str
