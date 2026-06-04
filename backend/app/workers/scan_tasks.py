@@ -49,17 +49,20 @@ def _pub(r: sync_redis.Redis, scan_id: str, event: dict):
 
 PHASES: list[tuple[str, list[tuple[str, str, int]]]] = [
     ("recon", [
-        ("nmap",     "-sV -sC --open -p- {target}",                         480),
-        ("httpx",    "-u {target} -title -tech-detect -status-code -silent", 120),
-        ("whatweb",  "-a 3 {target}",                                         60),
+        ("nmap",     "-sV -sC --open -p- {target}",                                    480),
+        # PD httpx needs explicit http:// scheme; -u flag supported in recent versions
+        ("httpx",    "-u http://{target} -title -tech-detect -status-code -silent",    120),
+        ("whatweb",  "-a 3 {target}",                                                   60),
     ]),
     ("vuln_scan", [
-        ("nuclei",   "-u {target} -severity critical,high,medium -json -silent", 600),
+        # -json deprecated in nuclei v3+; use -jsonl
+        ("nuclei",   "-u {target} -severity critical,high,medium -jsonl -silent",      600),
     ]),
     ("webapp", [
-        ("nikto",    "-h {target} -Format json",                              300),
-        ("sqlmap",   "-u {target} --batch --level=2 --risk=1 --forms",        600),
-        ("ffuf",     "-u {target}/FUZZ -w /usr/share/wordlists/dirb/common.txt -mc 200,301,302,403 -ac -t 40", 180),
+        # nikto -Format json requires -output; omit Format flag to use plain text
+        ("nikto",    "-h {target} -ask no",                                            300),
+        ("sqlmap",   "-u {target} --batch --level=2 --risk=1 --forms",                600),
+        ("ffuf",     "-u http://{target}/FUZZ -w /usr/share/wordlists/dirb/common.txt -mc 200,301,302,403 -ac -t 40", 180),
     ]),
     ("network", [
         ("nmap",     "--script=default,vuln -sV -p 21,22,23,25,53,80,110,139,143,443,445,3306,3389,5432,6379,8080,8443 {target}", 300),
