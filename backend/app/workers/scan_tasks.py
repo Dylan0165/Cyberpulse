@@ -50,8 +50,8 @@ def _pub(r: sync_redis.Redis, scan_id: str, event: dict):
 PHASES: list[tuple[str, list[tuple[str, str, int]]]] = [
     ("recon", [
         ("nmap",     "-sV -sC --open -p- {target}",                                    480),
-        # PD httpx needs explicit http:// scheme; -u flag supported in recent versions
-        ("httpx",    "-u http://{target} -title -tech-detect -status-code -silent",    120),
+        # Installed as httpx-pd on Kali VM to avoid clash with Python httpx client
+        ("httpx-pd", "-u http://{target} -title -tech-detect -status-code -silent",    120),
         ("whatweb",  "-a 3 {target}",                                                   60),
     ]),
     ("vuln_scan", [
