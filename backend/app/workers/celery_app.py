@@ -7,7 +7,7 @@ from app.core.config import get_settings
 settings = get_settings()
 
 celery_app = Celery(
-    "autopentest",
+    "cyberpulse",
     broker=settings.celery_broker_url,
     backend=settings.celery_result_backend,
 )
@@ -24,10 +24,18 @@ celery_app.conf.update(
     worker_prefetch_multiplier=1,
     task_acks_late=True,
     task_reject_on_worker_lost=True,
+    # Explicitly route tasks to the right queues
     task_routes={
-        "app.workers.scan_tasks.*": {"queue": "scans"},
+        "app.workers.scan_tasks.*":     {"queue": "scans"},
         "app.workers.analysis_tasks.*": {"queue": "analysis"},
     },
+    # Explicitly include the task modules so they are always imported by the worker.
+    # autodiscover_tasks(["app.workers"]) only looks for app/workers/tasks.py
+    # which doesn't exist — this is the correct way for non-standard filenames.
+    include=[
+        "app.workers.scan_tasks",
+        "app.workers.analysis_tasks",
+    ],
     beat_schedule={
         "cleanup-stale-containers": {
             "task": "app.workers.scan_tasks.cleanup_containers",
@@ -35,5 +43,3 @@ celery_app.conf.update(
         },
     },
 )
-
-celery_app.autodiscover_tasks(["app.workers"])
