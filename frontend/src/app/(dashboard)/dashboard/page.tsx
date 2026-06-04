@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import {
   Shield, Target, AlertTriangle, Activity, ArrowRight,
   Plus, Terminal, Zap, BarChart3,
+  Bug, Database, Camera, KeyRound, BrainCircuit, GitCompare,
 } from "lucide-react";
 
 export default function DashboardPage() {
@@ -265,9 +266,95 @@ export default function DashboardPage() {
           </div>
         )}
       </div>
+
+      {/* Custom security modules */}
+      <div>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-[17px] font-semibold">Security Modules</h2>
+          <Link href="/scans/new"
+            className="flex items-center gap-1 text-[13px] font-medium text-primary hover:underline">
+            Scan configureren <ArrowRight className="h-3.5 w-3.5" />
+          </Link>
+        </div>
+        <div className="grid grid-cols-3 gap-4">
+          {CUSTOM_MODULES.map((mod) => (
+            <Link key={mod.id} href={mod.href}>
+              <div className="rounded-2xl border border-border bg-card p-5 shadow-apple hover:shadow-apple-md hover:border-primary/20 transition-all cursor-pointer">
+                <div className="h-9 w-9 rounded-xl flex items-center justify-center mb-3"
+                     style={{ background: mod.iconBg }}>
+                  <mod.icon className="h-4.5 w-4.5" style={{ color: mod.iconColor }} />
+                </div>
+                <p className="text-[14px] font-semibold mb-1">{mod.name}</p>
+                <p className="text-[12px] text-muted-foreground leading-relaxed">{mod.description}</p>
+                <span className="inline-block mt-3 rounded-full px-2 py-0.5 text-[10px] font-semibold"
+                      style={{ background: mod.iconBg, color: mod.iconColor }}>
+                  Module {mod.id}
+                </span>
+              </div>
+            </Link>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
+
+const CUSTOM_MODULES = [
+  {
+    id: "09",
+    name: "Business Logic Tester",
+    description: "IDOR-detectie, rate limiting checks, admin-endpoint probing",
+    href: "/scans/new",
+    icon: Bug,
+    iconColor: "#ff3b30",
+    iconBg: "rgba(255,59,48,0.08)",
+  },
+  {
+    id: "10",
+    name: "CVE Correlator",
+    description: "Koppelt service-versies aan bekende CVEs via NVD API",
+    href: "/vulnerabilities",
+    icon: Database,
+    iconColor: "#ff9500",
+    iconBg: "rgba(255,149,0,0.08)",
+  },
+  {
+    id: "11",
+    name: "Visual Recon",
+    description: "Screenshots van alle webdiensten via Playwright",
+    href: "/scans/new",
+    icon: Camera,
+    iconColor: "#0071e3",
+    iconBg: "rgba(0,113,227,0.08)",
+  },
+  {
+    id: "12",
+    name: "Smart Credential Attack",
+    description: "Genereert doelspecifieke wordlists en test credentials via Hydra",
+    href: "/scans/new",
+    icon: KeyRound,
+    iconColor: "#c69b00",
+    iconBg: "rgba(255,204,0,0.10)",
+  },
+  {
+    id: "13",
+    name: "AI Adaptive Scanner",
+    description: "DeepSeek analyseert bevindingen en stuurt gerichte follow-up scans",
+    href: "/ai-analysis",
+    icon: BrainCircuit,
+    iconColor: "#bf5af2",
+    iconBg: "rgba(191,90,242,0.08)",
+  },
+  {
+    id: "14",
+    name: "Scan Comparator",
+    description: "Vergelijkt huidige scan met vorige scan — toont nieuw/opgelost",
+    href: "/compare",
+    icon: GitCompare,
+    iconColor: "#34c759",
+    iconBg: "rgba(52,199,89,0.08)",
+  },
+];
 
 function StatusDot({ status }: { status: string }) {
   const map: Record<string, { label: string; color: string; pulse?: boolean }> = {
