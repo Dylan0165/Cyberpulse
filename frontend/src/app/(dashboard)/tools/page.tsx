@@ -28,23 +28,29 @@ const PHASE_LABELS: Record<number, string> = {
   0: "Other",
 };
 
+// Only the tools CyberPulse actively uses in its scan phases.
+// Filtering the API response to this set prevents showing the thousands
+// of system binaries that the Kali VM tool discovery picks up.
 const TOOL_DESCRIPTIONS: Record<string, string> = {
-  nmap: "Netwerkpoorten en diensten scannen",
-  httpx: "HTTP-diensten verkennen en analyseren",
-  subfinder: "Subdomeinen ontdekken",
-  whatweb: "Web technologieën identificeren",
-  masscan: "Snelle massale poortscanner",
-  nuclei: "Kwetsbaarheden detecteren met templates",
-  nikto: "Webserver kwetsbaarheden scannen",
-  sqlmap: "SQL-injectie testen en exploiteren",
-  ffuf: "Verborgen webpagina's en parameters vinden",
-  gobuster: "Directory en bestanden brute-force",
-  feroxbuster: "Snelle recursieve content discovery",
-  hydra: "Wachtwoord brute-force aanvallen",
+  nmap:         "Netwerkpoorten en diensten scannen",
+  "httpx-pd":   "HTTP-diensten verkennen en analyseren (ProjectDiscovery)",
+  httpx:        "HTTP-diensten verkennen en analyseren",
+  subfinder:    "Subdomeinen ontdekken",
+  whatweb:      "Web technologieën identificeren",
+  masscan:      "Snelle massale poortscanner",
+  nuclei:       "Kwetsbaarheden detecteren met templates",
+  nikto:        "Webserver kwetsbaarheden scannen",
+  sqlmap:       "SQL-injectie testen en exploiteren",
+  ffuf:         "Verborgen webpagina's en parameters vinden",
+  gobuster:     "Directory en bestanden brute-force",
+  feroxbuster:  "Snelle recursieve content discovery",
+  hydra:        "Wachtwoord brute-force aanvallen",
   "testssl.sh": "SSL/TLS configuratie analyseren",
   theharvester: "E-mails en domeinen verzamelen",
-  gitleaks: "Geheimen in Git repositories zoeken",
+  gitleaks:     "Geheimen in Git repositories zoeken",
 };
+
+const CYBERPULSE_TOOLS = new Set(Object.keys(TOOL_DESCRIPTIONS));
 
 export default function ToolsPage() {
   const [data, setData] = useState<ToolsResponse | null>(null);
@@ -66,8 +72,17 @@ export default function ToolsPage() {
         return r.json();
       })
       .then((d: ToolsResponse) => {
-        console.log("[Tools] data received:", d.total, "tools,", d.available_count, "available");
-        setData(d);
+        // Filter to only the tools CyberPulse actively uses.
+        // The Kali VM tool discovery returns thousands of system binaries;
+        // we only care about the ~15 in CYBERPULSE_TOOLS.
+        const relevantTools = d.tools.filter((t) => CYBERPULSE_TOOLS.has(t.name));
+        console.log("[Tools] data received:", d.total, "total,", relevantTools.length, "relevant");
+        setData({
+          ...d,
+          tools: relevantTools,
+          total: relevantTools.length,
+          available_count: relevantTools.filter((t) => t.available).length,
+        });
         setLoading(false);
       })
       .catch((e) => {

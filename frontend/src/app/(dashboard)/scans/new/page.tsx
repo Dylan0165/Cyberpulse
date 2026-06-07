@@ -55,13 +55,13 @@ const TARGET_TYPES = [
 ];
 
 const PHASE_OPTIONS = [
-  { value: "recon",           label: "Reconnaissance",           tools: "nmap, subfinder, httpx, whatweb",    alwaysEnabled: true },
-  { value: "vulnerability",   label: "Vulnerability Detection",  tools: "nuclei, nikto",                      alwaysEnabled: false },
-  { value: "webapp",          label: "Web Application Tests",    tools: "sqlmap, ffuf, nikto",                alwaysEnabled: false },
-  { value: "network",         label: "Network Services",         tools: "nmap NSE, enum4linux, smbmap",       alwaysEnabled: false },
-  { value: "auth",            label: "Authentication Tests",     tools: "hydra, medusa, kerbrute",            alwaysEnabled: false, requiresCredentials: true },
-  { value: "ssl",             label: "SSL/TLS Analysis",         tools: "testssl.sh, sslyze",                 alwaysEnabled: false },
-  { value: "osint",           label: "OSINT & Secrets",          tools: "theharvester, gitleaks",             alwaysEnabled: false },
+  { value: "recon",        label: "Reconnaissance",          tools: "nmap, httpx-pd, whatweb",        alwaysEnabled: true },
+  { value: "vulnerability",label: "Vulnerability Detection", tools: "nuclei, nikto",                  alwaysEnabled: false },
+  { value: "webapp",       label: "Web Application Tests",   tools: "sqlmap, ffuf, nikto",            alwaysEnabled: false },
+  { value: "network",      label: "Network Services",        tools: "nmap NSE",                       alwaysEnabled: false },
+  { value: "auth",         label: "Authentication Tests",    tools: "hydra",                          alwaysEnabled: false },
+  { value: "ssl",          label: "SSL/TLS Analysis",        tools: "testssl.sh",                     alwaysEnabled: false },
+  { value: "osint",        label: "OSINT & Secrets",         tools: "theharvester, gitleaks",         alwaysEnabled: false },
 ];
 
 const SCAN_TYPES = [
@@ -335,31 +335,17 @@ function NewScanContent() {
           <CardContent className="space-y-3">
             {PHASE_OPTIONS.map((phase) => {
               const checked = selectedPhases.has(phase.value);
-              const disabled = phase.requiresCredentials && scanMode === "blackbox";
               return (
                 <label key={phase.value}
                   className={`flex items-start gap-3 border rounded-lg p-3 cursor-pointer transition-colors ${
-                    disabled ? "opacity-40 cursor-not-allowed" :
                     checked ? "border-foreground bg-secondary" : "hover:bg-secondary"
                   }`}>
-                  <input type="checkbox" checked={checked} disabled={disabled}
-                    onChange={() => !disabled && togglePhase(phase.value)}
+                  <input type="checkbox" checked={checked}
+                    onChange={() => togglePhase(phase.value)}
                     className="mt-0.5 accent-foreground" />
                   <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <span className="text-[13px] font-medium">{phase.label}</span>
-                      {phase.requiresCredentials && (
-                        <span className="text-[10px] bg-yellow-500/10 text-yellow-600 px-2 py-0.5 rounded">
-                          vereist credentials
-                        </span>
-                      )}
-                    </div>
+                    <span className="text-[13px] font-medium">{phase.label}</span>
                     <p className="text-[11px] text-muted-foreground mt-0.5">{phase.tools}</p>
-                    {disabled && (
-                      <p className="text-[10px] text-red-400 mt-1 flex items-center gap-1">
-                        <Info className="h-3 w-3" />Schakel graybox/whitebox in om auth tests uit te voeren
-                      </p>
-                    )}
                   </div>
                 </label>
               );
