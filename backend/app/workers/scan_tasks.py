@@ -71,7 +71,7 @@ PHASES: list[tuple[str, list[tuple[str, str, int]]]] = [
         # hydra — uses /tmp/cyber_passwords.txt written by tool_api.py on startup.
         # Contains common defaults incl. root:toor. -f stops on first hit. -w 3 = 3s wait.
         # 120s hard timeout so the phase never blocks the scan for long.
-        ("hydra",    "-l root -P /tmp/cyber_passwords.txt -t 4 -f -w 3 {target} ssh", 120),
+        ("hydra",    "-l root -P /opt/cyberpulse/passwords.txt -t 4 -f -w 3 {target} ssh", 120),
     ]),
     ("ssl", [
         ("testssl.sh", "--jsonfile /tmp/ssl_{scan_id}.json {target}",         180),

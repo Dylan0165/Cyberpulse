@@ -194,7 +194,8 @@ _CYBER_PASSWORDS = "\n".join([
     "1234", "P@ssw0rd", "Admin123", "welcome",
 ])
 try:
-    with open("/tmp/cyber_passwords.txt", "w") as _f:
+    os.makedirs("/opt/cyberpulse", exist_ok=True)
+    with open("/opt/cyberpulse/passwords.txt", "w") as _f:
         _f.write(_CYBER_PASSWORDS + "\n")
 except Exception:
     pass
