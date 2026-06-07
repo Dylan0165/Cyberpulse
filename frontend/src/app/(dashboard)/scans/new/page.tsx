@@ -64,6 +64,15 @@ const PHASE_OPTIONS = [
   { value: "osint",        label: "OSINT & Secrets",         tools: "theharvester, gitleaks",         alwaysEnabled: false },
 ];
 
+const CUSTOM_MODULE_OPTIONS = [
+  { value: "m09", label: "M09 — Business Logic Tester",    description: "IDOR, rate limiting, admin endpoints",         defaultChecked: false },
+  { value: "m10", label: "M10 — CVE Correlator",           description: "Koppelt services aan CVEs via NVD API",        defaultChecked: true  },
+  { value: "m11", label: "M11 — Visual Recon",             description: "Playwright screenshots van webdiensten",       defaultChecked: false },
+  { value: "m12", label: "M12 — Smart Credential Attack",  description: "Doelspecifieke wordlist + Hydra",              defaultChecked: false },
+  { value: "m13", label: "M13 — AI Adaptive Scanner",      description: "DeepSeek bepaalt follow-up scans",             defaultChecked: false },
+  { value: "m14", label: "M14 — Scan Comparator",          description: "Diff met vorige scan op hetzelfde target",     defaultChecked: false },
+];
+
 const SCAN_TYPES = [
   { value: "quick",     label: "Quick Scan",         description: "Recon + vulnerability scan",             phases: ["recon","vulnerability","ssl"] },
   { value: "full",      label: "Volledige Pentest",   description: "Alle 7 fases — uitgebreide assessment",  phases: PHASE_OPTIONS.map(p => p.value) },
@@ -101,6 +110,10 @@ function NewScanContent() {
   // Step 3 — Phases
   const [selectedPhases, setSelectedPhases] = useState<Set<string>>(
     new Set(SCAN_TYPES.find(t => t.value === "full")?.phases ?? [])
+  );
+  // Custom modules (m09–m14) — m10 on by default
+  const [selectedModules, setSelectedModules] = useState<Set<string>>(
+    new Set(CUSTOM_MODULE_OPTIONS.filter(m => m.defaultChecked).map(m => m.value))
   );
 
   // Step 4 — Credentials (only graybox / whitebox)
@@ -148,7 +161,8 @@ function NewScanContent() {
     createScanMutation.mutate({
       target_id:   selectedTarget,
       scan_type:   scanType,
-      phases:      Array.from(selectedPhases),
+      // Kali phases + selected custom modules combined into one list
+      phases:      [...Array.from(selectedPhases), ...Array.from(selectedModules)],
       scan_mode:   scanMode,
       target_type: targetType,
       credentials: creds,
@@ -169,6 +183,15 @@ function NewScanContent() {
       const next = new Set(prev);
       if (next.has(phase)) next.delete(phase);
       else next.add(phase);
+      return next;
+    });
+  };
+
+  const toggleModule = (mod: string) => {
+    setSelectedModules(prev => {
+      const next = new Set(prev);
+      if (next.has(mod)) next.delete(mod);
+      else next.add(mod);
       return next;
     });
   };
@@ -350,6 +373,36 @@ function NewScanContent() {
                 </label>
               );
             })}
+
+            {/* Custom Modules */}
+            <div className="pt-3 mt-1 border-t border-border">
+              <p className="text-[10px] uppercase tracking-widest text-muted-foreground mb-2 font-medium">
+                Custom Modules
+              </p>
+              {CUSTOM_MODULE_OPTIONS.map((mod) => {
+                const checked = selectedModules.has(mod.value);
+                return (
+                  <label key={mod.value}
+                    className={`flex items-start gap-3 border rounded-lg p-3 cursor-pointer transition-colors mb-2 ${
+                      checked ? "border-purple-500/40 bg-purple-500/5" : "hover:bg-secondary"
+                    }`}>
+                    <input type="checkbox" checked={checked}
+                      onChange={() => toggleModule(mod.value)}
+                      className="mt-0.5 accent-purple-500" />
+                    <div className="flex-1">
+                      <span className="text-[13px] font-medium">{mod.label}</span>
+                      <p className="text-[11px] text-muted-foreground mt-0.5">{mod.description}</p>
+                    </div>
+                    {mod.defaultChecked && (
+                      <span className="text-[9px] bg-purple-500/10 text-purple-600 px-1.5 py-0.5 rounded flex-shrink-0 mt-0.5">
+                        aanbevolen
+                      </span>
+                    )}
+                  </label>
+                );
+              })}
+            </div>
+
             <div className="flex gap-2 mt-4">
               <Button variant="outline" onClick={prevStep} className="text-[12px] uppercase">
                 <ArrowLeft className="mr-2 h-4 w-4" />Terug

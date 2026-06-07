@@ -49,14 +49,21 @@ interface PhaseState {
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 const PHASE_META: Record<string, { display: string; tools: string[] }> = {
-  recon:    { display: "Phase 1 — Reconnaissance",        tools: ["nmap","httpx","whatweb"] },
-  vuln_scan:{ display: "Phase 2 — Vulnerability Scan",    tools: ["nuclei"] },
-  webapp:   { display: "Phase 3 — Web Application Tests", tools: ["nikto","sqlmap","ffuf"] },
-  network:  { display: "Phase 4 — Network Services",      tools: ["nmap"] },
-  auth:     { display: "Phase 5 — Authentication Tests",  tools: ["hydra"] },
-  ssl:      { display: "Phase 6 — SSL/TLS Analysis",      tools: ["testssl.sh"] },
-  osint:    { display: "Phase 7 — OSINT & Secrets",       tools: ["theharvester","gitleaks"] },
-  ai_analysis: { display: "Phase 8 — AI Analysis",        tools: ["DeepSeek"] },
+  recon:       { display: "Phase 1 — Reconnaissance",        tools: ["nmap","httpx-pd","whatweb"] },
+  vuln_scan:   { display: "Phase 2 — Vulnerability Scan",    tools: ["nuclei"] },
+  webapp:      { display: "Phase 3 — Web Application Tests", tools: ["nikto","sqlmap","ffuf"] },
+  network:     { display: "Phase 4 — Network Services",      tools: ["nmap"] },
+  auth:        { display: "Phase 5 — Authentication Tests",  tools: ["hydra"] },
+  ssl:         { display: "Phase 6 — SSL/TLS Analysis",      tools: ["testssl.sh"] },
+  osint:       { display: "Phase 7 — OSINT & Secrets",       tools: ["theharvester","gitleaks"] },
+  ai_analysis: { display: "Phase 8 — AI Analysis",           tools: ["DeepSeek"] },
+  // Custom modules
+  m09: { display: "M09 — Business Logic Tester",    tools: ["custom"] },
+  m10: { display: "M10 — CVE Correlator",           tools: ["NVD API"] },
+  m11: { display: "M11 — Visual Recon",             tools: ["Playwright"] },
+  m12: { display: "M12 — Smart Credential Attack",  tools: ["hydra"] },
+  m13: { display: "M13 — AI Adaptive Scanner",      tools: ["DeepSeek"] },
+  m14: { display: "M14 — Scan Comparator",          tools: ["diff"] },
 };
 
 const SEVERITY_COLORS: Record<string, string> = {

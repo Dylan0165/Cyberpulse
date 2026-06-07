@@ -94,6 +94,83 @@ PHASE_DISPLAY  = {
 }
 
 
+_MODULE_DISPLAY = {
+    "m09": "M09 — Business Logic Tester",
+    "m10": "M10 — CVE Correlator",
+    "m11": "M11 — Visual Recon",
+    "m12": "M12 — Smart Credential Attack",
+    "m13": "M13 — AI Adaptive Scanner",
+    "m14": "M14 — Scan Comparator",
+}
+
+
+def _run_cve_correlator(scan_id: str, target: str, all_outputs: dict, r) -> str:
+    """Inline CVE correlation: extract service versions from nmap output and query NVD."""
+    import re
+    import requests as _req
+
+    lines: list[str] = []
+    lines.append(f"[M10] CVE Correlator — target: {target}")
+
+    # Extract service/version lines from nmap output
+    nmap_text = ""
+    for phase_data in all_outputs.values():
+        for tool_name, output in phase_data.items():
+            if "nmap" in tool_name.lower() and output:
+                nmap_text += output + "\n"
+
+    # Parse "PORT/tcp open  service  version" lines
+    svc_pattern = re.compile(
+        r"(\d+)/tcp\s+open\s+(\S+)\s*(.*)", re.IGNORECASE
+    )
+    services = []
+    for match in svc_pattern.finditer(nmap_text):
+        port, service, version = match.group(1), match.group(2), match.group(3).strip()
+        version_clean = re.split(r"\s{2,}|#", version)[0][:60]
+        if version_clean:
+            services.append({"port": port, "service": service, "version": version_clean})
+
+    if not services:
+        lines.append("[M10] Geen service-versies gevonden in nmap output — CVE lookup overgeslagen")
+        return "\n".join(lines)
+
+    lines.append(f"[M10] {len(services)} services gevonden, NVD opzoeken...")
+    findings_found = 0
+
+    for svc in services[:8]:  # cap at 8 to respect NVD rate limit
+        keyword = f"{svc['service']} {svc['version']}"
+        try:
+            resp = _req.get(
+                "https://services.nvd.nist.gov/rest/json/cves/2.0",
+                params={"keywordSearch": keyword, "resultsPerPage": 3},
+                timeout=10,
+                headers={"User-Agent": "CyberPulse/1.0"},
+            )
+            if resp.status_code == 200:
+                vulns = resp.json().get("vulnerabilities", [])
+                for v in vulns:
+                    cve_id = v.get("cve", {}).get("id", "?")
+                    desc = next(
+                        (d["value"][:120] for d in v.get("cve", {}).get("descriptions", []) if d.get("lang") == "en"),
+                        ""
+                    )
+                    metrics = v.get("cve", {}).get("metrics", {})
+                    score = 0.0
+                    for key in ("cvssMetricV31", "cvssMetricV30", "cvssMetricV2"):
+                        if metrics.get(key):
+                            score = float(metrics[key][0].get("cvssData", {}).get("baseScore", 0))
+                            break
+                    lines.append(f"  [{cve_id}] CVSS={score} port={svc['port']}/{svc['service']}: {desc}")
+                    findings_found += 1
+            import time as _time
+            _time.sleep(0.6)
+        except Exception as exc:
+            lines.append(f"  [M10] NVD fout voor {keyword}: {exc}")
+
+    lines.append(f"[M10] Klaar — {findings_found} CVEs gevonden voor {len(services)} services")
+    return "\n".join(lines)
+
+
 def _should_run_phase(phase_name: str, scan_mode: str, phases_enabled: list | None) -> bool:
     # Auth phase runs in ALL modes — blackbox uses default wordlists,
     # graybox/whitebox use provided credentials (substituted in args template).
@@ -289,6 +366,36 @@ def run_scan(self, scan_id: str):
             "display": "Phase 8 — AI Analysis (DeepSeek)",
             "progress": 85, "timestamp": time.time(),
         })
+
+        # ── Custom module phases (m09–m14) ───────────────────────────────────
+        CUSTOM_MODULES = {"m09", "m10", "m11", "m12", "m13", "m14"}
+        custom_selected = [p for p in (scan.phases or []) if p in CUSTOM_MODULES]
+
+        for mod_id in custom_selected:
+            _pub(r, scan_id, {
+                "type": "phase_start", "phase": mod_id,
+                "display": _MODULE_DISPLAY.get(mod_id, mod_id),
+                "timestamp": time.time(),
+            })
+            mod_output = ""
+            if mod_id == "m10":
+                mod_output = _run_cve_correlator(scan_id, target, all_outputs, r)
+            else:
+                mod_output = f"Module {mod_id} geselecteerd — wordt in toekomstige versie geïntegreerd."
+                logger.info("[%s] Custom module %s: not yet in pipeline", scan_id, mod_id)
+
+            all_outputs[mod_id] = {"module": mod_output}
+            current_tool_outputs = scan.tool_outputs or {}
+            current_tool_outputs[mod_id] = {"module": mod_output}
+            scan.tool_outputs = current_tool_outputs
+            completed = list(scan.phases_completed or [])
+            completed.append(mod_id)
+            scan.phases_completed = completed
+            db.commit()
+            _pub(r, scan_id, {
+                "type": "phase_complete", "phase": mod_id,
+                "output": mod_output[:500], "timestamp": time.time(),
+            })
 
         from app.workers.analysis_tasks import analyze_scan
         analyze_scan.delay(str(scan.id))
