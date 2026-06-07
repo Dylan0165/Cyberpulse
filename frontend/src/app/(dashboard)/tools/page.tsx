@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Search, Wifi, WifiOff, CheckCircle2, XCircle } from "lucide-react";
+import { Search, Wifi, WifiOff, CheckCircle2, XCircle, Bug, Database, Camera, KeyRound, BrainCircuit, GitCompare } from "lucide-react";
 
 interface KaliTool {
   name: string;
@@ -283,6 +283,75 @@ export default function ToolsPage() {
             </div>
           );
         })}
+
+      {/* ── Custom Modules ─────────────────────────────────────── */}
+      <div className="space-y-3 pt-4" style={{ borderTop: "1px solid #e5e5ea" }}>
+        <div className="flex items-center gap-3">
+          <h2 className="text-[17px] font-semibold">Custom Modules</h2>
+          <span className="text-[13px] text-muted-foreground">
+            CyberPulse post-scan analyse modules
+          </span>
+        </div>
+        <div className="grid grid-cols-3 gap-4">
+          {CUSTOM_MODULES.map((mod) => (
+            <div key={mod.id} className="rounded-2xl border border-border bg-card p-5 shadow-apple hover:shadow-apple-md transition-shadow">
+              <div className="flex items-start justify-between mb-3">
+                <div className="min-w-0">
+                  <p className="text-[15px] font-semibold truncate">{mod.name}</p>
+                  <p className="text-[12px] text-muted-foreground mt-0.5">{mod.category}</p>
+                </div>
+                <div className="h-9 w-9 rounded-xl flex items-center justify-center flex-shrink-0 ml-3"
+                     style={{ background: mod.iconBg }}>
+                  <mod.icon className="h-4 w-4" style={{ color: mod.iconColor }} />
+                </div>
+              </div>
+              <p className="text-[13px] text-muted-foreground leading-relaxed">{mod.description}</p>
+              <div className="flex items-center justify-between mt-4">
+                <span className="rounded-full px-2.5 py-1 text-[11px] font-semibold"
+                      style={{ background: "rgba(191,90,242,0.08)", color: "#bf5af2" }}>
+                  Module {mod.id}
+                </span>
+                <span className="text-[12px] font-medium" style={{ color: "#34c759" }}>
+                  Actief
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
+
+const CUSTOM_MODULES = [
+  {
+    id: "M09", name: "Business Logic Tester", category: "Exploitation",
+    description: "Test IDOR-kwetsbaarheden, rate limiting en blootgestelde admin-endpoints zonder authenticatie.",
+    icon: Bug, iconColor: "#ff3b30", iconBg: "rgba(255,59,48,0.08)",
+  },
+  {
+    id: "M10", name: "CVE Correlator", category: "Vulnerability Intelligence",
+    description: "Koppelt gedetecteerde service-versies aan bekende CVEs via de NVD REST API met CVSS-scores.",
+    icon: Database, iconColor: "#ff9500", iconBg: "rgba(255,149,0,0.08)",
+  },
+  {
+    id: "M11", name: "Visual Recon", category: "Reconnaissance",
+    description: "Maakt screenshots van alle webdiensten via Playwright voor visuele herkenning van aanvalsoppervlak.",
+    icon: Camera, iconColor: "#0071e3", iconBg: "rgba(0,113,227,0.08)",
+  },
+  {
+    id: "M12", name: "Smart Credential Attack", category: "Authentication",
+    description: "Genereert doelspecifieke wachtwoordlijsten op basis van bedrijfsnaam en test credentials via Hydra.",
+    icon: KeyRound, iconColor: "#c69b00", iconBg: "rgba(255,204,0,0.10)",
+  },
+  {
+    id: "M13", name: "AI Adaptive Scanner", category: "AI-Directed",
+    description: "DeepSeek analyseert alle bevindingen en bepaalt automatisch gerichte follow-up scans.",
+    icon: BrainCircuit, iconColor: "#bf5af2", iconBg: "rgba(191,90,242,0.08)",
+  },
+  {
+    id: "M14", name: "Scan Comparator", category: "Reporting",
+    description: "Vergelijkt huidige scan met vorige scan op hetzelfde target en rapporteert nieuw/opgelost/persistent.",
+    icon: GitCompare, iconColor: "#34c759", iconBg: "rgba(52,199,89,0.08)",
+  },
+];
