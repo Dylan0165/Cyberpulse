@@ -5,11 +5,16 @@ from uuid import UUID
 from pydantic import BaseModel, field_validator
 
 
-VALID_PHASES = {"recon", "vulnerability", "webapp", "network", "auth", "ssl", "cloud", "osint"}
+VALID_PHASES = {
+    # Kali VM phases
+    "recon", "vulnerability", "webapp", "network", "auth", "ssl", "cloud", "osint",
+    # Custom CyberPulse modules
+    "m09", "m10", "m11", "m12", "m13", "m14",
+}
 VALID_SCAN_TYPES = {"quick", "full", "custom"}
 
 QUICK_PHASES = ["recon", "vulnerability", "ssl"]
-FULL_PHASES = list(VALID_PHASES)
+FULL_PHASES = ["recon", "vulnerability", "webapp", "network", "auth", "ssl", "osint"]
 
 
 class ScanCreate(BaseModel):
