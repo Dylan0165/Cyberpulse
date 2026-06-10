@@ -50,7 +50,14 @@ export default api;
 // Named wrapper used by dashboard pages
 export const dashboardApi = {
   listScans: (page = 1, pageSize = 20) =>
-    scansApi.list(page, pageSize).then((r) => r.data).catch(() => ({ items: [], total: 0 })),
+    scansApi.list(page, pageSize)
+      .then((r) => {
+        const d = r.data;
+        // Backend returns { scans: [...], total, page, page_size }
+        // Normalise to { items: [...], total } so all pages use the same shape.
+        return { items: d.scans ?? d.items ?? [], total: d.total ?? 0 };
+      })
+      .catch(() => ({ items: [], total: 0 })),
   listTargets: () =>
     targetsApi.list().then((r) => r.data).catch(() => []),
 };

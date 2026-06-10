@@ -91,7 +91,7 @@ async def create_scan(
         scan_type=body.scan_type,
         phases=phases,
         config=config,
-        save_report=body.save_report,
+        save_report=True,  # always save — school project, no billing per report
         status="pending",       # skip NDA/verification flow
     )
     db.add(scan)

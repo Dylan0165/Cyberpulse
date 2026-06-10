@@ -21,7 +21,7 @@ class ScanCreate(BaseModel):
     target_id: UUID
     scan_type: str = "quick"
     phases: list[str] = []
-    save_report: bool = False
+    save_report: bool = True
     config: dict = {}
     # Scan context — stored inside config JSONB, no extra DB column needed
     scan_mode: str = "blackbox"    # blackbox | graybox | whitebox
