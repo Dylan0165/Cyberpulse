@@ -13,25 +13,20 @@ jobs:
       - name: Pull latest code
         run: cd /home/student/cyberpulse && git pull origin main
 
-      - name: Build and start containers
+      - name: Rebuild changed containers (no cache)
         run: |
           cd /home/student/cyberpulse
-          docker compose -f docker-compose.netlab.yml up -d --build
+          docker compose -f docker-compose.netlab.yml build --no-cache frontend backend worker beat
 
-      - name: Show container logs on failure
-        if: always()
+      - name: Start / recreate containers
         run: |
           cd /home/student/cyberpulse
-          echo "=== Container status ==="
-          docker compose -f docker-compose.netlab.yml ps -a
-          echo "=== cyberpulse-web logs ==="
-          docker logs cyberpulse-cyberpulse-web-1 --tail=40 2>&1 || true
-          echo "=== backend logs ==="
-          docker logs cyberpulse-backend-1 --tail=40 2>&1 || true
+          docker compose -f docker-compose.netlab.yml up -d
 
       - name: Run database migrations
         run: |
           cd /home/student/cyberpulse
+          sleep 5
           docker compose -f docker-compose.netlab.yml exec -T -e PYTHONPATH=/app backend alembic upgrade head
 
       - name: Health check
@@ -47,6 +42,15 @@ jobs:
           echo "Backend did not become healthy after 60s"
           docker logs cyberpulse-backend-1 --tail=30 2>&1 || true
           exit 1
+
+      - name: Show container status
+        if: always()
+        run: |
+          cd /home/student/cyberpulse
+          echo "=== Container status ==="
+          docker compose -f docker-compose.netlab.yml ps -a
+          echo "=== backend logs (last 40) ==="
+          docker logs cyberpulse-backend-1 --tail=40 2>&1 || true
 
       - name: Confirm deployment
         run: echo "Deploy successful"
