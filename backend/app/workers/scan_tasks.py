@@ -105,6 +105,51 @@ _MODULE_DISPLAY = {
 }
 
 
+def _parse_hydra_findings(output: str) -> list[dict]:
+    """Extract structured credential findings from hydra stdout."""
+    import re as _re
+    findings = []
+    # Matches: [22][ssh] host: 192.168.121.170   login: root   password: toor
+    pattern = _re.compile(
+        r"\[(\d+)\]\[(\w+)\]\s+host:\s+\S+\s+login:\s+(\S+)\s+password:\s+(\S+)",
+        _re.IGNORECASE,
+    )
+    for m in pattern.finditer(output):
+        port, service, login, password = m.group(1), m.group(2), m.group(3), m.group(4)
+        is_root = login.lower() in ("root", "admin", "administrator")
+        findings.append({
+            "type":        "credential_found",
+            "severity":    "CRITICAL",
+            "title":       f"Weak {service.upper()} credentials: {login}:{password}",
+            "service":     service,
+            "port":        int(port),
+            "login":       login,
+            "password":    password,
+            "description": (
+                f"Valid {service.upper()} credentials discovered on port {port}: "
+                f"login='{login}', password='{password}'. "
+                + ("Full root/administrator access to the target system is possible."
+                   if is_root else "Authenticated access to the service is possible.")
+            ),
+            "impact": (
+                f"An attacker can SSH into the target as '{login}' and gain "
+                + ("unrestricted root control over the system, including reading all files, "
+                   "installing backdoors, and pivoting to other systems."
+                   if is_root else "authenticated access to the service.")
+            ),
+            "recommendation": (
+                f"1. Immediately change the '{login}' password to a strong random value. "
+                f"2. Disable direct root SSH login (set PermitRootLogin no in sshd_config). "
+                f"3. Enforce SSH key-based authentication and disable password auth. "
+                f"4. Review /etc/passwd and /etc/shadow for other weak passwords. "
+                f"5. Check for persistence (crontabs, authorized_keys, new users)."
+            ),
+            "owasp": "A07:2021 - Identification and Authentication Failures",
+            "cvss":  9.8,
+        })
+    return findings
+
+
 def _run_cve_correlator(scan_id: str, target: str, all_outputs: dict, r) -> str:
     """Inline CVE correlation: extract service versions from nmap output and query NVD."""
     import re
@@ -304,6 +349,25 @@ def run_scan(self, scan_id: str):
                                    scan_id, phase_name, tool_name)
 
                 phase_outputs[tool_name] = output
+
+                # Parse structured credential findings from hydra output
+                # so the AI receives them as explicit CRITICAL findings.
+                if tool_name == "hydra" and output:
+                    hydra_creds = _parse_hydra_findings(output)
+                    if hydra_creds:
+                        phase_outputs["hydra_findings"] = json.dumps(hydra_creds, ensure_ascii=False)
+                        logger.info(
+                            "[%s] auth/hydra: %d credential(s) found — %s",
+                            scan_id, len(hydra_creds),
+                            ", ".join(f"{c['login']}:{c['password']}@{c['service']}:{c['port']}" for c in hydra_creds),
+                        )
+                        _pub(r, scan_id, {
+                            "type":    "credential_found",
+                            "phase":   "auth",
+                            "count":   len(hydra_creds),
+                            "summary": ", ".join(f"{c['login']}:{c['password']} via {c['service']}:{c['port']}" for c in hydra_creds),
+                            "timestamp": time.time(),
+                        })
 
                 _pub(r, scan_id, {
                     "type":     "tool_done",

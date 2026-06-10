@@ -97,12 +97,44 @@ def analyze_scan_sync(
             truncated = output[:25000] if len(output) > 25000 else output
             sections.append(f"\n--- {tool_name} ---\n{truncated}")
 
+    # Extract any pre-parsed credential findings (hydra_findings JSON blobs)
+    # and prepend them as an explicit CRITICAL alert so DeepSeek never misses them.
+    credential_alerts: list[str] = []
+    for phase_data in all_outputs.values():
+        raw = phase_data.get("hydra_findings", "")
+        if raw:
+            try:
+                for c in json.loads(raw):
+                    credential_alerts.append(
+                        f"  • {c['service'].upper()} port {c['port']}: "
+                        f"login='{c['login']}' password='{c['password']}' — "
+                        f"{c.get('description', '')}"
+                    )
+            except Exception:
+                pass
+
+    cred_section = ""
+    if credential_alerts:
+        cred_section = (
+            "\n\n*** CRITICAL PRE-VERIFIED FINDINGS — MUST be included as CRITICAL severity ***\n"
+            "The following credentials were successfully brute-forced during authentication testing:\n"
+            + "\n".join(credential_alerts)
+            + "\n\nThese MUST appear as CRITICAL findings in the JSON report with:\n"
+            "  - The exact username:password combination in the title and description\n"
+            "  - severity: CRITICAL\n"
+            "  - cvss: 9.8\n"
+            "  - owasp: A07:2021 - Identification and Authentication Failures\n"
+            "  - recommendation: immediate password change, disable root SSH, enforce key auth\n"
+            "*** END CRITICAL PRE-VERIFIED FINDINGS ***\n"
+        )
+
     user_message = (
         f"Analyze the following penetration test results.\n\n"
         f"Target: {target}\n"
         f"Scan Type: {scan_type}\n"
         f"Scan ID: {scan_id}\n"
-        f"Phases completed: {json.dumps(phases_completed)}\n\n"
+        f"Phases completed: {json.dumps(phases_completed)}\n"
+        f"{cred_section}\n"
         f"--- FULL SCAN OUTPUT ---\n"
         f"{''.join(sections)}\n"
         f"--- END SCAN OUTPUT ---\n\n"
@@ -147,9 +179,33 @@ def analyze_scan_sync_streaming(
             truncated = output[:25000] if len(output) > 25000 else output
             sections.append(f"\n--- {tool_name} ---\n{truncated}")
 
+    # Same credential alert injection as non-streaming variant
+    credential_alerts2: list[str] = []
+    for phase_data in all_outputs.values():
+        raw = phase_data.get("hydra_findings", "")
+        if raw:
+            try:
+                for c in json.loads(raw):
+                    credential_alerts2.append(
+                        f"  • {c['service'].upper()} port {c['port']}: "
+                        f"login='{c['login']}' password='{c['password']}'"
+                    )
+            except Exception:
+                pass
+
+    cred_section2 = ""
+    if credential_alerts2:
+        cred_section2 = (
+            "\n\n*** CRITICAL PRE-VERIFIED FINDINGS — MUST be CRITICAL severity ***\n"
+            "Valid credentials brute-forced:\n"
+            + "\n".join(credential_alerts2)
+            + "\n*** END ***\n"
+        )
+
     user_message = (
         f"Target: {target}\nScan Type: {scan_type}\nScan ID: {scan_id}\n"
-        f"Phases: {json.dumps(phases_completed)}\n\n"
+        f"Phases: {json.dumps(phases_completed)}\n"
+        f"{cred_section2}\n"
         f"--- SCAN OUTPUT ---\n{''.join(sections)}\n--- END ---\n\n"
         f"Produce the structured JSON security report."
     )
