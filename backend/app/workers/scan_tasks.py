@@ -68,10 +68,11 @@ PHASES: list[tuple[str, list[tuple[str, str, int]]]] = [
         ("nmap",     "--script=default,vuln -sV -p 21,22,23,25,53,80,110,139,143,443,445,3306,3389,5432,6379,8080,8443 {target}", 300),
     ]),
     ("auth", [
-        # hydra — uses /tmp/cyber_passwords.txt written by tool_api.py on startup.
-        # Contains common defaults incl. root:toor. -f stops on first hit. -w 3 = 3s wait.
-        # 120s hard timeout so the phase never blocks the scan for long.
-        ("hydra",    "-l root -P /opt/cyberpulse/passwords.txt -t 4 -f -w 3 {target} ssh", 120),
+        # hydra — uses /opt/cyberpulse/passwords.txt written by tool_api.py on the
+        # Kali VM at startup (separate filesystem from this worker container).
+        # -l root: target root user. -f: stop on first hit. -V: show every attempt.
+        # -w 5: 5s connection timeout. 120s hard cap on the whole phase.
+        ("hydra",    "-l root -P /opt/cyberpulse/passwords.txt -t 4 -f -V -w 5 {target} ssh", 120),
     ]),
     ("ssl", [
         ("testssl.sh", "--jsonfile /tmp/ssl_{scan_id}.json {target}",         180),
@@ -275,18 +276,6 @@ def run_scan(self, scan_id: str):
                         f"-t 4 {target} ssh"
                     )
 
-                # Ensure password file exists on Kali VM before hydra runs.
-                # /opt/cyberpulse/passwords.txt may be missing after reboot.
-                if phase_name == "auth" and tool_name == "hydra":
-                    logger.info("[%s] auth/hydra: recreating /opt/cyberpulse/passwords.txt on Kali VM", scan_id)
-                    runner.run_safe(
-                        "bash",
-                        "-c \"mkdir -p /opt/cyberpulse && "
-                        "printf 'root\\ntoor\\nadmin\\npassword\\n123456\\nkali\\nubuntu\\nchangeme\\ntest\\nletmein\\n' "
-                        "> /opt/cyberpulse/passwords.txt\"",
-                        5,
-                    )
-
                 logger.info(
                     "[%s] %s/%s → command: %s %s",
                     scan_id, phase_name, tool_name, tool_name, args[:300],
@@ -368,18 +357,8 @@ def run_scan(self, scan_id: str):
                 scan_id, settings.kali_vm_host, settings.kali_vm_port,
             )
 
-        # ── Phase 8: AI Analysis ──────────────────────────────────────────────
-        scan.status   = "analyzing"
-        scan.progress = 85
-        db.commit()
-
-        _pub(r, scan_id, {
-            "type": "phase_start", "phase": "ai_analysis", "phase_num": 8,
-            "display": "Phase 8 — AI Analysis (DeepSeek)",
-            "progress": 85, "timestamp": time.time(),
-        })
-
-        # ── Custom module phases (m09–m14) ───────────────────────────────────
+        # ── Custom module phases (m09–m14) — run BEFORE AI analysis ───────────
+        # so the AI analysis can use their output (e.g. M10's CVE data).
         CUSTOM_MODULES = {"m09", "m10", "m11", "m12", "m13", "m14"}
         custom_selected = [p for p in (scan.phases or []) if p in CUSTOM_MODULES]
         logger.info("[%s] Custom modules selected: %s", scan_id, custom_selected or "none")
@@ -412,6 +391,17 @@ def run_scan(self, scan_id: str):
                 "type": "phase_complete", "phase": mod_id,
                 "output": mod_output[:500], "timestamp": time.time(),
             })
+
+        # ── Phase 8: AI Analysis (uses all phase + custom module output) ──────
+        scan.status   = "analyzing"
+        scan.progress = 85
+        db.commit()
+
+        _pub(r, scan_id, {
+            "type": "phase_start", "phase": "ai_analysis", "phase_num": 8,
+            "display": "Phase 8 — AI Analysis (DeepSeek)",
+            "progress": 85, "timestamp": time.time(),
+        })
 
         from app.workers.analysis_tasks import analyze_scan
         analyze_scan.delay(str(scan.id))

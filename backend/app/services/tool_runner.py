@@ -36,6 +36,34 @@ class ScannerUnavailableError(Exception):
     """Raised when the Kali VM is unreachable."""
 
 
+def _is_success(tool: str, returncode: int, stdout: str, stderr: str) -> bool:
+    """Determine real success for security tools.
+
+    Many security tools exit non-zero even when they ran correctly
+    (e.g. nikto/sqlmap finding nothing, testssl with no HTTPS). A plain
+    `returncode == 0` check wrongly marks those as failures.
+    """
+    combined = (stdout + stderr).lower()
+
+    if tool == "nikto":
+        return "target ip:" in combined or "+ " in combined
+    if tool == "sqlmap":
+        return "starting @" in combined  # ran fine, no SQLi = expected
+    if tool == "testssl.sh":
+        return "testssl.sh version" in combined  # ran fine, no HTTPS = info
+    if tool == "hydra":
+        return len(stdout) > 100  # actually attempted connections
+    if tool == "theharvester":
+        return True  # deprecation warning is not a failure
+    if tool == "gitleaks":
+        return "scanned" in combined  # ran fine, no leaks = good
+    if tool == "ffuf":
+        return "method" in combined or "status:" in combined
+
+    # Default: success if returncode 0 OR produced meaningful output
+    return returncode == 0 or len(stdout.strip()) > 100
+
+
 # ── Sync ToolRunner (Celery workers) ──────────────────────────────────────────
 
 class ToolRunner:
@@ -117,21 +145,17 @@ class ToolRunner:
                 continue
 
             status = data.get("status")
-            if status == "done":
+            if status in ("done", "failed"):
                 self._del(f"/job/{job_id}")
+                stdout = data.get("stdout", "")
+                stderr = data.get("stderr", "")
+                returncode = data.get("returncode", 0 if status == "done" else -1)
+                success = _is_success(tool, returncode, stdout, stderr)
                 return ToolResult(
                     tool=tool, args=args,
-                    stdout=data.get("stdout", ""), stderr=data.get("stderr", ""),
-                    returncode=data.get("returncode", 0),
-                    success=True, duration_s=round(time.time() - t0, 1),
-                )
-            if status == "failed":
-                self._del(f"/job/{job_id}")
-                return ToolResult(
-                    tool=tool, args=args,
-                    stdout=data.get("stdout", ""), stderr=data.get("stderr", ""),
-                    returncode=data.get("returncode", -1),
-                    success=False, error=data.get("stderr", "tool failed"),
+                    stdout=stdout, stderr=stderr, returncode=returncode,
+                    success=success,
+                    error="" if success else (stderr[:200] or "tool failed"),
                     duration_s=round(time.time() - t0, 1),
                 )
 
@@ -235,21 +259,18 @@ class AsyncToolRunner:
                 except Exception:
                     continue
 
-                if data.get("status") == "done":
+                if data.get("status") in ("done", "failed"):
                     await client.delete(f"{self.base_url}/job/{job_id}", headers=self._headers)
+                    stdout = data.get("stdout", "")
+                    stderr = data.get("stderr", "")
+                    returncode = data.get("returncode", 0 if data.get("status") == "done" else -1)
+                    success = _is_success(tool, returncode, stdout, stderr)
                     return ToolResult(
                         tool=tool, args=args,
-                        stdout=data.get("stdout",""), stderr=data.get("stderr",""),
-                        returncode=data.get("returncode",0),
-                        success=True, duration_s=round(time.time()-t0,1),
-                    )
-                if data.get("status") == "failed":
-                    await client.delete(f"{self.base_url}/job/{job_id}", headers=self._headers)
-                    return ToolResult(
-                        tool=tool, args=args,
-                        stdout=data.get("stdout",""), stderr=data.get("stderr",""),
-                        returncode=data.get("returncode",-1),
-                        success=False, error=data.get("stderr","tool failed"),
+                        stdout=stdout, stderr=stderr, returncode=returncode,
+                        success=success,
+                        error="" if success else (stderr[:200] or "tool failed"),
+                        duration_s=round(time.time()-t0,1),
                     )
 
         return ToolResult(tool=tool, args=args, success=False, error=f"timeout after {timeout}s")

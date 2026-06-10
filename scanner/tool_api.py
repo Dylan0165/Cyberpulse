@@ -195,8 +195,10 @@ _CYBER_PASSWORDS = "\n".join([
 ])
 try:
     os.makedirs("/opt/cyberpulse", exist_ok=True)
-    with open("/opt/cyberpulse/passwords.txt", "w") as _f:
-        _f.write(_CYBER_PASSWORDS + "\n")
+    # Only write if missing — preserves any manually curated wordlist.
+    if not os.path.exists("/opt/cyberpulse/passwords.txt"):
+        with open("/opt/cyberpulse/passwords.txt", "w") as _f:
+            _f.write(_CYBER_PASSWORDS + "\n")
 except Exception:
     pass
 
