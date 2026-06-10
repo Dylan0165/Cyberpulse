@@ -24,8 +24,12 @@ router = APIRouter(prefix="/reports", tags=["reports"])
 
 
 async def _get_report_data(scan: Scan, scan_id: uuid.UUID) -> dict | None:
+    # Prefer report_data, fall back to ai_analysis, then Redis.
+    # Handles scans where report_data wasn't persisted but ai_analysis was.
     if scan.report_data:
         return scan.report_data
+    if getattr(scan, "ai_analysis", None):
+        return scan.ai_analysis
     redis = await get_redis()
     cached = await redis.get(f"scan:{scan_id}:report")
     if cached:
