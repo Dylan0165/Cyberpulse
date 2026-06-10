@@ -65,13 +65,19 @@ async def create_scan(
     if not target:
         raise HTTPException(status_code=404, detail="Target not found")
 
-    # Determine phases
+    # Determine Kali phases from preset, then append any custom modules
+    # from body.phases so user-selected m09-m14 are never dropped.
+    _CUSTOM_MODULE_IDS = {"m09", "m10", "m11", "m12", "m13", "m14"}
     if body.scan_type == "quick":
-        phases = QUICK_PHASES
+        phases = list(QUICK_PHASES)
     elif body.scan_type == "full":
-        phases = FULL_PHASES
+        phases = list(FULL_PHASES)
     else:
-        phases = body.phases or QUICK_PHASES
+        phases = list(body.phases or QUICK_PHASES)
+    # Always preserve custom module selections regardless of preset
+    for p in (body.phases or []):
+        if p in _CUSTOM_MODULE_IDS and p not in phases:
+            phases.append(p)
 
     config = dict(body.config) if body.config else {}
     config["scan_mode"]   = body.scan_mode

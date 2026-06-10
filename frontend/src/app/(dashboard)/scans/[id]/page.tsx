@@ -121,17 +121,22 @@ export default function ScanDetailPage() {
     onError: (err: any) => toast.error(err?.response?.data?.detail ?? "Annuleren mislukt"),
   });
 
-  // Initialise phases from PHASE_META
+  // Initialise phases from PHASE_META, filtered by which phases this scan has
+  const CUSTOM_MODULE_KEYS = new Set(["m09", "m10", "m11", "m12", "m13", "m14"]);
   useEffect(() => {
+    const scanPhaseSet = new Set<string>(scan?.phases ?? []);
     setPhases(
-      Object.entries(PHASE_META).map(([name, meta], i) => ({
-        name, display: meta.display, num: i + 1,
-        status: "pending",
-        tools: meta.tools.map(t => ({ name: t, done: false, success: true, output: "" })),
-        expanded: false,
-      }))
+      Object.entries(PHASE_META)
+        // Only include custom modules that were actually selected for this scan
+        .filter(([name]) => !CUSTOM_MODULE_KEYS.has(name) || scanPhaseSet.has(name))
+        .map(([name, meta], i) => ({
+          name, display: meta.display, num: i + 1,
+          status: "pending",
+          tools: meta.tools.map(t => ({ name: t, done: false, success: true, output: "" })),
+          expanded: false,
+        }))
     );
-  }, []);
+  }, [scan?.phases?.join(",")]); // re-run when phases list changes (scan loads)
 
   // WebSocket connection
   useEffect(() => {

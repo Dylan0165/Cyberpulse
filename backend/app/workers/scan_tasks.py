@@ -275,6 +275,18 @@ def run_scan(self, scan_id: str):
                         f"-t 4 {target} ssh"
                     )
 
+                # Ensure password file exists on Kali VM before hydra runs.
+                # /opt/cyberpulse/passwords.txt may be missing after reboot.
+                if phase_name == "auth" and tool_name == "hydra":
+                    logger.info("[%s] auth/hydra: recreating /opt/cyberpulse/passwords.txt on Kali VM", scan_id)
+                    runner.run_safe(
+                        "bash",
+                        "-c \"mkdir -p /opt/cyberpulse && "
+                        "printf 'root\\ntoor\\nadmin\\npassword\\n123456\\nkali\\nubuntu\\nchangeme\\ntest\\nletmein\\n' "
+                        "> /opt/cyberpulse/passwords.txt\"",
+                        5,
+                    )
+
                 logger.info(
                     "[%s] %s/%s → command: %s %s",
                     scan_id, phase_name, tool_name, tool_name, args[:300],
@@ -370,8 +382,10 @@ def run_scan(self, scan_id: str):
         # ── Custom module phases (m09–m14) ───────────────────────────────────
         CUSTOM_MODULES = {"m09", "m10", "m11", "m12", "m13", "m14"}
         custom_selected = [p for p in (scan.phases or []) if p in CUSTOM_MODULES]
+        logger.info("[%s] Custom modules selected: %s", scan_id, custom_selected or "none")
 
         for mod_id in custom_selected:
+            logger.info("[%s] Running custom module %s", scan_id, mod_id)
             _pub(r, scan_id, {
                 "type": "phase_start", "phase": mod_id,
                 "display": _MODULE_DISPLAY.get(mod_id, mod_id),
@@ -379,7 +393,9 @@ def run_scan(self, scan_id: str):
             })
             mod_output = ""
             if mod_id == "m10":
+                logger.info("[%s] M10 CVE Correlator starting", scan_id)
                 mod_output = _run_cve_correlator(scan_id, target, all_outputs, r)
+                logger.info("[%s] M10 CVE Correlator done — output %d bytes", scan_id, len(mod_output))
             else:
                 mod_output = f"Module {mod_id} geselecteerd — wordt in toekomstige versie geïntegreerd."
                 logger.info("[%s] Custom module %s: not yet in pipeline", scan_id, mod_id)
