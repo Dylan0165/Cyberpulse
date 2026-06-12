@@ -1,4 +1,5 @@
-FROM node:20-alpine AS base
+# AWS ECR Public mirror of the Docker Hub official image — no pull rate limits.
+FROM public.ecr.aws/docker/library/node:20-alpine AS base
 
 WORKDIR /app
 
@@ -8,7 +9,7 @@ RUN npm ci
 COPY . .
 RUN npm run build
 
-FROM node:20-alpine AS runner
+FROM public.ecr.aws/docker/library/node:20-alpine AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production

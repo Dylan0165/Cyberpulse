@@ -69,8 +69,8 @@ jobs:
             echo "::warning::Could not pull $img after 5 attempts. Build will use local cache if available."
             return 0
           }
-          ensure_image python:3.12-slim
-          ensure_image node:20-alpine
+          ensure_image public.ecr.aws/docker/library/python:3.12-slim
+          ensure_image public.ecr.aws/docker/library/node:20-alpine
 
       - name: Build changed containers (cached, with retry)
         run: |
