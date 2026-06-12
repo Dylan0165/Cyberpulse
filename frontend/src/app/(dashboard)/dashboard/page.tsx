@@ -2,391 +2,356 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { dashboardApi } from "@/lib/api";
-import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
 import {
-  Shield, Target, AlertTriangle, Activity, ArrowRight,
-  Plus, Terminal, Zap, BarChart3,
-  Bug, Database, Camera, KeyRound, BrainCircuit, GitCompare,
+  AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer,
+} from "recharts";
+import {
+  ScanLine, Target, AlertTriangle, BarChart3,
 } from "lucide-react";
 
+import { StatCard } from "@/components/cyber/stat-card";
+import { GlowCard } from "@/components/cyber/glow-card";
+import { RiskBadge } from "@/components/cyber/risk-badge";
+import { SkeletonRow, SkeletonCard } from "@/components/cyber/skeleton";
+import { NetworkGlobePanel } from "@/components/cyber/network-globe-lazy";
+
+// ── Helpers ─────────────────────────────────────────────────────────────────
+function riskScore(scan: any): number {
+  if (scan?.security_score != null) {
+    return Math.max(0, Math.min(100, Math.round(100 - scan.security_score)));
+  }
+  const crit = scan?.findings_critical ?? scan?.critical_count ?? 0;
+  const high = scan?.findings_high ?? scan?.high_count ?? 0;
+  const med = scan?.findings_medium ?? scan?.medium_count ?? 0;
+  return Math.min(100, crit * 25 + high * 12 + med * 5);
+}
+
+function riskSeverity(score: number): string {
+  if (score >= 60) return "critical";
+  if (score >= 30) return "high";
+  if (score >= 10) return "medium";
+  return "low";
+}
+
+function timeAgo(date: string): string {
+  const diff = Date.now() - new Date(date).getTime();
+  const min = Math.floor(diff / 60000);
+  if (min < 1) return "zojuist";
+  if (min < 60) return `${min} min geleden`;
+  const hrs = Math.floor(min / 60);
+  if (hrs < 24) return `${hrs} uur geleden`;
+  const days = Math.floor(hrs / 24);
+  return `${days} dag${days > 1 ? "en" : ""} geleden`;
+}
+
+const STATUS_MAP: Record<string, { label: string; color: string; pulse?: boolean }> = {
+  completed: { label: "Voltooid", color: "#00FF88" },
+  running: { label: "Actief", color: "#00D4FF", pulse: true },
+  pending: { label: "Wachtend", color: "#FF8C00" },
+  analyzing: { label: "Analyseren", color: "#0A84FF", pulse: true },
+  failed: { label: "Mislukt", color: "#FF2D55" },
+  cancelled: { label: "Geannuleerd", color: "#4A6880" },
+};
+
 export default function DashboardPage() {
-  const { data: scansData } = useQuery({
+  const router = useRouter();
+
+  const { data: scansData, isLoading: scansLoading } = useQuery({
     queryKey: ["scans"],
     queryFn: () => dashboardApi.listScans(1, 20),
   });
-  const { data: targets } = useQuery({
+  const { data: targets, isLoading: targetsLoading } = useQuery({
     queryKey: ["targets"],
     queryFn: dashboardApi.listTargets,
   });
-  const [toolsAvail, setToolsAvail] = useState<number | null>(null);
 
-  useEffect(() => {
-    fetch("/api/tools/available")
-      .then((r) => r.json())
-      .then((d) => setToolsAvail(d.available_count ?? null))
-      .catch(() => {});
-  }, []);
+  const isLoading = scansLoading || targetsLoading;
 
-  const recentScans = scansData?.items ?? [];
+  const recentScans: any[] = scansData?.items ?? [];
   const totalTargets = targets?.length ?? 0;
+
   const criticalFindings = recentScans.reduce(
-    (sum: number, s: any) => sum + (s.findings_critical ?? 0), 0
+    (sum: number, s: any) => sum + (s.findings_critical ?? s.critical_count ?? 0),
+    0
   );
-  const runningScans = recentScans.filter((s: any) => s.status === "running").length;
 
-  // Scans this week
-  const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
-  const scansThisWeek = recentScans.filter(
-    (s: any) => new Date(s.created_at).getTime() > weekAgo
-  ).length;
+  const avgRisk = recentScans.length
+    ? Math.round(
+        recentScans.reduce((sum: number, s: any) => sum + riskScore(s), 0) /
+          recentScans.length
+      )
+    : 0;
 
-  const stats = [
-    {
-      label: "Totaal scans",
-      value: recentScans.length,
-      icon: Activity,
-      color: "#0071e3",
-      bg: "rgba(0,113,227,0.08)",
-      sub: runningScans > 0 ? `${runningScans} actief` : undefined,
-      href: "/scans",
-    },
-    {
-      label: "Kritieke bevindingen",
-      value: criticalFindings,
-      icon: AlertTriangle,
-      color: criticalFindings > 0 ? "#ff3b30" : "#34c759",
-      bg: criticalFindings > 0 ? "rgba(255,59,48,0.08)" : "rgba(52,199,89,0.08)",
-      href: "/scans",
-    },
-    {
-      label: "Tools beschikbaar",
-      value: toolsAvail ?? "—",
-      icon: Terminal,
-      color: "#34c759",
-      bg: "rgba(52,199,89,0.08)",
-      href: "/tools",
-    },
-    {
-      label: "Scans deze week",
-      value: scansThisWeek,
-      icon: BarChart3,
-      color: "#bf5af2",
-      bg: "rgba(191,90,242,0.08)",
-      href: "/scans",
-    },
-  ];
+  const avgRiskColor = avgRisk >= 60 ? "#FF2D55" : avgRisk >= 30 ? "#FF8C00" : "#00FF88";
+
+  // Risk trend — last 10 scans, chronological
+  const trendData = [...recentScans]
+    .reverse()
+    .slice(-10)
+    .map((s: any) => ({
+      date: new Date(s.created_at).toLocaleDateString("nl-NL", {
+        day: "2-digit",
+        month: "short",
+      }),
+      risk: riskScore(s),
+    }));
+
+  // Globe targets
+  const globeTargets = recentScans.slice(0, 12).map((s: any) => ({
+    id: String(s.id ?? s.target_id ?? Math.random()),
+    label: (s.target_id ?? s.scan_type ?? "target").toString().replace(/_/g, " "),
+    risk: riskScore(s),
+  }));
 
   return (
-    <div className="space-y-8">
-      {/* Hero */}
-      <div className="rounded-2xl overflow-hidden" style={{ background: "linear-gradient(135deg, #1d1d1f 0%, #2d2d2f 100%)" }}>
-        <div className="px-8 py-10">
-          <div className="flex items-start justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-white mb-2" style={{ letterSpacing: "-0.03em" }}>
-                CyberPulse Security Platform
-              </h1>
-              <p className="text-[15px]" style={{ color: "rgba(255,255,255,0.6)" }}>
-                Geautomatiseerde penetratietests op basis van AI-analyse
-              </p>
-              <div className="flex gap-3 mt-6">
-                <Link
-                  href="/scans/new"
-                  className="inline-flex items-center gap-2 rounded-lg px-5 py-2.5 text-[14px] font-semibold transition-opacity hover:opacity-90"
-                  style={{ background: "#0071e3", color: "#fff" }}
-                >
-                  <Plus className="h-4 w-4" />
-                  Scan starten
-                </Link>
-                <Link
-                  href="/reports"
-                  className="inline-flex items-center gap-2 rounded-lg px-5 py-2.5 text-[14px] font-semibold transition-colors"
-                  style={{
-                    background: "rgba(255,255,255,0.10)",
-                    color: "#fff",
-                    border: "1px solid rgba(255,255,255,0.15)",
-                  }}
-                >
-                  Rapporten bekijken
-                </Link>
-              </div>
-            </div>
-            <Shield className="h-16 w-16 opacity-10 text-white flex-shrink-0" />
-          </div>
-        </div>
-      </div>
+    <div className="space-y-6">
+      {/* Header */}
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+      >
+        <h1 className="font-display text-2xl font-bold text-ink">
+          Mission Control
+        </h1>
+        <p className="font-mono text-[12px] text-ink-muted">
+          Realtime overzicht van scans, doelen en risico&apos;s
+        </p>
+      </motion.div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-4 gap-4">
-        {stats.map((s) => {
-          const Icon = s.icon;
-          return (
-            <Link key={s.label} href={s.href}>
-              <div className="rounded-2xl border border-border bg-card p-5 shadow-apple hover:shadow-apple-md transition-shadow cursor-pointer">
-                <div className="flex items-center justify-between mb-4">
-                  <p className="text-[13px] font-medium text-muted-foreground">{s.label}</p>
-                  <div
-                    className="h-8 w-8 rounded-lg flex items-center justify-center flex-shrink-0"
-                    style={{ background: s.bg }}
-                  >
-                    <Icon className="h-4 w-4" style={{ color: s.color }} />
-                  </div>
-                </div>
-                <p
-                  className="text-[32px] font-bold leading-none"
-                  style={{ color: s.color, letterSpacing: "-0.03em" }}
-                >
-                  {s.value}
-                </p>
-                {s.sub && (
-                  <p className="text-[12px] text-primary mt-1.5 font-medium">{s.sub}</p>
-                )}
-              </div>
-            </Link>
-          );
-        })}
-      </div>
-
-      {/* Quick actions */}
-      <div>
-        <h2 className="text-[17px] font-semibold mb-4">Snel starten</h2>
-        <div className="grid grid-cols-3 gap-4">
-          <Link href="/scans/new?type=quick" className="group">
-            <div className="rounded-2xl border border-border bg-card p-5 shadow-apple hover:shadow-apple-md hover:border-primary/30 transition-all cursor-pointer">
-              <div className="h-10 w-10 rounded-xl flex items-center justify-center mb-4" style={{ background: "rgba(0,113,227,0.08)" }}>
-                <Zap className="h-5 w-5" style={{ color: "#0071e3" }} />
-              </div>
-              <p className="font-semibold text-[15px] mb-1">Snelle scan</p>
-              <p className="text-[13px] text-muted-foreground">nmap + nuclei — klaar in 5–10 min</p>
-            </div>
-          </Link>
-          <Link href="/scans/new?type=full" className="group">
-            <div className="rounded-2xl border border-border bg-card p-5 shadow-apple hover:shadow-apple-md hover:border-primary/30 transition-all cursor-pointer">
-              <div className="h-10 w-10 rounded-xl flex items-center justify-center mb-4" style={{ background: "rgba(191,90,242,0.08)" }}>
-                <Shield className="h-5 w-5" style={{ color: "#bf5af2" }} />
-              </div>
-              <p className="font-semibold text-[15px] mb-1">Volledige assessment</p>
-              <p className="text-[13px] text-muted-foreground">Alle 8 fases — uitgebreide pentest</p>
-            </div>
-          </Link>
-          <Link href="/tools" className="group">
-            <div className="rounded-2xl border border-border bg-card p-5 shadow-apple hover:shadow-apple-md hover:border-primary/30 transition-all cursor-pointer">
-              <div className="h-10 w-10 rounded-xl flex items-center justify-center mb-4" style={{ background: "rgba(52,199,89,0.08)" }}>
-                <Terminal className="h-5 w-5" style={{ color: "#34c759" }} />
-              </div>
-              <p className="font-semibold text-[15px] mb-1">Kali Tools status</p>
-              <p className="text-[13px] text-muted-foreground">
-                {toolsAvail !== null ? `${toolsAvail} tools beschikbaar` : "Tools controleren"}
-              </p>
-            </div>
-          </Link>
-        </div>
-      </div>
-
-      {/* Recent scans */}
-      <div>
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-[17px] font-semibold">Recente activiteit</h2>
-          <Link
-            href="/scans"
-            className="flex items-center gap-1 text-[13px] font-medium text-primary hover:underline"
-          >
-            Alles bekijken <ArrowRight className="h-3.5 w-3.5" />
-          </Link>
-        </div>
-
-        {recentScans.length === 0 ? (
-          <div className="rounded-2xl border border-border bg-card p-12 text-center shadow-apple">
-            <Shield className="h-10 w-10 text-muted-foreground/20 mx-auto mb-3" />
-            <p className="text-[15px] font-medium mb-1">Nog geen scans</p>
-            <p className="text-[13px] text-muted-foreground mb-5">
-              Start je eerste penetratietest om resultaten te zien.
-            </p>
-            <Link
-              href="/scans/new"
-              className="inline-flex items-center gap-2 rounded-lg px-5 py-2.5 text-[14px] font-semibold transition-opacity hover:opacity-90"
-              style={{ background: "#0071e3", color: "#fff" }}
-            >
-              <Plus className="h-4 w-4" />
-              Scan starten
-            </Link>
-          </div>
-        ) : (
-          <div className="rounded-2xl border border-border bg-card shadow-apple overflow-hidden">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-border" style={{ background: "#f5f5f7" }}>
-                  <th className="text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-5 py-3">
-                    Type
-                  </th>
-                  <th className="text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-5 py-3">
-                    Status
-                  </th>
-                  <th className="text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-5 py-3">
-                    Bevindingen
-                  </th>
-                  <th className="text-right text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-5 py-3">
-                    Datum
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {recentScans.slice(0, 8).map((scan: any, i: number) => (
-                  <tr
-                    key={scan.id}
-                    className={`hover:bg-secondary/60 transition-colors cursor-pointer ${
-                      i < Math.min(recentScans.length, 8) - 1 ? "border-b border-border" : ""
-                    }`}
-                    onClick={() => (window.location.href = `/scans/${scan.id}`)}
-                  >
-                    <td className="px-5 py-3.5">
-                      <span className="text-[14px] font-medium">
-                        {scan.scan_type?.replace(/_/g, " ") ?? "scan"}
-                      </span>
-                    </td>
-                    <td className="px-5 py-3.5">
-                      <StatusDot status={scan.status} />
-                    </td>
-                    <td className="px-5 py-3.5">
-                      <FindingsPills scan={scan} />
-                    </td>
-                    <td className="px-5 py-3.5 text-right text-[13px] text-muted-foreground">
-                      {new Date(scan.created_at).toLocaleDateString("nl-NL", {
-                        day: "2-digit",
-                        month: "short",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
-
-      {/* Custom security modules */}
-      <div>
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-[17px] font-semibold">Security Modules</h2>
-          <Link href="/scans/new"
-            className="flex items-center gap-1 text-[13px] font-medium text-primary hover:underline">
-            Scan configureren <ArrowRight className="h-3.5 w-3.5" />
-          </Link>
-        </div>
-        <div className="grid grid-cols-3 gap-4">
-          {CUSTOM_MODULES.map((mod) => (
-            <Link key={mod.id} href={mod.href}>
-              <div className="rounded-2xl border border-border bg-card p-5 shadow-apple hover:shadow-apple-md hover:border-primary/20 transition-all cursor-pointer">
-                <div className="h-9 w-9 rounded-xl flex items-center justify-center mb-3"
-                     style={{ background: mod.iconBg }}>
-                  <mod.icon className="h-4.5 w-4.5" style={{ color: mod.iconColor }} />
-                </div>
-                <p className="text-[14px] font-semibold mb-1">{mod.name}</p>
-                <p className="text-[12px] text-muted-foreground leading-relaxed">{mod.description}</p>
-                <span className="inline-block mt-3 rounded-full px-2 py-0.5 text-[10px] font-semibold"
-                      style={{ background: mod.iconBg, color: mod.iconColor }}>
-                  Module {mod.id}
-                </span>
-              </div>
-            </Link>
+      {/* TOP ROW — stat cards */}
+      {isLoading ? (
+        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+          {[0, 1, 2, 3].map((i) => (
+            <SkeletonCard key={i} />
           ))}
         </div>
+      ) : (
+        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+          <StatCard
+            label="Total Scans"
+            value={recentScans.length}
+            icon={ScanLine}
+            color="#00D4FF"
+            index={0}
+          />
+          <StatCard
+            label="Active Targets"
+            value={totalTargets}
+            icon={Target}
+            color="#0A84FF"
+            index={1}
+          />
+          <StatCard
+            label="Critical Findings"
+            value={criticalFindings}
+            icon={AlertTriangle}
+            color="#FF2D55"
+            index={2}
+          />
+          <StatCard
+            label="Avg Risk Score"
+            value={avgRisk}
+            icon={BarChart3}
+            color={avgRiskColor}
+            index={3}
+          />
+        </div>
+      )}
+
+      {/* MIDDLE ROW — recent scans (60%) + risk trend (40%) */}
+      <div className="grid gap-4 lg:grid-cols-5">
+        {/* LEFT — Recent scans */}
+        <motion.div
+          className="lg:col-span-3"
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.1 }}
+        >
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="font-display text-[15px] font-semibold text-ink">
+              Recente scans
+            </h2>
+            <button
+              onClick={() => router.push("/scans")}
+              className="font-mono text-[11px] uppercase tracking-wider text-cyan transition-opacity hover:opacity-70"
+            >
+              Alles bekijken
+            </button>
+          </div>
+
+          {isLoading ? (
+            <div className="space-y-2.5">
+              {[0, 1, 2, 3].map((i) => (
+                <SkeletonRow key={i} />
+              ))}
+            </div>
+          ) : recentScans.length === 0 ? (
+            <div className="rounded-lg border border-grid bg-card2 p-8">
+              <div className="terminal-cursor font-mono text-[13px] text-ink-muted">
+                No scans yet. Start your first scan.
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-2.5">
+              {recentScans.slice(0, 6).map((scan: any) => {
+                const score = riskScore(scan);
+                const st = STATUS_MAP[scan.status] ?? {
+                  label: scan.status,
+                  color: "#4A6880",
+                };
+                const crit = scan.findings_critical ?? scan.critical_count ?? 0;
+                const high = scan.findings_high ?? scan.high_count ?? 0;
+                const med = scan.findings_medium ?? scan.medium_count ?? 0;
+                const low = scan.findings_low ?? scan.low_count ?? 0;
+                return (
+                  <GlowCard
+                    key={scan.id}
+                    glowColor="#00D4FF"
+                    onClick={() => router.push(`/scans/${scan.id}`)}
+                    className="px-4 py-3"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className="truncate font-mono text-[13px] font-medium text-ink">
+                            {(scan.target_id ?? scan.scan_type ?? "scan")
+                              .toString()
+                              .replace(/_/g, " ")}
+                          </span>
+                          <RiskBadge severity={riskSeverity(score)} />
+                        </div>
+                        <div className="mt-1 flex items-center gap-3">
+                          <span className="font-mono text-[11px] text-ink-muted">
+                            {timeAgo(scan.created_at)}
+                          </span>
+                          <span
+                            className={`inline-flex items-center gap-1.5 font-mono text-[11px] font-medium ${
+                              st.pulse ? "animate-pulse" : ""
+                            }`}
+                            style={{ color: st.color }}
+                          >
+                            <span
+                              className="h-1.5 w-1.5 rounded-full"
+                              style={{ background: st.color }}
+                            />
+                            {st.label}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Finding-count dots */}
+                      <div className="flex items-center gap-1.5">
+                        <FindingDot count={crit} color="#FF2D55" />
+                        <FindingDot count={high} color="#FF8C00" />
+                        <FindingDot count={med} color="#FFD60A" />
+                        <FindingDot count={low} color="#0A84FF" />
+                      </div>
+                    </div>
+                  </GlowCard>
+                );
+              })}
+            </div>
+          )}
+        </motion.div>
+
+        {/* RIGHT — Risk trend chart */}
+        <motion.div
+          className="lg:col-span-2"
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.2 }}
+        >
+          <h2 className="mb-3 font-display text-[15px] font-semibold text-ink">
+            Risico-trend
+          </h2>
+          <div className="rounded-lg border border-grid bg-card2 p-4">
+            {isLoading ? (
+              <div className="h-[220px]">
+                <SkeletonCard className="h-full" />
+              </div>
+            ) : trendData.length === 0 ? (
+              <div className="flex h-[220px] items-center justify-center">
+                <span className="font-mono text-[12px] text-ink-muted">
+                  Geen data
+                </span>
+              </div>
+            ) : (
+              <div className="h-[220px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={trendData} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id="riskGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#00D4FF" stopOpacity={0.5} />
+                        <stop offset="100%" stopColor="#00D4FF" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <XAxis
+                      dataKey="date"
+                      stroke="#4A6880"
+                      tick={{ fontSize: 10, fill: "#4A6880" }}
+                      tickLine={false}
+                      axisLine={{ stroke: "#0A2035" }}
+                    />
+                    <YAxis
+                      domain={[0, 100]}
+                      stroke="#4A6880"
+                      tick={{ fontSize: 10, fill: "#4A6880" }}
+                      tickLine={false}
+                      axisLine={{ stroke: "#0A2035" }}
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        background: "#080F18",
+                        border: "1px solid #0A2035",
+                        color: "#E8F4F8",
+                        borderRadius: 8,
+                        fontSize: 12,
+                      }}
+                      labelStyle={{ color: "#4A6880" }}
+                      cursor={{ stroke: "#0A2035" }}
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="risk"
+                      stroke="#00D4FF"
+                      strokeWidth={2}
+                      fill="url(#riskGradient)"
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            )}
+          </div>
+        </motion.div>
       </div>
+
+      {/* BOTTOM — Network globe */}
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 0.3 }}
+      >
+        <NetworkGlobePanel targets={globeTargets} />
+      </motion.div>
     </div>
   );
 }
 
-const CUSTOM_MODULES = [
-  {
-    id: "09",
-    name: "Business Logic Tester",
-    description: "IDOR-detectie, rate limiting checks, admin-endpoint probing",
-    href: "/scans/new",
-    icon: Bug,
-    iconColor: "#ff3b30",
-    iconBg: "rgba(255,59,48,0.08)",
-  },
-  {
-    id: "10",
-    name: "CVE Correlator",
-    description: "Koppelt service-versies aan bekende CVEs via NVD API",
-    href: "/vulnerabilities",
-    icon: Database,
-    iconColor: "#ff9500",
-    iconBg: "rgba(255,149,0,0.08)",
-  },
-  {
-    id: "11",
-    name: "Visual Recon",
-    description: "Screenshots van alle webdiensten via Playwright",
-    href: "/scans/new",
-    icon: Camera,
-    iconColor: "#0071e3",
-    iconBg: "rgba(0,113,227,0.08)",
-  },
-  {
-    id: "12",
-    name: "Smart Credential Attack",
-    description: "Genereert doelspecifieke wordlists en test credentials via Hydra",
-    href: "/scans/new",
-    icon: KeyRound,
-    iconColor: "#c69b00",
-    iconBg: "rgba(255,204,0,0.10)",
-  },
-  {
-    id: "13",
-    name: "AI Adaptive Scanner",
-    description: "DeepSeek analyseert bevindingen en stuurt gerichte follow-up scans",
-    href: "/ai-analysis",
-    icon: BrainCircuit,
-    iconColor: "#bf5af2",
-    iconBg: "rgba(191,90,242,0.08)",
-  },
-  {
-    id: "14",
-    name: "Scan Comparator",
-    description: "Vergelijkt huidige scan met vorige scan — toont nieuw/opgelost",
-    href: "/compare",
-    icon: GitCompare,
-    iconColor: "#34c759",
-    iconBg: "rgba(52,199,89,0.08)",
-  },
-];
-
-function StatusDot({ status }: { status: string }) {
-  const map: Record<string, { label: string; color: string; pulse?: boolean }> = {
-    completed:  { label: "Voltooid",    color: "#34c759" },
-    running:    { label: "Actief",      color: "#0071e3", pulse: true },
-    pending:    { label: "Wachtend",    color: "#ff9500" },
-    analyzing:  { label: "Analyseren", color: "#bf5af2", pulse: true },
-    failed:     { label: "Mislukt",     color: "#ff3b30" },
-    cancelled:  { label: "Geannuleerd", color: "#8e8e93" },
-  };
-  const s = map[status] ?? { label: status, color: "#8e8e93" };
+function FindingDot({ count, color }: { count: number; color: string }) {
+  if (!count) return null;
   return (
-    <span className="inline-flex items-center gap-1.5 text-[13px] font-medium" style={{ color: s.color }}>
-      <span
-        className={`h-2 w-2 rounded-full flex-shrink-0 ${s.pulse ? "animate-pulse" : ""}`}
-        style={{ background: s.color }}
-      />
-      {s.label}
+    <span
+      className="inline-flex h-5 min-w-[20px] items-center justify-center rounded-full px-1 font-mono text-[10px] font-semibold tabular-nums"
+      style={{
+        color,
+        background: `${color}1A`,
+        border: `1px solid ${color}55`,
+      }}
+    >
+      {count}
     </span>
-  );
-}
-
-function FindingsPills({ scan }: { scan: any }) {
-  const crit = scan.findings_critical ?? 0;
-  const high = scan.findings_high ?? 0;
-  const med  = scan.findings_medium ?? 0;
-  if (crit + high + med === 0) return <span className="text-[13px] text-muted-foreground">—</span>;
-  return (
-    <div className="flex items-center gap-1.5">
-      {crit > 0 && <span className="rounded-full px-2 py-0.5 text-[11px] font-semibold" style={{ background: "rgba(255,59,48,0.10)", color: "#ff3b30" }}>{crit}K</span>}
-      {high > 0 && <span className="rounded-full px-2 py-0.5 text-[11px] font-semibold" style={{ background: "rgba(255,149,0,0.10)", color: "#ff9500" }}>{high}H</span>}
-      {med  > 0 && <span className="rounded-full px-2 py-0.5 text-[11px] font-semibold" style={{ background: "rgba(255,204,0,0.12)", color: "#c69b00" }}>{med}M</span>}
-    </div>
   );
 }

@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep -E \"\\(node_modules|\\\\.next|/dist/|/build/|__pycache__|\\\\.pyc|\\\\.pyo|data/scans|data/scraped|autopentest-ai\\\\.skill|\\\\.DS_Store|Thumbs\\\\.db|\\\\.venv|\\\\.log$\\)\")",
+      "Bash(grep -v -E \"\\(node_modules|\\\\.next|/dist/|/build/|__pycache__|\\\\.pyc|\\\\.pyo|data/scans|data/scraped|autopentest-ai\\\\.skill|\\\\.DS_Store|Thumbs\\\\.db|\\\\.venv|\\\\.log$\\)\")",
+      "Bash(grep -E \"\\(\\\\.env$\\)\")"
+    ]
+  }
+}

@@ -1,9 +1,16 @@
 "use client";
 
+import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { dashboardApi, reportsApi, targetsApi } from "@/lib/api";
 import Link from "next/link";
-import { FileText, Download, ArrowRight, Plus } from "lucide-react";
+import { motion } from "framer-motion";
+import { Download, ArrowRight, Plus, Search, FileSearch } from "lucide-react";
+import { GlowCard } from "@/components/cyber/glow-card";
+import { SkeletonRow } from "@/components/cyber/skeleton";
+
+type SeverityFilter = "all" | "critical" | "medium" | "low";
+type SortMode = "newest" | "oldest" | "risk";
 
 export default function ReportsPage() {
   const { data: scansData, isLoading } = useQuery({
@@ -50,154 +57,259 @@ export default function ReportsPage() {
     }
   };
 
+  // ───── UI state: filter / sort / search ─────
+  const [filter, setFilter] = useState<SeverityFilter>("all");
+  const [sort, setSort] = useState<SortMode>("newest");
+  const [query, setQuery] = useState("");
+
+  const topSeverity = (s: any): SeverityFilter => {
+    const crit = s.critical_count ?? s.findings_critical ?? 0;
+    const high = s.high_count ?? s.findings_high ?? 0;
+    const med = s.medium_count ?? s.findings_medium ?? 0;
+    if (crit > 0 || high > 0) return "critical";
+    if (med > 0) return "medium";
+    return "low";
+  };
+
+  const riskOf = (s: any): number => {
+    if (s.security_score != null) return Math.round(100 - s.security_score);
+    const crit = s.critical_count ?? s.findings_critical ?? 0;
+    const high = s.high_count ?? s.findings_high ?? 0;
+    const med = s.medium_count ?? s.findings_medium ?? 0;
+    const low = s.low_count ?? s.findings_low ?? 0;
+    return Math.min(100, crit * 25 + high * 12 + med * 5 + low * 1);
+  };
+
+  const visibleScans = useMemo(() => {
+    let list = [...completedScans];
+
+    if (filter !== "all") {
+      list = list.filter((s) => topSeverity(s) === filter);
+    }
+
+    const q = query.trim().toLowerCase();
+    if (q) {
+      list = list.filter((s) => {
+        const display = (targetMap[s.target_id] ?? s.target_id ?? "").toLowerCase();
+        return display.includes(q);
+      });
+    }
+
+    list.sort((a, b) => {
+      if (sort === "risk") return riskOf(b) - riskOf(a);
+      const ta = new Date(a.completed_at ?? a.created_at).getTime();
+      const tb = new Date(b.completed_at ?? b.created_at).getTime();
+      return sort === "newest" ? tb - ta : ta - tb;
+    });
+
+    return list;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [completedScans, filter, sort, query, targetsData]);
+
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
+      {/* ───── Header ───── */}
+      <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-[28px] font-bold" style={{ letterSpacing: "-0.03em" }}>
-            Rapporten
+          <h1
+            className="font-display text-[30px] font-bold text-ink"
+            style={{ letterSpacing: "-0.03em" }}
+          >
+            Reports
           </h1>
-          <p className="text-[15px] text-muted-foreground mt-0.5">
+          <p className="mt-1 text-[14px] text-ink-muted">
             Download en bekijk voltooide pentest rapporten
           </p>
         </div>
         <Link
           href="/scans/new"
-          className="inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-[14px] font-semibold transition-opacity hover:opacity-90"
-          style={{ background: "#0071e3", color: "#fff" }}
+          className="inline-flex items-center gap-2 rounded-lg bg-cyan px-5 py-2.5 text-[14px] font-semibold text-black transition-opacity duration-150 hover:opacity-90 shadow-glow-cyan"
         >
           <Plus className="h-4 w-4" />
           Nieuwe scan
         </Link>
       </div>
 
+      {/* ───── Controls ───── */}
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Severity filter pills */}
+          <div className="flex items-center gap-1.5">
+            {([
+              ["all", "All"],
+              ["critical", "Critical"],
+              ["medium", "Medium"],
+              ["low", "Low"],
+            ] as [SeverityFilter, string][]).map(([key, label]) => (
+              <Pill
+                key={key}
+                active={filter === key}
+                onClick={() => setFilter(key)}
+              >
+                {label}
+              </Pill>
+            ))}
+          </div>
+
+          {/* Sort pills */}
+          <span className="mx-1 hidden h-4 w-px bg-grid sm:block" />
+          <div className="flex items-center gap-1.5">
+            {([
+              ["newest", "Newest"],
+              ["oldest", "Oldest"],
+              ["risk", "Risk Score"],
+            ] as [SortMode, string][]).map(([key, label]) => (
+              <Pill
+                key={key}
+                active={sort === key}
+                onClick={() => setSort(key)}
+              >
+                {label}
+              </Pill>
+            ))}
+          </div>
+        </div>
+
+        {/* Search */}
+        <div className="relative">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-muted" />
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Zoek op IP / hostname"
+            className="w-full rounded-lg border border-grid bg-panel py-2 pl-9 pr-3 font-mono text-[13px] text-ink placeholder:text-ink-muted outline-none transition-colors duration-150 focus:border-cyan lg:w-64"
+          />
+        </div>
+      </div>
+
+      {/* ───── Body ───── */}
       {isLoading ? (
-        <SkeletonList />
-      ) : completedScans.length === 0 ? (
-        <EmptyState />
-      ) : (
         <div className="space-y-3">
-          {completedScans.map((scan: any) => {
+          {[...Array(4)].map((_, i) => (
+            <SkeletonRow key={i} />
+          ))}
+        </div>
+      ) : visibleScans.length === 0 ? (
+        <EmptyState hasReports={completedScans.length > 0} />
+      ) : (
+        <div className="grid gap-4 md:grid-cols-2">
+          {visibleScans.map((scan: any, index: number) => {
             // ScanResponse uses critical_count / high_count / medium_count / low_count
             const crit = scan.critical_count ?? scan.findings_critical ?? 0;
-            const high = scan.high_count    ?? scan.findings_high     ?? 0;
-            const med  = scan.medium_count  ?? scan.findings_medium   ?? 0;
-            const low  = scan.low_count     ?? scan.findings_low      ?? 0;
+            const high = scan.high_count ?? scan.findings_high ?? 0;
+            const med = scan.medium_count ?? scan.findings_medium ?? 0;
+            const low = scan.low_count ?? scan.findings_low ?? 0;
             const total = crit + high + med + low;
-            const riskScore = scan.security_score != null
-              ? Math.round(100 - scan.security_score)
-              : null;
+            const risk = riskOf(scan);
+            const riskColor =
+              risk >= 70 ? "#FF2D55" : risk >= 40 ? "#FF8C00" : "#00FF88";
             const targetDisplay = targetMap[scan.target_id] ?? scan.target_id ?? "—";
 
             return (
-              <div
+              <motion.div
                 key={scan.id}
-                className="rounded-2xl border border-border bg-card shadow-apple hover:shadow-apple-md transition-shadow"
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: index * 0.05 }}
               >
-                <div className="flex items-center justify-between p-5">
-                  {/* Left: icon + info */}
-                  <div className="flex items-center gap-4 min-w-0">
-                    <div
-                      className="h-12 w-12 rounded-xl flex items-center justify-center flex-shrink-0"
-                      style={{ background: "rgba(0,113,227,0.08)" }}
-                    >
-                      <FileText className="h-6 w-6" style={{ color: "#0071e3" }} />
+                <GlowCard
+                  glowColor={riskColor}
+                  accentBorder={crit > 0 ? "#FF2D55" : undefined}
+                  className="h-full"
+                >
+                  <div className="flex items-stretch gap-4 p-5">
+                    {/* Left: risk score box */}
+                    <div className="flex flex-shrink-0 flex-col items-center justify-center">
+                      <div
+                        className="flex h-16 w-16 flex-col items-center justify-center rounded-lg"
+                        style={{
+                          background: `${riskColor}14`,
+                          border: `1px solid ${riskColor}55`,
+                          boxShadow: `0 0 18px ${riskColor}33`,
+                        }}
+                      >
+                        <span
+                          className="font-display text-[24px] font-bold leading-none"
+                          style={{ color: riskColor }}
+                        >
+                          {risk}
+                        </span>
+                        <span className="mt-1 text-[9px] font-semibold uppercase tracking-widest text-ink-muted">
+                          Risk
+                        </span>
+                      </div>
                     </div>
-                    <div className="min-w-0">
-                      <p className="text-[15px] font-semibold truncate font-mono">
+
+                    {/* Center: target, date, findings */}
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate font-mono text-[15px] font-semibold text-ink">
                         {targetDisplay}
                       </p>
-                      <p className="text-[13px] text-muted-foreground mt-0.5">
+                      <p className="mt-0.5 font-mono text-[12px] text-ink-muted">
                         {scan.scan_type?.replace(/_/g, " ") ?? "pentest"}
                         {" · "}
-                        {new Date(scan.completed_at ?? scan.created_at).toLocaleDateString("nl-NL", {
+                        {new Date(
+                          scan.completed_at ?? scan.created_at,
+                        ).toLocaleDateString("nl-NL", {
                           day: "2-digit",
                           month: "short",
                           year: "numeric",
                         })}
                       </p>
-                      {/* Finding breakdown */}
-                      {total > 0 && (
-                        <div className="flex items-center gap-2 mt-1.5">
-                          {crit > 0 && <span className="text-[11px] font-semibold rounded-full px-2 py-0.5" style={{ background: "rgba(255,59,48,0.10)", color: "#ff3b30" }}>{crit} kritiek</span>}
-                          {high > 0 && <span className="text-[11px] font-semibold rounded-full px-2 py-0.5" style={{ background: "rgba(255,149,0,0.10)", color: "#ff9500" }}>{high} hoog</span>}
-                          {med  > 0 && <span className="text-[11px] font-semibold rounded-full px-2 py-0.5" style={{ background: "rgba(255,204,0,0.12)", color: "#c69b00" }}>{med} gemiddeld</span>}
-                          {low  > 0 && <span className="text-[11px] font-semibold rounded-full px-2 py-0.5" style={{ background: "rgba(142,142,147,0.10)", color: "#8e8e93" }}>{low} laag</span>}
+
+                      {/* Findings dots */}
+                      {total > 0 ? (
+                        <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1.5">
+                          {crit > 0 && <Dot color="#FF2D55" count={crit} label="K" />}
+                          {high > 0 && <Dot color="#FF8C00" count={high} label="H" />}
+                          {med > 0 && <Dot color="#FFD60A" count={med} label="M" />}
+                          {low > 0 && <Dot color="#0A84FF" count={low} label="L" />}
                         </div>
+                      ) : (
+                        <p className="mt-3 font-mono text-[11px] text-neon-green">
+                          Geen findings
+                        </p>
                       )}
                     </div>
-                  </div>
 
-                  {/* Right: risk + findings + actions */}
-                  <div className="flex items-center gap-4 flex-shrink-0">
-                    {/* Risk score */}
-                    {riskScore !== null && (
-                      <div className="text-right">
-                        <p className="text-[11px] text-muted-foreground uppercase tracking-wider">
-                          Risico
-                        </p>
-                        <p
-                          className="text-[20px] font-bold leading-tight"
-                          style={{
-                            color: riskScore >= 70 ? "#ff3b30" : riskScore >= 40 ? "#ff9500" : "#34c759",
-                          }}
-                        >
-                          {riskScore}
-                        </p>
-                      </div>
-                    )}
-
-                    {/* Findings pills */}
-                    {total > 0 && (
+                    {/* Right: actions */}
+                    <div className="flex flex-shrink-0 flex-col items-end justify-between gap-2">
                       <div className="flex items-center gap-1.5">
-                        {crit > 0 && <Pill value={crit} label="K" color="#ff3b30" bg="rgba(255,59,48,0.10)" />}
-                        {high > 0 && <Pill value={high} label="H" color="#ff9500" bg="rgba(255,149,0,0.10)" />}
-                        {med  > 0 && <Pill value={med}  label="M" color="#c69b00" bg="rgba(255,204,0,0.12)" />}
-                        {low  > 0 && <Pill value={low}  label="L" color="#8e8e93" bg="rgba(142,142,147,0.10)" />}
+                        <button
+                          title="Download PDF"
+                          onClick={(e) => handleDownload(e, scan.id, "pdf")}
+                          className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-grid bg-panel text-ink-muted transition-colors duration-150 hover:border-cyan hover:text-cyan"
+                        >
+                          <Download className="h-4 w-4" />
+                        </button>
+                        <button
+                          title="Download JSON"
+                          onClick={(e) => handleDownload(e, scan.id, "json")}
+                          className="inline-flex h-8 items-center justify-center rounded-md border border-grid bg-panel px-2 font-mono text-[11px] font-semibold text-ink-muted transition-colors duration-150 hover:border-cyan hover:text-cyan"
+                        >
+                          JSON
+                        </button>
                       </div>
-                    )}
-
-                    {/* Download buttons */}
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={(e) => handleDownload(e, scan.id, "pdf")}
-                        className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-secondary px-3 py-2 text-[13px] font-medium text-foreground hover:bg-border transition-colors"
-                      >
-                        <Download className="h-3.5 w-3.5" />
-                        PDF
-                      </button>
-                      <button
-                        onClick={(e) => handleDownload(e, scan.id, "json")}
-                        className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-secondary px-3 py-2 text-[13px] font-medium text-foreground hover:bg-border transition-colors"
-                      >
-                        <Download className="h-3.5 w-3.5" />
-                        JSON
-                      </button>
                       <Link
                         href={`/scans/${scan.id}`}
-                        className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-[13px] font-semibold transition-opacity hover:opacity-90"
-                        style={{ background: "#0071e3", color: "#fff" }}
+                        className="inline-flex items-center gap-1.5 rounded-md border border-grid bg-panel px-3 py-1.5 text-[12px] font-semibold text-ink transition-colors duration-150 hover:border-cyan hover:text-cyan"
                       >
                         Bekijken
                         <ArrowRight className="h-3.5 w-3.5" />
                       </Link>
                     </div>
                   </div>
-                </div>
 
-                {/* Summary bar if AI analysis available */}
-                {scan.ai_analysis?.management_summary && (
-                  <div
-                    className="px-5 pb-4 pt-0"
-                    style={{ borderTop: "1px solid #e5e5ea" }}
-                  >
-                    <p className="text-[13px] text-muted-foreground mt-3 line-clamp-2">
-                      {scan.ai_analysis.management_summary}
-                    </p>
-                  </div>
-                )}
-              </div>
+                  {/* Summary bar if AI analysis available */}
+                  {scan.ai_analysis?.management_summary && (
+                    <div className="border-t border-grid px-5 py-3">
+                      <p className="line-clamp-2 text-[12px] text-ink-muted">
+                        {scan.ai_analysis.management_summary}
+                      </p>
+                    </div>
+                  )}
+                </GlowCard>
+              </motion.div>
             );
           })}
         </div>
@@ -206,51 +318,69 @@ export default function ReportsPage() {
   );
 }
 
-function Pill({ value, label, color, bg }: { value: number; label: string; color: string; bg: string }) {
+function Pill({
+  active,
+  onClick,
+  children,
+}: {
+  active: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
   return (
-    <span
-      className="rounded-full px-2 py-0.5 text-[11px] font-semibold"
-      style={{ background: bg, color }}
+    <button
+      onClick={onClick}
+      className={
+        "rounded-lg border px-3 py-1.5 text-[12px] font-semibold transition-colors duration-150 " +
+        (active
+          ? "border-cyan bg-cyan/10 text-cyan shadow-glow-cyan"
+          : "border-grid bg-panel text-ink-muted hover:border-cyan/40 hover:text-ink")
+      }
     >
-      {value}{label}
+      {children}
+    </button>
+  );
+}
+
+function Dot({ color, count, label }: { color: string; count: number; label: string }) {
+  return (
+    <span className="inline-flex items-center gap-1.5 font-mono text-[12px] text-ink">
+      <span
+        className="h-2 w-2 rounded-full"
+        style={{ background: color, boxShadow: `0 0 8px ${color}` }}
+      />
+      <span style={{ color }}>{count}</span>
+      <span className="text-ink-muted">{label}</span>
     </span>
   );
 }
 
-function EmptyState() {
+function EmptyState({ hasReports }: { hasReports: boolean }) {
   return (
-    <div className="rounded-2xl border border-border bg-card p-16 text-center shadow-apple">
-      <FileText className="h-12 w-12 text-muted-foreground/20 mx-auto mb-4" />
-      <p className="text-[17px] font-semibold mb-2">Geen rapporten</p>
-      <p className="text-[14px] text-muted-foreground mb-6">
-        Rapporten verschijnen hier nadat een scan voltooid is.
-      </p>
-      <Link
-        href="/scans/new"
-        className="inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-[14px] font-semibold transition-opacity hover:opacity-90"
-        style={{ background: "#0071e3", color: "#fff" }}
+    <div className="flex flex-col items-center justify-center rounded-lg border border-grid bg-card2 px-6 py-20 text-center">
+      <motion.div
+        animate={{ opacity: [0.4, 1, 0.4], scale: [0.98, 1.02, 0.98] }}
+        transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
       >
-        <Plus className="h-4 w-4" />
-        Scan starten
-      </Link>
-    </div>
-  );
-}
-
-function SkeletonList() {
-  return (
-    <div className="space-y-3">
-      {[...Array(3)].map((_, i) => (
-        <div key={i} className="rounded-2xl border border-border bg-card p-5 shadow-apple animate-pulse">
-          <div className="flex items-center gap-4">
-            <div className="h-12 w-12 rounded-xl bg-muted flex-shrink-0" />
-            <div className="flex-1">
-              <div className="h-4 w-48 rounded bg-muted mb-2" />
-              <div className="h-3 w-32 rounded bg-muted" />
-            </div>
-          </div>
-        </div>
-      ))}
+        <FileSearch className="h-12 w-12 text-cyan" />
+      </motion.div>
+      <p className="mt-5 font-display text-[17px] font-semibold text-ink">
+        {hasReports ? "Geen resultaten" : "No reports yet"}
+      </p>
+      <p className="mt-2 max-w-sm text-[13px] text-ink-muted">
+        {hasReports
+          ? "Geen rapporten gevonden voor deze filters."
+          : "Run your first scan to generate a report."}
+      </p>
+      {!hasReports && (
+        <Link
+          href="/scans/new"
+          className="mt-6 inline-flex items-center gap-2 rounded-lg bg-cyan px-5 py-2.5 text-[14px] font-semibold text-black transition-opacity duration-150 hover:opacity-90 shadow-glow-cyan"
+        >
+          <Plus className="h-4 w-4" />
+          Scan starten
+        </Link>
+      )}
     </div>
   );
 }

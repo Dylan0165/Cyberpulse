@@ -1,7 +1,21 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Search, Wifi, WifiOff, CheckCircle2, XCircle, Bug, Database, Camera, KeyRound, BrainCircuit, GitCompare } from "lucide-react";
+import { motion } from "framer-motion";
+import {
+  Search,
+  Wifi,
+  WifiOff,
+  Bug,
+  Database,
+  Camera,
+  KeyRound,
+  BrainCircuit,
+  GitCompare,
+  type LucideIcon,
+} from "lucide-react";
+import { GlowCard } from "@/components/cyber/glow-card";
+import { SkeletonCard } from "@/components/cyber/skeleton";
 
 interface KaliTool {
   name: string;
@@ -52,12 +66,32 @@ const TOOL_DESCRIPTIONS: Record<string, string> = {
 
 const CYBERPULSE_TOOLS = new Set(Object.keys(TOOL_DESCRIPTIONS));
 
+// Per-phase accent colors for the cyberpunk theme.
+const PHASE_GLOW: Record<number, string> = {
+  1: "#00D4FF",
+  2: "#FF2D55",
+  3: "#0A84FF",
+  4: "#00FF88",
+  5: "#FFD60A",
+  6: "#FF8C00",
+  7: "#00D4FF",
+  0: "#4A6880",
+};
+
+function pad(n: number): string {
+  return String(n).padStart(2, "0");
+}
+
 export default function ToolsPage() {
   const [data, setData] = useState<ToolsResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [selectedPhase, setSelectedPhase] = useState<number | null>(null);
+
+  // Cosmetic live counters for the Kali VM status panel.
+  const [uptime, setUptime] = useState(0);
+  const [lastPing, setLastPing] = useState(0);
 
   useEffect(() => {
     console.log("[Tools] fetching /api/tools/available");
@@ -92,6 +126,18 @@ export default function ToolsPage() {
       });
   }, []);
 
+  // Cosmetic uptime counter — counts up from mount.
+  useEffect(() => {
+    const id = setInterval(() => setUptime((u) => u + 1), 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  // Cosmetic "last ping" counter — resets every few seconds.
+  useEffect(() => {
+    const id = setInterval(() => setLastPing((p) => (p >= 4 ? 0 : p + 1)), 1000);
+    return () => clearInterval(id);
+  }, []);
+
   const tools = data?.tools ?? [];
   const filtered = tools.filter((t) => {
     const q = search.toLowerCase();
@@ -114,259 +160,381 @@ export default function ToolsPage() {
     (a, b) => (a === 0 ? 1 : b === 0 ? -1 : a - b)
   );
 
+  const kaliVm = data?.kali_vm ?? "192.168.121.28";
+  const hh = Math.floor(uptime / 3600);
+  const mm = Math.floor((uptime % 3600) / 60);
+  const ss = uptime % 60;
+
+  // Running index so cards stagger continuously across phase groups.
+  let cardIndex = 0;
+
   return (
-    <div className="space-y-6">
-      {/* Header */}
+    <div className="space-y-8">
+      {/* ── Header ───────────────────────────────────────────── */}
       <div>
-        <h1 className="text-[28px] font-bold" style={{ letterSpacing: "-0.03em" }}>
-          Kali Tools
+        <h1 className="font-display text-[32px] font-bold tracking-tight text-glow-cyan text-ink">
+          Security Arsenal
         </h1>
-        <p className="text-[15px] text-muted-foreground mt-0.5">
-          Beveiligingstools beschikbaar op de Kali VM
+        <p className="mt-1 text-[15px] text-ink-muted">
+          {data
+            ? `${data.available_count} / ${data.total} tools running on Kali Linux 2024`
+            : "15 professional tools running on Kali Linux 2024"}
         </p>
       </div>
 
-      {/* Connection banner */}
+      {/* ── Connection banner ────────────────────────────────── */}
       {!loading && (
         <div
-          className="flex items-center gap-3 rounded-2xl border px-5 py-4"
+          className="flex items-center gap-3 rounded-lg border px-5 py-4"
           style={
             error
-              ? { borderColor: "rgba(255,59,48,0.3)", background: "rgba(255,59,48,0.04)" }
-              : { borderColor: "rgba(52,199,89,0.3)", background: "rgba(52,199,89,0.04)" }
+              ? { borderColor: "rgba(255,45,85,0.35)", background: "rgba(255,45,85,0.05)" }
+              : { borderColor: "rgba(0,255,136,0.30)", background: "rgba(0,255,136,0.05)" }
           }
         >
           {error ? (
-            <WifiOff className="h-5 w-5 flex-shrink-0" style={{ color: "#ff3b30" }} />
+            <WifiOff className="h-5 w-5 flex-shrink-0 text-neon-red" />
           ) : (
-            <Wifi className="h-5 w-5 flex-shrink-0" style={{ color: "#34c759" }} />
+            <Wifi className="h-5 w-5 flex-shrink-0 text-neon-green" />
           )}
           <div className="flex-1">
             {error ? (
               <div>
-                <p className="text-[14px] font-semibold" style={{ color: "#ff3b30" }}>
-                  Kali VM niet bereikbaar
+                <p className="flex items-center gap-2 font-mono text-[13px] font-semibold text-neon-red">
+                  <span className="inline-block h-2 w-2 rounded-full bg-[#FF2D55]" />
+                  Kali VM OFFLINE
                 </p>
-                <p className="text-[12px] mt-1 font-mono break-all" style={{ color: "#ff3b30", opacity: 0.8 }}>
-                  {error}
-                </p>
-                <p className="text-[11px] mt-1 text-muted-foreground">
+                <p className="mt-1 break-all font-mono text-[12px] text-[#FF2D55]/70">{error}</p>
+                <p className="mt-1 text-[11px] text-ink-muted">
                   Controleer de browser console (F12) voor meer details.
                 </p>
               </div>
             ) : (
-              <>
-                <p className="text-[14px] font-semibold" style={{ color: "#1d1d1f" }}>
-                  Kali VM verbonden
-                  <span className="font-normal text-muted-foreground ml-2 font-mono text-[13px]">
-                    {data?.kali_vm}
-                  </span>
-                </p>
-                <p className="text-[13px] text-muted-foreground mt-0.5">
-                  <span className="font-semibold" style={{ color: "#34c759" }}>
-                    {data?.available_count}
-                  </span>
-                  /{data?.total} tools beschikbaar
-                </p>
-              </>
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                <span className="flex items-center gap-2 font-mono text-[13px] font-semibold text-neon-green">
+                  <span className="animate-pulse-dot inline-block h-2 w-2 rounded-full bg-[#00FF88]" />
+                  Kali VM ONLINE
+                </span>
+                <span className="font-mono text-[13px] text-ink-muted">{kaliVm}</span>
+                <span className="font-mono text-[12px] text-ink-muted">
+                  <span className="text-neon-green">{data?.available_count}</span>/{data?.total} tools
+                  beschikbaar
+                </span>
+              </div>
             )}
           </div>
         </div>
       )}
 
-      {/* Search + filter */}
-      <div className="flex flex-col sm:flex-row gap-3">
+      {/* ── Search + phase filters ───────────────────────────── */}
+      <div className="flex flex-col gap-3 sm:flex-row">
         <div className="relative flex-1">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-muted" />
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Zoek tool of categorie..."
-            className="w-full rounded-xl border border-border bg-card pl-10 pr-4 py-2.5 text-[14px] placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+            className="w-full rounded-lg border border-grid bg-card2 py-2.5 pl-10 pr-4 font-mono text-[14px] text-ink placeholder:text-ink-muted focus:outline-none focus:ring-2 focus:ring-[#00D4FF]/50"
           />
         </div>
-        <div className="flex gap-1.5 flex-wrap">
-          <button
-            onClick={() => setSelectedPhase(null)}
-            className="rounded-xl px-3.5 py-2 text-[13px] font-medium border transition-colors"
-            style={{
-              background: selectedPhase === null ? "#0071e3" : "#fff",
-              color: selectedPhase === null ? "#fff" : "#6e6e73",
-              borderColor: selectedPhase === null ? "#0071e3" : "#e5e5ea",
-            }}
-          >
+        <div className="flex flex-wrap gap-1.5">
+          <FilterButton active={selectedPhase === null} onClick={() => setSelectedPhase(null)}>
             Alle
-          </button>
+          </FilterButton>
           {allPhases.map((ph) => (
-            <button
+            <FilterButton
               key={ph}
+              active={selectedPhase === ph}
               onClick={() => setSelectedPhase(selectedPhase === ph ? null : ph)}
-              className="rounded-xl px-3.5 py-2 text-[13px] font-medium border transition-colors"
-              style={{
-                background: selectedPhase === ph ? "#0071e3" : "#fff",
-                color: selectedPhase === ph ? "#fff" : "#6e6e73",
-                borderColor: selectedPhase === ph ? "#0071e3" : "#e5e5ea",
-              }}
             >
               {ph > 0 ? PHASE_LABELS[ph] : "Other"}
-            </button>
+            </FilterButton>
           ))}
         </div>
       </div>
 
-      {/* Loading */}
+      {/* ── Loading ──────────────────────────────────────────── */}
       {loading && (
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {[...Array(12)].map((_, i) => (
-            <div key={i} className="rounded-2xl border border-border bg-card p-5 shadow-apple animate-pulse">
-              <div className="h-4 w-24 rounded bg-muted mb-3" />
-              <div className="h-3 w-16 rounded bg-muted mb-2" />
-              <div className="h-3 w-full rounded bg-muted" />
-            </div>
+            <SkeletonCard key={i} />
           ))}
         </div>
       )}
 
-      {/* Tools per phase */}
+      {/* ── Empty state ──────────────────────────────────────── */}
       {!loading && phases.length === 0 && (
-        <div className="text-center py-16 text-muted-foreground text-[14px]">
+        <div className="py-16 text-center font-mono text-[14px] text-ink-muted">
           {error ? "Kan tools niet laden." : "Geen tools gevonden."}
         </div>
       )}
 
+      {/* ── Tools grouped by phase ───────────────────────────── */}
       {!loading &&
         phases.map((ph) => {
           const phaseTools = byPhase.get(ph) ?? [];
           const avail = phaseTools.filter((t) => t.available).length;
+          const glow = PHASE_GLOW[ph] ?? "#00D4FF";
 
           return (
-            <div key={ph} className="space-y-3">
-              {/* Phase header */}
+            <div key={ph} className="space-y-4">
               <div className="flex items-center gap-3">
-                <h2 className="text-[17px] font-semibold">
+                <h2 className="font-display text-[18px] font-semibold text-ink">
                   {ph > 0 ? `Phase ${ph} — ${PHASE_LABELS[ph]}` : PHASE_LABELS[0]}
                 </h2>
-                <span className="text-[13px] text-muted-foreground">
+                <span className="font-mono text-[12px] text-ink-muted">
                   {avail}/{phaseTools.length} beschikbaar
                 </span>
               </div>
 
-              {/* Cards grid */}
-              <div className="grid grid-cols-3 gap-4">
-                {phaseTools.map((tool) => (
-                  <div
-                    key={tool.name}
-                    className="rounded-2xl border border-border bg-card p-5 shadow-apple hover:shadow-apple-md transition-shadow"
-                    style={tool.available ? {} : { opacity: 0.5 }}
-                  >
-                    <div className="flex items-start justify-between mb-3">
-                      <div className="min-w-0">
-                        <p className="text-[15px] font-semibold truncate">{tool.name}</p>
-                        <p className="text-[12px] text-muted-foreground mt-0.5">{tool.category}</p>
-                      </div>
-                      {tool.available ? (
-                        <CheckCircle2 className="h-5 w-5 flex-shrink-0 mt-0.5" style={{ color: "#34c759" }} />
-                      ) : (
-                        <XCircle className="h-5 w-5 flex-shrink-0 mt-0.5" style={{ color: "#ff3b30" }} />
-                      )}
-                    </div>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                {phaseTools.map((tool) => {
+                  const idx = cardIndex++;
+                  return (
+                    <motion.div
+                      key={tool.name}
+                      initial={{ opacity: 0, y: 12 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.3, delay: idx * 0.03 }}
+                      whileHover={{ rotate: 0.5, scale: 1.01 }}
+                    >
+                      <GlowCard glowColor={glow} accentBorder={tool.available ? glow : "#0A2035"}>
+                        <div
+                          className="p-5"
+                          style={tool.available ? undefined : { opacity: 0.55 }}
+                        >
+                          <div className="mb-3 flex items-start justify-between gap-3">
+                            <div className="min-w-0">
+                              <p className="truncate font-mono text-[15px] font-semibold text-ink">
+                                {tool.name}
+                              </p>
+                              <span
+                                className="mt-2 inline-block rounded-md px-2 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-wider"
+                                style={{
+                                  background: "rgba(0,212,255,0.10)",
+                                  color: "#00D4FF",
+                                  border: "1px solid rgba(0,212,255,0.25)",
+                                }}
+                              >
+                                {tool.category || PHASE_LABELS[ph]}
+                              </span>
+                            </div>
+                          </div>
 
-                    {TOOL_DESCRIPTIONS[tool.name] && (
-                      <p className="text-[13px] text-muted-foreground leading-relaxed">
-                        {TOOL_DESCRIPTIONS[tool.name]}
-                      </p>
-                    )}
+                          {TOOL_DESCRIPTIONS[tool.name] && (
+                            <p className="text-[13px] leading-relaxed text-ink-muted">
+                              {TOOL_DESCRIPTIONS[tool.name]}
+                            </p>
+                          )}
 
-                    <div className="flex items-center justify-between mt-4">
-                      <span
-                        className="rounded-full px-2.5 py-1 text-[11px] font-semibold"
-                        style={{ background: "rgba(0,113,227,0.08)", color: "#0071e3" }}
-                      >
-                        Phase {ph > 0 ? ph : "—"}
-                      </span>
-                      <span
-                        className="text-[12px] font-medium"
-                        style={{ color: tool.available ? "#34c759" : "#ff3b30" }}
-                      >
-                        {tool.available ? "Beschikbaar" : "Niet geïnstalleerd"}
-                      </span>
-                    </div>
-                  </div>
-                ))}
+                          <div className="mt-4 flex items-center justify-between">
+                            <span className="font-mono text-[11px] text-ink-muted">
+                              Phase {ph > 0 ? ph : "—"}
+                            </span>
+                            <span
+                              className="flex items-center gap-1.5 font-mono text-[11px] font-semibold uppercase tracking-wider"
+                              style={{ color: tool.available ? "#00FF88" : "#FF2D55" }}
+                            >
+                              <span
+                                className={tool.available ? "animate-pulse-dot inline-block h-1.5 w-1.5 rounded-full" : "inline-block h-1.5 w-1.5 rounded-full"}
+                                style={{ background: tool.available ? "#00FF88" : "#FF2D55" }}
+                              />
+                              {tool.available ? "READY" : "OFFLINE"}
+                            </span>
+                          </div>
+                        </div>
+                      </GlowCard>
+                    </motion.div>
+                  );
+                })}
               </div>
             </div>
           );
         })}
 
-      {/* ── Custom Modules ─────────────────────────────────────── */}
-      <div className="space-y-3 pt-4" style={{ borderTop: "1px solid #e5e5ea" }}>
+      {/* ── Custom Modules ───────────────────────────────────── */}
+      <div className="space-y-4 border-t border-grid pt-6">
         <div className="flex items-center gap-3">
-          <h2 className="text-[17px] font-semibold">Custom Modules</h2>
-          <span className="text-[13px] text-muted-foreground">
+          <h2 className="font-display text-[18px] font-semibold text-ink">Custom Modules</h2>
+          <span className="font-mono text-[12px] text-ink-muted">
             CyberPulse post-scan analyse modules
           </span>
         </div>
-        <div className="grid grid-cols-3 gap-4">
-          {CUSTOM_MODULES.map((mod) => (
-            <div key={mod.id} className="rounded-2xl border border-border bg-card p-5 shadow-apple hover:shadow-apple-md transition-shadow">
-              <div className="flex items-start justify-between mb-3">
-                <div className="min-w-0">
-                  <p className="text-[15px] font-semibold truncate">{mod.name}</p>
-                  <p className="text-[12px] text-muted-foreground mt-0.5">{mod.category}</p>
-                </div>
-                <div className="h-9 w-9 rounded-xl flex items-center justify-center flex-shrink-0 ml-3"
-                     style={{ background: mod.iconBg }}>
-                  <mod.icon className="h-4 w-4" style={{ color: mod.iconColor }} />
-                </div>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {CUSTOM_MODULES.map((mod, i) => {
+            const Icon = mod.icon;
+            const recommended = mod.id === "M10";
+            return (
+              <motion.div
+                key={mod.id}
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: i * 0.03 }}
+                whileHover={{ rotate: 0.5, scale: 1.01 }}
+              >
+                <GlowCard glowColor={mod.iconColor} accentBorder="#BF5AF2">
+                  <div className="p-5">
+                    <div className="mb-3 flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <p className="truncate font-mono text-[15px] font-semibold text-ink">
+                            {mod.name}
+                          </p>
+                          {recommended && (
+                            <span
+                              className="rounded-md px-1.5 py-0.5 font-mono text-[9px] font-bold uppercase tracking-wider"
+                              style={{
+                                background: "rgba(0,212,255,0.12)",
+                                color: "#00D4FF",
+                                border: "1px solid rgba(0,212,255,0.3)",
+                              }}
+                            >
+                              Recommended
+                            </span>
+                          )}
+                        </div>
+                        <span
+                          className="mt-2 inline-block rounded-md px-2 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-wider"
+                          style={{
+                            background: "rgba(191,90,242,0.10)",
+                            color: "#BF5AF2",
+                            border: "1px solid rgba(191,90,242,0.25)",
+                          }}
+                        >
+                          {mod.category}
+                        </span>
+                      </div>
+                      <div
+                        className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-md"
+                        style={{ background: mod.iconBg }}
+                      >
+                        <Icon className="h-4 w-4" style={{ color: mod.iconColor }} />
+                      </div>
+                    </div>
+                    <p className="text-[13px] leading-relaxed text-ink-muted">{mod.description}</p>
+                    <div className="mt-4 flex items-center justify-between">
+                      <span className="font-mono text-[11px] text-ink-muted">Module {mod.id}</span>
+                      <span className="flex items-center gap-1.5 font-mono text-[11px] font-semibold uppercase tracking-wider text-neon-green">
+                        <span
+                          className="animate-pulse-dot inline-block h-1.5 w-1.5 rounded-full"
+                          style={{ background: "#00FF88" }}
+                        />
+                        Actief
+                      </span>
+                    </div>
+                  </div>
+                </GlowCard>
+              </motion.div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* ── Live Kali VM Status ──────────────────────────────── */}
+      <div className="border-t border-grid pt-6">
+        <GlowCard glowColor="#00FF88" accentBorder="#00FF88">
+          <div className="p-5">
+            <div className="mb-4 flex items-center gap-2">
+              <span className="animate-pulse-dot inline-block h-2 w-2 rounded-full bg-[#00FF88]" />
+              <h2 className="font-display text-[16px] font-semibold text-ink">Live Kali VM Status</h2>
+            </div>
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+              <div>
+                <p className="font-mono text-[10px] uppercase tracking-wider text-ink-muted">IP Address</p>
+                <p className="mt-1 font-mono text-[15px] font-semibold text-ink">{kaliVm}</p>
               </div>
-              <p className="text-[13px] text-muted-foreground leading-relaxed">{mod.description}</p>
-              <div className="flex items-center justify-between mt-4">
-                <span className="rounded-full px-2.5 py-1 text-[11px] font-semibold"
-                      style={{ background: "rgba(191,90,242,0.08)", color: "#bf5af2" }}>
-                  Module {mod.id}
-                </span>
-                <span className="text-[12px] font-medium" style={{ color: "#34c759" }}>
-                  Actief
-                </span>
+              <div>
+                <p className="font-mono text-[10px] uppercase tracking-wider text-ink-muted">Uptime</p>
+                <p className="mt-1 font-mono text-[15px] font-semibold text-neon-cyan">
+                  {pad(hh)}:{pad(mm)}:{pad(ss)}
+                </p>
+              </div>
+              <div>
+                <p className="font-mono text-[10px] uppercase tracking-wider text-ink-muted">Tools</p>
+                <p className="mt-1 font-mono text-[15px] font-semibold text-ink">
+                  <span className="text-neon-green">{data?.available_count ?? 0}</span> / {data?.total ?? 0}{" "}
+                  <span className="text-ink-muted">available</span>
+                </p>
+              </div>
+              <div>
+                <p className="font-mono text-[10px] uppercase tracking-wider text-ink-muted">Last Ping</p>
+                <p className="mt-1 flex items-center gap-1.5 font-mono text-[15px] font-semibold text-ink">
+                  <span className="animate-pulse-dot inline-block h-1.5 w-1.5 rounded-full bg-[#00FF88]" />
+                  {lastPing}s ago
+                </p>
               </div>
             </div>
-          ))}
-        </div>
+          </div>
+        </GlowCard>
       </div>
     </div>
   );
 }
 
-const CUSTOM_MODULES = [
+function FilterButton({
+  active,
+  onClick,
+  children,
+}: {
+  active: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className="rounded-lg border px-3.5 py-2 font-mono text-[12px] font-medium uppercase tracking-wider transition-colors duration-200"
+      style={
+        active
+          ? { background: "#00D4FF", color: "#020408", borderColor: "#00D4FF" }
+          : { background: "var(--bg-card)", color: "#4A6880", borderColor: "#0A2035" }
+      }
+    >
+      {children}
+    </button>
+  );
+}
+
+interface CustomModule {
+  id: string;
+  name: string;
+  category: string;
+  description: string;
+  icon: LucideIcon;
+  iconColor: string;
+  iconBg: string;
+}
+
+const CUSTOM_MODULES: CustomModule[] = [
   {
     id: "M09", name: "Business Logic Tester", category: "Exploitation",
     description: "Test IDOR-kwetsbaarheden, rate limiting en blootgestelde admin-endpoints zonder authenticatie.",
-    icon: Bug, iconColor: "#ff3b30", iconBg: "rgba(255,59,48,0.08)",
+    icon: Bug, iconColor: "#FF2D55", iconBg: "rgba(255,45,85,0.10)",
   },
   {
     id: "M10", name: "CVE Correlator", category: "Vulnerability Intelligence",
     description: "Koppelt gedetecteerde service-versies aan bekende CVEs via de NVD REST API met CVSS-scores.",
-    icon: Database, iconColor: "#ff9500", iconBg: "rgba(255,149,0,0.08)",
+    icon: Database, iconColor: "#FF8C00", iconBg: "rgba(255,140,0,0.10)",
   },
   {
     id: "M11", name: "Visual Recon", category: "Reconnaissance",
     description: "Maakt screenshots van alle webdiensten via Playwright voor visuele herkenning van aanvalsoppervlak.",
-    icon: Camera, iconColor: "#0071e3", iconBg: "rgba(0,113,227,0.08)",
+    icon: Camera, iconColor: "#0A84FF", iconBg: "rgba(10,132,255,0.10)",
   },
   {
     id: "M12", name: "Smart Credential Attack", category: "Authentication",
     description: "Genereert doelspecifieke wachtwoordlijsten op basis van bedrijfsnaam en test credentials via Hydra.",
-    icon: KeyRound, iconColor: "#c69b00", iconBg: "rgba(255,204,0,0.10)",
+    icon: KeyRound, iconColor: "#FFD60A", iconBg: "rgba(255,214,10,0.10)",
   },
   {
     id: "M13", name: "AI Adaptive Scanner", category: "AI-Directed",
     description: "DeepSeek analyseert alle bevindingen en bepaalt automatisch gerichte follow-up scans.",
-    icon: BrainCircuit, iconColor: "#bf5af2", iconBg: "rgba(191,90,242,0.08)",
+    icon: BrainCircuit, iconColor: "#BF5AF2", iconBg: "rgba(191,90,242,0.10)",
   },
   {
     id: "M14", name: "Scan Comparator", category: "Reporting",
     description: "Vergelijkt huidige scan met vorige scan op hetzelfde target en rapporteert nieuw/opgelost/persistent.",
-    icon: GitCompare, iconColor: "#34c759", iconBg: "rgba(52,199,89,0.08)",
+    icon: GitCompare, iconColor: "#00FF88", iconBg: "rgba(0,255,136,0.10)",
   },
 ];

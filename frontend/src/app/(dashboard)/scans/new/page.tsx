@@ -2,17 +2,17 @@
 
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { dashboardApi, scansApi } from "@/lib/api";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, Suspense } from "react";
 import { toast } from "sonner";
+import { motion, AnimatePresence } from "framer-motion";
 import {
-  Shield, ArrowLeft, ArrowRight, CheckCircle, Target, Globe, Server,
-  Eye, EyeOff, Key, Lock, Unlock, Info,
+  Shield, ArrowLeft, ArrowRight, Check, Target, Server,
+  Eye, EyeOff, Key, Lock, Unlock, Rocket, Crosshair, Layers,
+  Bug, Code2, Network, KeyRound, ShieldCheck, Search, Sparkles,
 } from "lucide-react";
 import Link from "next/link";
+import { GlowCard } from "@/components/cyber/glow-card";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -21,28 +21,31 @@ const SCAN_MODES = [
     value: "blackbox",
     label: "Blackbox",
     description: "Extern perspectief — geen kennis of toegang. Simuleert een externe aanvaller.",
-    icon: <Lock className="h-4 w-4" />,
+    icon: <Lock className="h-5 w-5" />,
     color: "border-red-500/40 bg-red-500/5",
     activeColor: "border-red-500 bg-red-500/10 ring-1 ring-red-500",
     badge: "text-red-500",
+    accent: "#FF2D55",
   },
   {
     value: "graybox",
     label: "Graybox",
     description: "Gedeeltelijke kennis — beperkte inloggegevens beschikbaar.",
-    icon: <Eye className="h-4 w-4" />,
+    icon: <Eye className="h-5 w-5" />,
     color: "border-yellow-500/40 bg-yellow-500/5",
     activeColor: "border-yellow-500 bg-yellow-500/10 ring-1 ring-yellow-500",
     badge: "text-yellow-500",
+    accent: "#FF8C00",
   },
   {
     value: "whitebox",
     label: "Whitebox",
     description: "Volledige toegang — broncode, SSH, alle configuratie beschikbaar.",
-    icon: <Unlock className="h-4 w-4" />,
+    icon: <Unlock className="h-5 w-5" />,
     color: "border-green-500/40 bg-green-500/5",
     activeColor: "border-green-500 bg-green-500/10 ring-1 ring-green-500",
     badge: "text-green-500",
+    accent: "#00FF88",
   },
 ];
 
@@ -55,13 +58,13 @@ const TARGET_TYPES = [
 ];
 
 const PHASE_OPTIONS = [
-  { value: "recon",        label: "Reconnaissance",          tools: "nmap, httpx-pd, whatweb",        alwaysEnabled: true },
-  { value: "vulnerability",label: "Vulnerability Detection", tools: "nuclei, nikto",                  alwaysEnabled: false },
-  { value: "webapp",       label: "Web Application Tests",   tools: "sqlmap, ffuf, nikto",            alwaysEnabled: false },
-  { value: "network",      label: "Network Services",        tools: "nmap NSE",                       alwaysEnabled: false },
-  { value: "auth",         label: "Authentication Tests",    tools: "hydra",                          alwaysEnabled: false },
-  { value: "ssl",          label: "SSL/TLS Analysis",        tools: "testssl.sh",                     alwaysEnabled: false },
-  { value: "osint",        label: "OSINT & Secrets",         tools: "theharvester, gitleaks",         alwaysEnabled: false },
+  { value: "recon",        label: "Reconnaissance",          tools: "nmap, httpx-pd, whatweb",        alwaysEnabled: true,  icon: <Crosshair className="h-4 w-4" /> },
+  { value: "vulnerability",label: "Vulnerability Detection", tools: "nuclei, nikto",                  alwaysEnabled: false, icon: <Bug className="h-4 w-4" /> },
+  { value: "webapp",       label: "Web Application Tests",   tools: "sqlmap, ffuf, nikto",            alwaysEnabled: false, icon: <Code2 className="h-4 w-4" /> },
+  { value: "network",      label: "Network Services",        tools: "nmap NSE",                       alwaysEnabled: false, icon: <Network className="h-4 w-4" /> },
+  { value: "auth",         label: "Authentication Tests",    tools: "hydra",                          alwaysEnabled: false, icon: <KeyRound className="h-4 w-4" /> },
+  { value: "ssl",          label: "SSL/TLS Analysis",        tools: "testssl.sh",                     alwaysEnabled: false, icon: <ShieldCheck className="h-4 w-4" /> },
+  { value: "osint",        label: "OSINT & Secrets",         tools: "theharvester, gitleaks",         alwaysEnabled: false, icon: <Search className="h-4 w-4" /> },
 ];
 
 const CUSTOM_MODULE_OPTIONS = [
@@ -86,7 +89,7 @@ const SCAN_TYPES = [
 
 export default function NewScanPage() {
   return (
-    <Suspense fallback={<div className="text-center py-12 text-muted-foreground">Loading...</div>}>
+    <Suspense fallback={<div className="py-12 text-center font-mono text-sm text-ink-muted">Loading...</div>}>
       <NewScanContent />
     </Suspense>
   );
@@ -202,359 +205,646 @@ function NewScanContent() {
   const nextStep = () => setStep(s => s + 1);
   const prevStep = () => setStep(s => s - 1);
 
+  // ── Shared motion variants ────────────────────────────────────────────────
+  const panelVariants = {
+    initial: { opacity: 0, x: 24 },
+    animate: { opacity: 1, x: 0 },
+    exit:    { opacity: 0, x: -24 },
+  };
+
+  const listContainer = {
+    animate: { transition: { staggerChildren: 0.05 } },
+  };
+  const listItem = {
+    initial: { opacity: 0, y: 12 },
+    animate: { opacity: 1, y: 0 },
+  };
+
   // ── Render ──────────────────────────────────────────────────────────────────
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6">
+    <div className="mx-auto w-full max-w-5xl space-y-8 px-4 py-6">
       {/* Header */}
       <div className="flex items-center gap-4">
-        <Link href="/scans">
-          <Button variant="ghost" size="sm" className="text-[12px] uppercase tracking-[0.05em]">
-            <ArrowLeft className="mr-2 h-4 w-4" />Terug
-          </Button>
+        <Link
+          href="/scans"
+          className="flex items-center gap-2 rounded-lg border border-grid bg-card2 px-3 py-2 font-mono text-[11px] uppercase tracking-[0.12em] text-ink-muted transition-colors duration-150 hover:border-cyan/50 hover:text-cyan"
+        >
+          <ArrowLeft className="h-4 w-4" />Terug
         </Link>
         <div>
-          <h1 className="text-[18px] font-bold tracking-[0.05em]">Nieuwe Scan</h1>
-          <p className="text-muted-foreground text-[12px]">Configureer en start een security assessment</p>
+          <h1 className="font-display text-2xl font-bold uppercase tracking-[0.06em] text-ink">
+            Nieuwe <span className="text-cyan">Scan</span>
+          </h1>
+          <p className="font-mono text-[12px] text-ink-muted">
+            Configureer en start een security assessment
+          </p>
         </div>
       </div>
 
-      {/* Step indicator */}
-      <div className="flex items-center gap-3 flex-wrap">
-        {STEPS.map((s, i) => (
-          <div key={s.n} className="flex items-center gap-2">
-            <div className={`flex h-7 w-7 items-center justify-center text-[11px] font-medium border transition-colors ${
-              step >= s.n ? "bg-foreground text-background border-foreground" : "text-muted-foreground border-border"
-            }`}>
-              {step > s.n ? <CheckCircle className="h-3 w-3" /> : s.n}
-            </div>
-            <span className="text-[11px] uppercase tracking-[0.05em]">{s.label}</span>
-            {i < STEPS.length - 1 && <ArrowRight className="h-3 w-3 text-muted-foreground" />}
-          </div>
-        ))}
-      </div>
-
-      {/* ── Step 1: Target ─────────────────────────────────────────────────── */}
-      {step === 1 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-[11px] uppercase tracking-[0.1em] text-muted-foreground font-normal">Target selecteren</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {allTargets.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground text-[12px]">
-                <Target className="h-12 w-12 mx-auto mb-4 opacity-30" />
-                Geen targets gevonden.
-                <Link href="/targets"><Button className="ml-2 text-[12px]">Targets beheren</Button></Link>
+      {/* Progress indicator */}
+      <div className="flex items-center">
+        {STEPS.map((s, i) => {
+          const done = step > s.n;
+          const active = step === s.n;
+          return (
+            <div key={`${s.n}-${s.label}`} className="flex flex-1 items-center last:flex-none">
+              <div className="flex flex-col items-center gap-2">
+                <motion.div
+                  animate={{ scale: active ? 1.1 : 1 }}
+                  transition={{ type: "spring", stiffness: 320, damping: 20 }}
+                  className="flex h-9 w-9 items-center justify-center rounded-lg border font-mono text-[12px] font-bold transition-colors duration-200"
+                  style={
+                    done || active
+                      ? {
+                          borderColor: "#00D4FF",
+                          color: "#020408",
+                          background: "#00D4FF",
+                          boxShadow: active ? "0 0 18px rgba(0,212,255,0.5)" : undefined,
+                        }
+                      : { borderColor: "#0A2035", color: "#4A6880", background: "#080F18" }
+                  }
+                >
+                  {done ? <Check className="h-4 w-4" /> : s.n}
+                </motion.div>
+                <span
+                  className={`font-mono text-[10px] uppercase tracking-[0.1em] ${
+                    active ? "text-cyan" : done ? "text-ink" : "text-ink-muted"
+                  }`}
+                >
+                  {s.label}
+                </span>
               </div>
-            ) : (
-              <>
-                {allTargets.map((target: any) => (
-                  <div key={target.id} onClick={() => setSelectedTarget(target.id)}
-                    className={`flex items-center gap-4 border p-3 cursor-pointer transition-colors ${
-                      selectedTarget === target.id ? "border-foreground bg-secondary" : "hover:bg-secondary"
-                    }`}>
-                    <div className="flex h-8 w-8 items-center justify-center bg-secondary">
-                      {target.target_type === "web_application" ? <Globe className="h-4 w-4" /> : <Server className="h-4 w-4" />}
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-[13px] font-medium">{target.hostname ?? target.value}</p>
-                      <p className="text-[10px] text-muted-foreground uppercase">{target.target_type?.replace("_", " ")}</p>
-                    </div>
-                    {selectedTarget === target.id && <CheckCircle className="h-4 w-4" />}
-                  </div>
-                ))}
-                <Button className="w-full mt-4 text-[12px] uppercase" disabled={!selectedTarget} onClick={nextStep}>
-                  Volgende <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-              </>
-            )}
-          </CardContent>
-        </Card>
-      )}
-
-      {/* ── Step 2: Scan mode + type + target type ──────────────────────────── */}
-      {step === 2 && (
-        <div className="space-y-4">
-          {/* Scan Mode */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-[11px] uppercase tracking-[0.1em] text-muted-foreground font-normal">Scan modus</CardTitle>
-            </CardHeader>
-            <CardContent className="grid grid-cols-3 gap-3">
-              {SCAN_MODES.map((mode) => (
-                <button key={mode.value} onClick={() => setScanMode(mode.value as any)}
-                  className={`flex flex-col items-start gap-2 rounded-lg border p-4 text-left transition-all ${
-                    scanMode === mode.value ? mode.activeColor : mode.color + " hover:opacity-90"
-                  }`}>
-                  <div className={`flex items-center gap-2 font-semibold text-[13px] ${scanMode === mode.value ? "" : mode.badge}`}>
-                    {mode.icon} {mode.label}
-                  </div>
-                  <p className="text-[11px] text-muted-foreground leading-snug">{mode.description}</p>
-                </button>
-              ))}
-            </CardContent>
-          </Card>
-
-          {/* Target Type */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-[11px] uppercase tracking-[0.1em] text-muted-foreground font-normal">Doelwit type</CardTitle>
-            </CardHeader>
-            <CardContent className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-              {TARGET_TYPES.map((tt) => (
-                <button key={tt.value} onClick={() => setTargetType(tt.value)}
-                  className={`border rounded-lg p-3 text-left transition-colors ${
-                    targetType === tt.value ? "border-foreground bg-secondary" : "hover:bg-secondary"
-                  }`}>
-                  <p className="text-[13px] font-medium">{tt.label}</p>
-                  <p className="text-[11px] text-muted-foreground">{tt.description}</p>
-                </button>
-              ))}
-            </CardContent>
-          </Card>
-
-          {/* Scan Type */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-[11px] uppercase tracking-[0.1em] text-muted-foreground font-normal">Scan type</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {SCAN_TYPES.map((type) => (
-                <div key={type.value} onClick={() => handleScanTypeChange(type.value)}
-                  className={`border p-3 cursor-pointer transition-colors ${
-                    scanType === type.value ? "border-foreground bg-secondary" : "hover:bg-secondary"
-                  }`}>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-[13px] font-medium">{type.label}</p>
-                      <p className="text-[11px] text-muted-foreground">{type.description}</p>
-                    </div>
-                    {type.value !== "custom" && (
-                      <span className="text-[10px] text-muted-foreground">{type.phases.length} fases</span>
-                    )}
-                  </div>
+              {i < STEPS.length - 1 && (
+                <div className="mx-2 mb-6 h-[2px] flex-1 overflow-hidden rounded-full bg-grid">
+                  <motion.div
+                    className="h-full bg-cyan"
+                    initial={false}
+                    animate={{ width: step > s.n ? "100%" : "0%" }}
+                    transition={{ duration: 0.3 }}
+                    style={{ boxShadow: "0 0 8px rgba(0,212,255,0.6)" }}
+                  />
                 </div>
-              ))}
-              <div className="flex gap-2 mt-4">
-                <Button variant="outline" onClick={prevStep} className="text-[12px] uppercase">
-                  <ArrowLeft className="mr-2 h-4 w-4" />Terug
-                </Button>
-                <Button className="flex-1 text-[12px] uppercase" onClick={nextStep}>
-                  Volgende <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      <AnimatePresence mode="wait">
+        {/* ── Step 1: Target + Scan mode + Target type ───────────────────────── */}
+        {step === 1 && (
+          <motion.div
+            key="step-1"
+            variants={panelVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            transition={{ duration: 0.25 }}
+            className="space-y-6"
+          >
+            {/* Target select */}
+            <div className="space-y-3">
+              <SectionLabel icon={<Target className="h-3.5 w-3.5" />} text="Target selecteren" />
+              {allTargets.length === 0 ? (
+                <GlowCard glowColor="#FF8C00" className="p-8 text-center">
+                  <Target className="mx-auto mb-4 h-12 w-12 text-ink-muted opacity-40" />
+                  <p className="font-mono text-[13px] text-ink-muted">Geen targets gevonden.</p>
+                  <Link
+                    href="/targets"
+                    className="mt-4 inline-flex items-center gap-2 rounded-lg bg-cyan px-4 py-2 font-display text-[12px] font-bold uppercase tracking-[0.08em] text-app transition-transform duration-150 hover:scale-[1.02] active:scale-[0.98]"
+                  >
+                    Targets beheren
+                  </Link>
+                </GlowCard>
+              ) : (
+                <div className="relative">
+                  <select
+                    value={selectedTarget}
+                    onChange={(e) => setSelectedTarget(e.target.value)}
+                    className="w-full appearance-none rounded-lg border border-grid bg-card2 px-4 py-3 pr-10 font-mono text-[13px] text-ink outline-none transition-colors duration-150 focus:border-cyan focus:ring-1 focus:ring-cyan"
+                  >
+                    <option value="" disabled>
+                      — Kies een target —
+                    </option>
+                    {allTargets.map((target: any) => (
+                      <option key={target.id} value={target.id} className="bg-card2 text-ink">
+                        {(target.hostname ?? target.value) +
+                          " · " +
+                          (target.target_type?.replace("_", " ") ?? "")}
+                      </option>
+                    ))}
+                  </select>
+                  <Server className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-muted" />
+                </div>
+              )}
+            </div>
+
+            {/* Scan mode */}
+            <div className="space-y-3">
+              <SectionLabel icon={<Shield className="h-3.5 w-3.5" />} text="Scan modus" />
+              <motion.div
+                variants={listContainer}
+                initial="initial"
+                animate="animate"
+                className="grid grid-cols-1 gap-3 sm:grid-cols-3"
+              >
+                {SCAN_MODES.map((mode) => {
+                  const active = scanMode === mode.value;
+                  return (
+                    <motion.div key={mode.value} variants={listItem}>
+                      <GlowCard
+                        glowColor={mode.accent}
+                        accentBorder={active ? mode.accent : undefined}
+                        onClick={() => setScanMode(mode.value as any)}
+                        className="h-full p-4"
+                      >
+                        <div
+                          className="mb-2 flex items-center gap-2 font-display text-[14px] font-bold"
+                          style={{ color: active ? mode.accent : undefined }}
+                        >
+                          <span style={{ color: mode.accent }}>{mode.icon}</span>
+                          {mode.label}
+                        </div>
+                        <p className="font-mono text-[11px] leading-snug text-ink-muted">
+                          {mode.description}
+                        </p>
+                      </GlowCard>
+                    </motion.div>
+                  );
+                })}
+              </motion.div>
+            </div>
+
+            {/* Target type */}
+            <div className="space-y-3">
+              <SectionLabel icon={<Layers className="h-3.5 w-3.5" />} text="Doelwit type" />
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                {TARGET_TYPES.map((tt) => {
+                  const active = targetType === tt.value;
+                  return (
+                    <button
+                      key={tt.value}
+                      type="button"
+                      onClick={() => setTargetType(tt.value)}
+                      className={`rounded-lg border p-3 text-left transition-all duration-150 hover:scale-[1.02] active:scale-[0.98] ${
+                        active
+                          ? "border-cyan bg-cyan/5 shadow-glow-cyan"
+                          : "border-grid bg-card2 hover:border-cyan/40"
+                      }`}
+                    >
+                      <p className={`font-display text-[13px] font-semibold ${active ? "text-cyan" : "text-ink"}`}>
+                        {tt.label}
+                      </p>
+                      <p className="font-mono text-[10px] leading-snug text-ink-muted">{tt.description}</p>
+                    </button>
+                  );
+                })}
               </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
+            </div>
 
-      {/* ── Step 3: Phases ──────────────────────────────────────────────────── */}
-      {step === 3 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-[11px] uppercase tracking-[0.1em] text-muted-foreground font-normal">Scan fases selecteren</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {PHASE_OPTIONS.map((phase) => {
-              const checked = selectedPhases.has(phase.value);
-              return (
-                <label key={phase.value}
-                  className={`flex items-start gap-3 border rounded-lg p-3 cursor-pointer transition-colors ${
-                    checked ? "border-foreground bg-secondary" : "hover:bg-secondary"
-                  }`}>
-                  <input type="checkbox" checked={checked}
-                    onChange={() => togglePhase(phase.value)}
-                    className="mt-0.5 accent-foreground" />
-                  <div className="flex-1">
-                    <span className="text-[13px] font-medium">{phase.label}</span>
-                    <p className="text-[11px] text-muted-foreground mt-0.5">{phase.tools}</p>
-                  </div>
-                </label>
-              );
-            })}
+            <NavButtons
+              onNext={nextStep}
+              nextDisabled={!selectedTarget}
+            />
+          </motion.div>
+        )}
 
-            {/* Custom Modules */}
-            <div className="pt-3 mt-1 border-t border-border">
-              <p className="text-[10px] uppercase tracking-widest text-muted-foreground mb-2 font-medium">
-                Custom Modules
-              </p>
-              {CUSTOM_MODULE_OPTIONS.map((mod) => {
-                const checked = selectedModules.has(mod.value);
+        {/* ── Step 2: Scan type ──────────────────────────────────────────────── */}
+        {step === 2 && (
+          <motion.div
+            key="step-2"
+            variants={panelVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            transition={{ duration: 0.25 }}
+            className="space-y-6"
+          >
+            <SectionLabel icon={<Sparkles className="h-3.5 w-3.5" />} text="Scan type" />
+            <motion.div
+              variants={listContainer}
+              initial="initial"
+              animate="animate"
+              className="grid grid-cols-1 gap-3 sm:grid-cols-2"
+            >
+              {SCAN_TYPES.map((type) => {
+                const active = scanType === type.value;
                 return (
-                  <label key={mod.value}
-                    className={`flex items-start gap-3 border rounded-lg p-3 cursor-pointer transition-colors mb-2 ${
-                      checked ? "border-purple-500/40 bg-purple-500/5" : "hover:bg-secondary"
-                    }`}>
-                    <input type="checkbox" checked={checked}
-                      onChange={() => toggleModule(mod.value)}
-                      className="mt-0.5 accent-purple-500" />
-                    <div className="flex-1">
-                      <span className="text-[13px] font-medium">{mod.label}</span>
-                      <p className="text-[11px] text-muted-foreground mt-0.5">{mod.description}</p>
-                    </div>
-                    {mod.defaultChecked && (
-                      <span className="text-[9px] bg-purple-500/10 text-purple-600 px-1.5 py-0.5 rounded flex-shrink-0 mt-0.5">
-                        aanbevolen
-                      </span>
-                    )}
-                  </label>
+                  <motion.div key={type.value} variants={listItem}>
+                    <GlowCard
+                      glowColor="#00D4FF"
+                      accentBorder={active ? "#00D4FF" : undefined}
+                      onClick={() => handleScanTypeChange(type.value)}
+                      className="h-full p-4"
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <p className={`font-display text-[14px] font-semibold ${active ? "text-cyan" : "text-ink"}`}>
+                            {type.label}
+                          </p>
+                          <p className="mt-0.5 font-mono text-[11px] text-ink-muted">{type.description}</p>
+                        </div>
+                        {type.value !== "custom" && (
+                          <span className="shrink-0 rounded border border-grid bg-app px-2 py-0.5 font-mono text-[10px] text-ink-muted">
+                            {type.phases.length} fases
+                          </span>
+                        )}
+                      </div>
+                    </GlowCard>
+                  </motion.div>
                 );
               })}
+            </motion.div>
+
+            <NavButtons onPrev={prevStep} onNext={nextStep} />
+          </motion.div>
+        )}
+
+        {/* ── Step 3: Phases + custom modules ────────────────────────────────── */}
+        {step === 3 && (
+          <motion.div
+            key="step-3"
+            variants={panelVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            transition={{ duration: 0.25 }}
+            className="space-y-6"
+          >
+            <SectionLabel icon={<Layers className="h-3.5 w-3.5" />} text="Selecteer scan fases" />
+            <motion.div
+              variants={listContainer}
+              initial="initial"
+              animate="animate"
+              className="grid grid-cols-1 gap-3 sm:grid-cols-2"
+            >
+              {PHASE_OPTIONS.map((phase) => {
+                const checked = selectedPhases.has(phase.value);
+                return (
+                  <motion.div key={phase.value} variants={listItem}>
+                    <GlowCard
+                      glowColor="#00D4FF"
+                      accentBorder={checked ? "#00D4FF" : undefined}
+                      onClick={() => togglePhase(phase.value)}
+                      className="h-full p-4"
+                    >
+                      <div className="flex items-start gap-3">
+                        <span className={checked ? "text-cyan" : "text-ink-muted"}>{phase.icon}</span>
+                        <div className="flex-1">
+                          <div className="flex items-center justify-between gap-2">
+                            <span className={`font-display text-[13px] font-semibold ${checked ? "text-cyan" : "text-ink"}`}>
+                              {phase.label}
+                            </span>
+                            <CheckBox checked={checked} color="#00D4FF" />
+                          </div>
+                          <div className="mt-2 flex flex-wrap gap-1">
+                            {phase.tools.split(",").map((tool) => (
+                              <span
+                                key={tool}
+                                className="rounded border border-grid bg-app px-1.5 py-0.5 font-mono text-[9px] text-ink-muted"
+                              >
+                                {tool.trim()}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </GlowCard>
+                  </motion.div>
+                );
+              })}
+            </motion.div>
+
+            {/* Custom modules */}
+            <div className="space-y-3 border-t border-grid pt-5">
+              <SectionLabel icon={<Sparkles className="h-3.5 w-3.5" />} text="Custom Modules" accent="#A855F7" />
+              <motion.div
+                variants={listContainer}
+                initial="initial"
+                animate="animate"
+                className="grid grid-cols-1 gap-3 sm:grid-cols-2"
+              >
+                {CUSTOM_MODULE_OPTIONS.map((mod) => {
+                  const checked = selectedModules.has(mod.value);
+                  return (
+                    <motion.div key={mod.value} variants={listItem}>
+                      <GlowCard
+                        glowColor="#A855F7"
+                        accentBorder={checked ? "#A855F7" : undefined}
+                        onClick={() => toggleModule(mod.value)}
+                        className="h-full p-4"
+                      >
+                        <div className="flex items-start gap-3">
+                          <CheckBox checked={checked} color="#A855F7" />
+                          <div className="flex-1">
+                            <div className="flex items-center justify-between gap-2">
+                              <span
+                                className="font-display text-[13px] font-semibold"
+                                style={{ color: checked ? "#C084FC" : "#E8F4F8" }}
+                              >
+                                {mod.label}
+                              </span>
+                              {mod.defaultChecked && (
+                                <span className="shrink-0 rounded bg-cyan/15 px-1.5 py-0.5 font-mono text-[8px] font-bold uppercase tracking-[0.1em] text-cyan">
+                                  Recommended
+                                </span>
+                              )}
+                            </div>
+                            <p className="mt-0.5 font-mono text-[10px] leading-snug text-ink-muted">
+                              {mod.description}
+                            </p>
+                          </div>
+                        </div>
+                      </GlowCard>
+                    </motion.div>
+                  );
+                })}
+              </motion.div>
             </div>
 
-            <div className="flex gap-2 mt-4">
-              <Button variant="outline" onClick={prevStep} className="text-[12px] uppercase">
-                <ArrowLeft className="mr-2 h-4 w-4" />Terug
-              </Button>
-              <Button className="flex-1 text-[12px] uppercase"
-                disabled={selectedPhases.size === 0} onClick={nextStep}>
-                Volgende <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+            <NavButtons onPrev={prevStep} onNext={nextStep} nextDisabled={selectedPhases.size === 0} />
+          </motion.div>
+        )}
 
-      {/* ── Step 4: Credentials (graybox/whitebox only) ─────────────────────── */}
-      {step === 4 && scanMode !== "blackbox" && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-[11px] uppercase tracking-[0.1em] text-muted-foreground font-normal">
-              Credentials ({scanMode === "whitebox" ? "Whitebox" : "Graybox"})
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <p className="text-[12px] text-muted-foreground">
-              Alle credentials worden versleuteld opgeslagen en alleen gebruikt tijdens de scan.
-            </p>
+        {/* ── Step 4: Credentials (graybox/whitebox only) ────────────────────── */}
+        {step === 4 && scanMode !== "blackbox" && (
+          <motion.div
+            key="step-4"
+            variants={panelVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            transition={{ duration: 0.25 }}
+            className="space-y-6"
+          >
+            <SectionLabel
+              icon={<Key className="h-3.5 w-3.5" />}
+              text={`Credentials (${scanMode === "whitebox" ? "Whitebox" : "Graybox"})`}
+            />
+            <GlowCard glowColor="#00D4FF" className="space-y-4 p-5">
+              <p className="font-mono text-[11px] leading-snug text-ink-muted">
+                Alle credentials worden versleuteld opgeslagen en alleen gebruikt tijdens de scan.
+              </p>
 
-            <div className="grid gap-3">
-              <div>
-                <label className="text-[11px] uppercase tracking-wider text-muted-foreground mb-1 block">Gebruikersnaam</label>
-                <Input value={username} onChange={e => setUsername(e.target.value)}
-                  placeholder="admin" className="text-[13px]" />
-              </div>
+              <Field label="Gebruikersnaam">
+                <input
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  placeholder="admin"
+                  className={inputCls}
+                />
+              </Field>
 
-              <div>
-                <label className="text-[11px] uppercase tracking-wider text-muted-foreground mb-1 block">Wachtwoord</label>
+              <Field label="Wachtwoord">
                 <div className="relative">
-                  <Input type={showPassword ? "text" : "password"}
-                    value={password} onChange={e => setPassword(e.target.value)}
-                    placeholder="••••••••" className="text-[13px] pr-10" />
-                  <button type="button" onClick={() => setShowPassword(v => !v)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className={`${inputCls} pr-10`}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((v) => !v)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-muted transition-colors hover:text-cyan"
+                  >
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 </div>
-              </div>
+              </Field>
 
-              <div>
-                <label className="text-[11px] uppercase tracking-wider text-muted-foreground mb-1 block">
-                  Bearer Token / API Key
-                </label>
-                <Input value={bearerToken} onChange={e => setBearerToken(e.target.value)}
-                  placeholder="eyJhbGci..." className="text-[13px] font-mono" />
-              </div>
+              <Field label="Bearer Token / API Key">
+                <input
+                  value={bearerToken}
+                  onChange={(e) => setBearerToken(e.target.value)}
+                  placeholder="eyJhbGci..."
+                  className={inputCls}
+                />
+              </Field>
 
               {scanMode === "whitebox" && (
-                <div>
-                  <label className="text-[11px] uppercase tracking-wider text-muted-foreground mb-1 block">
-                    SSH Private Key
-                  </label>
-                  <textarea value={sshKey} onChange={e => setSshKey(e.target.value)}
+                <Field label="SSH Private Key">
+                  <textarea
+                    value={sshKey}
+                    onChange={(e) => setSshKey(e.target.value)}
                     placeholder="-----BEGIN OPENSSH PRIVATE KEY-----"
                     rows={4}
-                    className="w-full rounded-md border bg-background px-3 py-2 text-[12px] font-mono focus:outline-none focus:ring-2 focus:ring-ring resize-none" />
-                </div>
+                    className={`${inputCls} resize-none`}
+                  />
+                </Field>
               )}
 
-              <div>
-                <label className="text-[11px] uppercase tracking-wider text-muted-foreground mb-1 block">
-                  Custom Headers (optioneel, één per regel: Header: Value)
-                </label>
-                <textarea value={customHeaders} onChange={e => setCustomHeaders(e.target.value)}
+              <Field label="Custom Headers (optioneel, één per regel: Header: Value)">
+                <textarea
+                  value={customHeaders}
+                  onChange={(e) => setCustomHeaders(e.target.value)}
                   placeholder={"X-Auth-Token: abc123\nX-Custom: value"}
                   rows={3}
-                  className="w-full rounded-md border bg-background px-3 py-2 text-[12px] font-mono focus:outline-none focus:ring-2 focus:ring-ring resize-none" />
-              </div>
-            </div>
+                  className={`${inputCls} resize-none`}
+                />
+              </Field>
+            </GlowCard>
 
-            <div className="flex gap-2 mt-4">
-              <Button variant="outline" onClick={prevStep} className="text-[12px] uppercase">
-                <ArrowLeft className="mr-2 h-4 w-4" />Terug
-              </Button>
-              <Button className="flex-1 text-[12px] uppercase" onClick={nextStep}>
-                Volgende <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+            <NavButtons onPrev={prevStep} onNext={nextStep} />
+          </motion.div>
+        )}
 
-      {/* ── Last step: Confirm ───────────────────────────────────────────────── */}
-      {step === lastStep && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-[11px] uppercase tracking-[0.1em] text-muted-foreground font-normal">
-              Bevestigen &amp; starten
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="border p-4 space-y-3 text-[12px]">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Target</span>
-                <span className="font-medium">{selectedTarget_obj?.hostname ?? selectedTarget_obj?.value ?? selectedTarget}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Doelwit type</span>
-                <span className="font-medium">{TARGET_TYPES.find(t => t.value === targetType)?.label}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Scan modus</span>
-                <span className={`font-medium ${
-                  scanMode === "blackbox" ? "text-red-500" :
-                  scanMode === "graybox" ? "text-yellow-500" : "text-green-500"
-                }`}>{SCAN_MODES.find(m => m.value === scanMode)?.label}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Scan type</span>
-                <span className="font-medium">{currentScanType?.label}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Fases</span>
-                <span className="font-medium">{selectedPhases.size} geselecteerd</span>
-              </div>
-              <div className="flex flex-wrap gap-1 mt-2">
-                {Array.from(selectedPhases).map(p => (
-                  <span key={p} className="text-[10px] bg-secondary border px-2 py-0.5 rounded">
-                    {PHASE_OPTIONS.find(o => o.value === p)?.label ?? p}
+        {/* ── Last step: Confirm & Launch ────────────────────────────────────── */}
+        {step === lastStep && (
+          <motion.div
+            key="step-confirm"
+            variants={panelVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            transition={{ duration: 0.25 }}
+            className="space-y-6"
+          >
+            <SectionLabel icon={<Rocket className="h-3.5 w-3.5" />} text="Bevestigen & starten" />
+            <GlowCard glowColor="#00FF88" accentBorder="#00D4FF" className="space-y-4 p-5">
+              <SummaryRow
+                label="Target"
+                value={selectedTarget_obj?.hostname ?? selectedTarget_obj?.value ?? selectedTarget}
+              />
+              <SummaryRow
+                label="Doelwit type"
+                value={TARGET_TYPES.find((t) => t.value === targetType)?.label ?? targetType}
+              />
+              <SummaryRow
+                label="Scan modus"
+                value={SCAN_MODES.find((m) => m.value === scanMode)?.label ?? scanMode}
+                valueClass={
+                  scanMode === "blackbox"
+                    ? "text-red-500"
+                    : scanMode === "graybox"
+                    ? "text-yellow-500"
+                    : "text-green-500"
+                }
+              />
+              <SummaryRow label="Scan type" value={currentScanType?.label ?? scanType} />
+              <SummaryRow label="Fases" value={`${selectedPhases.size} geselecteerd`} />
+              <SummaryRow label="Modules" value={`${selectedModules.size} geselecteerd`} />
+
+              <div className="flex flex-wrap gap-1 border-t border-grid pt-3">
+                {Array.from(selectedPhases).map((p) => (
+                  <span
+                    key={p}
+                    className="rounded border border-grid bg-app px-2 py-0.5 font-mono text-[10px] text-ink"
+                  >
+                    {PHASE_OPTIONS.find((o) => o.value === p)?.label ?? p}
                   </span>
                 ))}
               </div>
-              {scanMode !== "blackbox" && (username || password || bearerToken || sshKey) && (
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Credentials</span>
-                  <span className="flex items-center gap-1 text-green-500 font-medium">
-                    <Key className="h-3 w-3" />Ingesteld
-                  </span>
-                </div>
-              )}
-            </div>
 
-            <div className="flex gap-2">
-              <Button variant="outline" onClick={prevStep} className="text-[12px] uppercase">
-                <ArrowLeft className="mr-2 h-4 w-4" />Terug
-              </Button>
-              <Button className="flex-1 text-[12px] uppercase" onClick={handleCreate}
-                disabled={createScanMutation.isPending}>
-                <Shield className="mr-2 h-4 w-4" />
-                {createScanMutation.isPending ? "Bezig..." : "Scan Starten"}
-              </Button>
+              {scanMode !== "blackbox" && (username || password || bearerToken || sshKey) && (
+                <SummaryRow
+                  label="Credentials"
+                  value={
+                    <span className="flex items-center justify-end gap-1 text-green-500">
+                      <Key className="h-3 w-3" />Ingesteld
+                    </span>
+                  }
+                />
+              )}
+            </GlowCard>
+
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={prevStep}
+                className="flex items-center gap-2 rounded-lg border border-grid bg-card2 px-4 py-3 font-mono text-[12px] uppercase tracking-[0.1em] text-ink-muted transition-all duration-150 hover:border-cyan/50 hover:text-cyan active:scale-[0.98]"
+              >
+                <ArrowLeft className="h-4 w-4" />Terug
+              </button>
+              <motion.button
+                type="button"
+                onClick={handleCreate}
+                disabled={createScanMutation.isPending}
+                whileHover={{ scale: createScanMutation.isPending ? 1 : 1.02 }}
+                whileTap={{ scale: createScanMutation.isPending ? 1 : 0.98 }}
+                className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-cyan px-4 py-3 font-display text-[13px] font-bold uppercase tracking-[0.12em] text-app shadow-glow-cyan transition-colors duration-150 disabled:cursor-not-allowed disabled:opacity-70"
+              >
+                {createScanMutation.isPending ? (
+                  <>
+                    <motion.span
+                      animate={{ rotate: 360 }}
+                      transition={{ repeat: Infinity, duration: 0.8, ease: "linear" }}
+                      className="inline-flex"
+                    >
+                      <Rocket className="h-4 w-4" />
+                    </motion.span>
+                    Scan starten...
+                  </>
+                ) : (
+                  <>
+                    <Rocket className="h-4 w-4" />Launch Scan
+                  </>
+                )}
+              </motion.button>
             </div>
-          </CardContent>
-        </Card>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+// ── Small presentational helpers ───────────────────────────────────────────────
+
+const inputCls =
+  "w-full rounded-lg border border-grid bg-app px-3 py-2.5 font-mono text-[12px] text-ink outline-none transition-colors duration-150 placeholder:text-ink-muted/60 focus:border-cyan focus:ring-1 focus:ring-cyan";
+
+function SectionLabel({
+  icon,
+  text,
+  accent = "#00D4FF",
+}: {
+  icon: React.ReactNode;
+  text: string;
+  accent?: string;
+}) {
+  return (
+    <div className="flex items-center gap-2">
+      <span style={{ color: accent }}>{icon}</span>
+      <span className="font-mono text-[11px] uppercase tracking-[0.16em] text-ink-muted">{text}</span>
+    </div>
+  );
+}
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <label className="mb-1 block font-mono text-[10px] uppercase tracking-[0.12em] text-ink-muted">
+        {label}
+      </label>
+      {children}
+    </div>
+  );
+}
+
+function CheckBox({ checked, color }: { checked: boolean; color: string }) {
+  return (
+    <span
+      className="flex h-5 w-5 shrink-0 items-center justify-center rounded border transition-colors duration-150"
+      style={{
+        borderColor: checked ? color : "#0A2035",
+        background: checked ? color : "transparent",
+      }}
+    >
+      {checked && <Check className="h-3.5 w-3.5 text-app" />}
+    </span>
+  );
+}
+
+function SummaryRow({
+  label,
+  value,
+  valueClass = "text-ink",
+}: {
+  label: string;
+  value: React.ReactNode;
+  valueClass?: string;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-4">
+      <span className="font-mono text-[11px] uppercase tracking-[0.1em] text-ink-muted">{label}</span>
+      <span className={`text-right font-display text-[13px] font-semibold ${valueClass}`}>{value}</span>
+    </div>
+  );
+}
+
+function NavButtons({
+  onPrev,
+  onNext,
+  nextDisabled = false,
+}: {
+  onPrev?: () => void;
+  onNext: () => void;
+  nextDisabled?: boolean;
+}) {
+  return (
+    <div className="flex gap-3 pt-2">
+      {onPrev && (
+        <button
+          type="button"
+          onClick={onPrev}
+          className="flex items-center gap-2 rounded-lg border border-grid bg-card2 px-4 py-3 font-mono text-[12px] uppercase tracking-[0.1em] text-ink-muted transition-all duration-150 hover:border-cyan/50 hover:text-cyan active:scale-[0.98]"
+        >
+          <ArrowLeft className="h-4 w-4" />Terug
+        </button>
       )}
+      <motion.button
+        type="button"
+        onClick={onNext}
+        disabled={nextDisabled}
+        whileHover={{ scale: nextDisabled ? 1 : 1.02 }}
+        whileTap={{ scale: nextDisabled ? 1 : 0.98 }}
+        className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-cyan px-4 py-3 font-display text-[12px] font-bold uppercase tracking-[0.12em] text-app shadow-glow-cyan transition-colors duration-150 disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        Volgende <ArrowRight className="h-4 w-4" />
+      </motion.button>
     </div>
   );
 }
