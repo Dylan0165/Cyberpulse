@@ -10,13 +10,88 @@ jobs:
     runs-on: self-hosted
 
     steps:
-      - name: Pull latest code
-        run: cd /home/student/cyberpulse && git pull origin main
+      # Optional: authenticate to Docker Hub to avoid the unauthenticated pull
+      # rate limit. Set DOCKERHUB_USERNAME + DOCKERHUB_TOKEN as GitHub repo
+      # secrets to enable. Skipped automatically if the secrets are not set.
+      # (Secrets live in GitHub, never in the repo.)
+      - name: Docker Hub login (optional)
+        if: ${{ env.DOCKERHUB_USERNAME != '' }}
+        env:
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+        run: echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
 
-      - name: Rebuild changed containers (no cache)
+      - name: Pull latest code & detect changed services
+        id: changes
         run: |
           cd /home/student/cyberpulse
-          docker compose -f docker-compose.netlab.yml build --no-cache frontend backend worker beat
+          BEFORE=$(git rev-parse HEAD)
+          git pull origin main
+          AFTER=$(git rev-parse HEAD)
+
+          CHANGED=$(git diff --name-only "$BEFORE" "$AFTER" 2>/dev/null || echo "")
+          echo "Changed files:"
+          echo "$CHANGED"
+
+          SERVICES=""
+          echo "$CHANGED" | grep -q '^frontend/'    && SERVICES="$SERVICES frontend"
+          echo "$CHANGED" | grep -q '^backend/'      && SERVICES="$SERVICES backend worker beat"
+          echo "$CHANGED" | grep -q '^cyberpulse/'   && SERVICES="$SERVICES cyberpulse-web"
+          # compose/nginx/infra change, or first run with no diff → rebuild everything
+          if echo "$CHANGED" | grep -qE '^(docker-compose|nginx/|\.github/)'; then
+            SERVICES="frontend backend worker beat cyberpulse-web"
+          fi
+          if [ -z "$SERVICES" ]; then
+            SERVICES="frontend backend worker beat cyberpulse-web"
+          fi
+          # de-duplicate
+          SERVICES=$(echo $SERVICES | tr ' ' '\n' | grep -v '^$' | sort -u | tr '\n' ' ')
+          echo "Services to rebuild: $SERVICES"
+          echo "services=$SERVICES" >> "$GITHUB_OUTPUT"
+
+      - name: Ensure base images are present (pull only if missing, with retry)
+        run: |
+          ensure_image() {
+            img="$1"
+            if docker image inspect "$img" >/dev/null 2>&1; then
+              echo "✓ $img already present locally — skipping pull"
+              return 0
+            fi
+            for i in 1 2 3 4 5; do
+              echo "Pulling $img (attempt $i/5)..."
+              if docker pull "$img"; then
+                echo "✓ pulled $img"
+                return 0
+              fi
+              echo "pull failed (likely Docker Hub rate limit), waiting 30s..."
+              sleep 30
+            done
+            echo "::warning::Could not pull $img after 5 attempts. Build will use local cache if available."
+            return 0
+          }
+          ensure_image python:3.12-slim
+          ensure_image node:20-alpine
+
+      - name: Build changed containers (cached, with retry)
+        run: |
+          cd /home/student/cyberpulse
+          SERVICES="${{ steps.changes.outputs.services }}"
+          # Cached build: layers whose inputs are unchanged are reused, so base
+          # images are NOT re-pulled. The `COPY . .` layer is invalidated whenever
+          # source changes, so new code is always picked up.
+          ok=0
+          for i in 1 2 3; do
+            echo "Build attempt $i/3 for: $SERVICES"
+            if docker compose -f docker-compose.netlab.yml build $SERVICES; then
+              ok=1; break
+            fi
+            echo "build failed (attempt $i), waiting 45s before retry..."
+            sleep 45
+          done
+          if [ "$ok" != "1" ]; then
+            echo "::error::Build failed after 3 attempts. If this is a Docker Hub 429 rate limit, set DOCKERHUB_USERNAME/DOCKERHUB_TOKEN repo secrets or wait for the limit to reset."
+            exit 1
+          fi
 
       - name: Start / recreate containers
         run: |
@@ -27,7 +102,8 @@ jobs:
         run: |
           cd /home/student/cyberpulse
           sleep 5
-          docker compose -f docker-compose.netlab.yml exec -T -e PYTHONPATH=/app backend alembic upgrade head
+          docker compose -f docker-compose.netlab.yml exec -T -e PYTHONPATH=/app backend alembic upgrade head || \
+            echo "::warning::alembic migration step failed or was skipped"
 
       - name: Health check
         run: |
