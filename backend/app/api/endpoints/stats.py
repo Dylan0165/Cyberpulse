@@ -1,5 +1,6 @@
-"""Dashboard statistics endpoint — school project, no per-user filtering."""
+"""Dashboard statistics endpoint — per-account isolated."""
 
+import uuid
 from datetime import datetime, timezone, timedelta
 
 from fastapi import APIRouter, Depends
@@ -7,10 +8,13 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
-from app.core.auth import get_current_user
+from app.core.auth import get_current_user, get_optional_user
 from app.models.scan import Scan
+from app.models.user import User
 
 router = APIRouter()
+
+_STUDENT_USER_ID = uuid.UUID("00000000-0000-0000-0000-000000000001")
 
 
 def _risk_for_scan(scan: Scan) -> int:
@@ -29,9 +33,11 @@ def _risk_for_scan(scan: Scan) -> int:
 async def get_stats(
     db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(get_current_user),
+    auth_user: User | None = Depends(get_optional_user),
 ):
     try:
-        result = await db.execute(select(Scan))
+        owner = auth_user.id if auth_user is not None else _STUDENT_USER_ID
+        result = await db.execute(select(Scan).where(Scan.user_id == owner))
         scans = result.scalars().all()
 
         total_scans = len(scans)

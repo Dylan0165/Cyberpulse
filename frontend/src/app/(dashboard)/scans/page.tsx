@@ -23,7 +23,7 @@ export default function ScansPage() {
     const matchSearch =
       !search ||
       (s.scan_type ?? "").toLowerCase().includes(search.toLowerCase()) ||
-      (s.target_id ?? "").toLowerCase().includes(search.toLowerCase());
+      ((s.target_value ?? s.target_id ?? "")).toLowerCase().includes(search.toLowerCase());
     return matchStatus && matchSearch;
   });
 
@@ -128,14 +128,12 @@ export default function ScansPage() {
                   onClick={() => (window.location.href = `/scans/${scan.id}`)}
                 >
                   <td className="px-5 py-4">
-                    <p className="text-[14px] font-semibold">
+                    <p className="text-[14px] font-semibold font-mono">
+                      {scan.target_value ?? (scan.scan_type?.replace(/_/g, " ") ?? "scan")}
+                    </p>
+                    <p className="text-[12px] text-muted-foreground mt-0.5">
                       {scan.scan_type?.replace(/_/g, " ") ?? "scan"}
                     </p>
-                    {scan.target_id && (
-                      <p className="text-[12px] text-muted-foreground mt-0.5 font-mono">
-                        {scan.target_id}
-                      </p>
-                    )}
                   </td>
                   <td className="px-5 py-4">
                     <ModeBadge mode={scan.scan_mode} />

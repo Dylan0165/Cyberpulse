@@ -47,6 +47,8 @@ class ScanCreate(BaseModel):
 class ScanResponse(BaseModel):
     id: UUID
     target_id: UUID
+    target_value: str | None = None   # resolved IP/hostname for display
+    scan_mode: str | None = None
     scan_type: str
     phases: list[str]
     status: str

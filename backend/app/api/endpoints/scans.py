@@ -125,8 +125,11 @@ async def create_scan(
     if body.credentials:
         config["credentials"] = body.credentials
 
+    # Owner: the authenticated user if logged in, else the demo/student user.
+    owner_id = auth_user.id if auth_user is not None else user.id
+
     scan = Scan(
-        user_id=user.id,
+        user_id=owner_id,
         target_id=body.target_id,
         scan_type=body.scan_type,
         phases=phases,
@@ -148,22 +151,42 @@ async def create_scan(
     return scan
 
 
+async def _enrich_target_values(db: AsyncSession, scans: list) -> None:
+    """Attach a transient .target_value (IP/hostname) to each scan for display."""
+    target_ids = {s.target_id for s in scans if s.target_id}
+    if not target_ids:
+        return
+    res = await db.execute(select(Target).where(Target.id.in_(target_ids)))
+    tmap = {t.id: t.value for t in res.scalars().all()}
+    for s in scans:
+        s.target_value = tmap.get(s.target_id)
+
+
+def _owner_id(auth_user, student_id):
+    """Whose scans to show: the logged-in user, or the demo/student user."""
+    return auth_user.id if auth_user is not None else student_id
+
+
 @router.get("/", response_model=ScanListResponse)
 async def list_scans(
     page: int = 1,
     page_size: int = 20,
     db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(get_current_user),
+    auth_user: User | None = Depends(get_optional_user),
 ):
-    total = await db.scalar(select(func.count(Scan.id)))
+    owner = _owner_id(auth_user, _STUDENT_USER_ID)
+    total = await db.scalar(select(func.count(Scan.id)).where(Scan.user_id == owner))
     result = await db.execute(
         select(Scan)
+        .where(Scan.user_id == owner)
         .order_by(Scan.created_at.desc())
         .offset((page - 1) * page_size)
         .limit(page_size)
     )
     scans = result.scalars().all()
-    return ScanListResponse(scans=scans, total=total, page=page, page_size=page_size)
+    await _enrich_target_values(db, scans)
+    return ScanListResponse(scans=scans, total=total or 0, page=page, page_size=page_size)
 
 
 @router.get("/{scan_id}", response_model=ScanResponse)
@@ -171,11 +194,18 @@ async def get_scan(
     scan_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(get_current_user),
+    auth_user: User | None = Depends(get_optional_user),
 ):
     result = await db.execute(select(Scan).where(Scan.id == scan_id))
     scan = result.scalar_one_or_none()
     if not scan:
         raise HTTPException(status_code=404, detail="Scan not found")
+    # Ownership: a logged-in user may only see their own scans; the demo user
+    # sees the demo/student scans. Return 404 (not 403) to avoid leaking existence.
+    owner = _owner_id(auth_user, _STUDENT_USER_ID)
+    if scan.user_id != owner:
+        raise HTTPException(status_code=404, detail="Scan not found")
+    await _enrich_target_values(db, [scan])
     return scan
 
 

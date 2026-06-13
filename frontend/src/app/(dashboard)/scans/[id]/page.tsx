@@ -349,7 +349,7 @@ export default function ScanDetailPage() {
         {/* Left: target info */}
         <GlowCard className="flex flex-col justify-center p-6">
           <p className="font-mono text-[11px] uppercase tracking-widest text-ink-muted">target</p>
-          <p className="mt-1 break-all font-mono text-xl font-semibold text-ink">{scan.target_id ?? "—"}</p>
+          <p className="mt-1 break-all font-mono text-xl font-semibold text-ink">{scan.target_value ?? scan.target_id ?? "—"}</p>
           <div className="mt-3 flex flex-wrap items-center gap-2">
             <span className="rounded border border-grid bg-panel px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider text-cyan">
               {scan.scan_mode ?? "blackbox"}

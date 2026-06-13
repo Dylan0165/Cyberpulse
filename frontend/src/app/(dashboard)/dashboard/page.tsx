@@ -134,7 +134,7 @@ export default function DashboardPage() {
   // Globe targets
   const globeTargets = recentScans.slice(0, 12).map((s: any) => ({
     id: String(s.id ?? s.target_id ?? Math.random()),
-    label: (s.target_id ?? s.scan_type ?? "target").toString().replace(/_/g, " "),
+    label: (s.target_value ?? s.scan_type ?? "target").toString().replace(/_/g, " "),
     risk: riskScore(s),
   }));
 
@@ -250,9 +250,8 @@ export default function DashboardPage() {
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2">
                           <span className="truncate font-mono text-[13px] font-medium text-ink">
-                            {(scan.target_id ?? scan.scan_type ?? "scan")
-                              .toString()
-                              .replace(/_/g, " ")}
+                            {scan.target_value
+                              ?? (scan.scan_type ?? "scan").toString().replace(/_/g, " ")}
                           </span>
                           <RiskBadge severity={riskSeverity(score)} />
                         </div>

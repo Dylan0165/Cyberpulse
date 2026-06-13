@@ -6,6 +6,11 @@ const PUBLIC_ROUTES = ["/login", "/register", "/terms", "/onboarding"];
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
+  // Landing page is always public.
+  if (pathname === "/") {
+    return NextResponse.next();
+  }
+
   // Always allow public routes.
   if (PUBLIC_ROUTES.some((route) => pathname === route || pathname.startsWith(route + "/"))) {
     return NextResponse.next();
