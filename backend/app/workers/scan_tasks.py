@@ -13,6 +13,7 @@ from app.core.config import get_settings
 import app.models  # registers all models with SQLAlchemy before any query runs
 from app.models.scan import Scan
 from app.models.target import Target
+from app.models.scheduled_scan import ScheduledScan
 from app.services.tool_runner import ToolRunner, ScannerUnavailableError
 from app.workers.celery_app import celery_app
 
@@ -665,3 +666,81 @@ def run_scan(self, scan_id: str):
 def cleanup_containers():
     """No-op — kept for scheduler compatibility."""
     pass
+
+
+_SCHEDULE_INTERVALS = {
+    "daily":   60 * 60 * 24,
+    "weekly":  60 * 60 * 24 * 7,
+    "monthly": 60 * 60 * 24 * 30,
+}
+
+
+@celery_app.task(name="app.workers.scan_tasks.run_scheduled_scans")
+def run_scheduled_scans():
+    """Celery Beat runner — launch due scheduled scans (every 15 min).
+
+    Defensive: any missing piece is logged and skipped; the task never raises.
+    Only schedules whose target_ip maps to an existing Target (by value) are
+    processed; others are skipped (target lookup/create is out of scope).
+    """
+    from datetime import timedelta
+
+    try:
+        now = datetime.now(timezone.utc)
+        processed = 0
+
+        with Session(sync_engine) as db:
+            due = (
+                db.query(ScheduledScan)
+                .filter(
+                    ScheduledScan.is_active == True,  # noqa: E712
+                    ScheduledScan.next_run_at <= now,
+                )
+                .all()
+            )
+
+            for sched in due:
+                try:
+                    target = (
+                        db.query(Target)
+                        .filter(Target.value == sched.target_ip)
+                        .first()
+                    )
+                    if not target:
+                        logger.info(
+                            "Scheduled scan %s skipped — no Target matches value '%s'",
+                            sched.id, sched.target_ip,
+                        )
+                        continue
+
+                    phases = sched.phases or list(PHASE_NAMES)
+                    for mod in (sched.custom_modules or []):
+                        if mod not in phases:
+                            phases.append(mod)
+
+                    scan = Scan(
+                        status="pending",
+                        scan_type="full",
+                        phases=phases,
+                        scan_mode="blackbox",
+                        target_id=target.id,
+                        user_id=sched.user_id,
+                    )
+                    db.add(scan)
+                    db.commit()
+                    db.refresh(scan)
+
+                    run_scan.delay(str(scan.id))
+
+                    interval = _SCHEDULE_INTERVALS.get(sched.schedule_type, _SCHEDULE_INTERVALS["weekly"])
+                    sched.next_run_at = now + timedelta(seconds=interval)
+                    sched.last_run_at = now
+                    db.commit()
+                    processed += 1
+                except Exception as exc:
+                    logger.warning("Scheduled scan %s failed to launch: %s", getattr(sched, "id", "?"), exc)
+                    db.rollback()
+
+        logger.info("Scheduled scan runner: processed %d scans", processed)
+    except Exception as exc:
+        logger.error("Scheduled scan runner error: %s", exc)

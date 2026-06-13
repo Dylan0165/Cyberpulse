@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
+import Link from "next/link";
 import {
   User,
   Bell,
@@ -15,9 +16,13 @@ import {
   Plug,
   CheckCircle2,
   XCircle,
+  Copy,
+  LogIn,
   type LucideIcon,
 } from "lucide-react";
 import { GlowCard } from "@/components/cyber/glow-card";
+import { useAuth } from "@/contexts/auth-context";
+import { usersApi } from "@/lib/api";
 
 type TabId = "account" | "notifications" | "apikey" | "kali";
 
@@ -57,30 +62,54 @@ function PrimaryButton({
   );
 }
 
+function LoginPrompt({ message }: { message: string }) {
+  return (
+    <div className="flex flex-col items-start gap-4">
+      <p className="text-[13px] text-ink-muted">{message}</p>
+      <Link
+        href="/login"
+        className="inline-flex items-center gap-2 rounded-lg border border-cyan/40 bg-cyan/10 px-4 py-2 text-[13px] font-medium text-cyan transition-all hover:bg-cyan/20 hover:shadow-glow-cyan"
+      >
+        <LogIn className="h-4 w-4" />
+        Inloggen
+      </Link>
+    </div>
+  );
+}
+
 export default function SettingsPage() {
+  const { user, refresh } = useAuth();
   const [tab, setTab] = useState<TabId>("account");
 
-  // Account (UI-only)
-  const [account, setAccount] = useState({
-    name: "",
-    email: "",
-    company: "",
-  });
+  // Account
+  const [name, setName] = useState("");
+  const [company, setCompany] = useState("");
+  const [savingAccount, setSavingAccount] = useState(false);
 
-  // Notifications (UI-only)
+  // Notifications
   const [notifyOn, setNotifyOn] = useState(false);
   const [notifyEmail, setNotifyEmail] = useState("");
+  const [savingNotify, setSavingNotify] = useState(false);
 
-  // API key (UI-only)
+  // API key
   const [keyRevealed, setKeyRevealed] = useState(false);
-  const apiKey = "sk-a91f0c4d7e2b88f3a1d6e09c4b2f3f8a";
-  const maskedKey = "sk-••••••••••••3f8a";
+  const [newKey, setNewKey] = useState<string | null>(null);
+  const [regenerating, setRegenerating] = useState(false);
 
   // Kali VM
   const [kaliIp, setKaliIp] = useState("192.168.121.28");
   const [kaliPort, setKaliPort] = useState("5001");
   const [conn, setConn] = useState<"idle" | "testing" | "ok" | "fail">("idle");
   const [responseMs, setResponseMs] = useState<number | null>(null);
+
+  // Prefill form fields from the authenticated user.
+  useEffect(() => {
+    if (!user) return;
+    setName(user.name ?? "");
+    setCompany(user.company_name ?? "");
+    setNotifyOn(!!user.notify_on_complete);
+    setNotifyEmail(user.notification_email ?? "");
+  }, [user]);
 
   // Optional prefill of host/port from backend (graceful — ignore failures).
   useEffect(() => {
@@ -121,6 +150,72 @@ export default function SettingsPage() {
       setConn("fail");
     }
   }
+
+  async function saveAccount() {
+    setSavingAccount(true);
+    try {
+      await usersApi.updateMe({ name, company_name: company });
+      toast.success("Instellingen opgeslagen");
+      await refresh();
+    } catch {
+      toast.error("Kon instellingen niet opslaan");
+    } finally {
+      setSavingAccount(false);
+    }
+  }
+
+  async function saveNotifications() {
+    setSavingNotify(true);
+    try {
+      await usersApi.updateMe({
+        notify_on_complete: notifyOn,
+        notification_email: notifyEmail,
+      });
+      toast.success("Instellingen opgeslagen");
+      await refresh();
+    } catch {
+      toast.error("Kon instellingen niet opslaan");
+    } finally {
+      setSavingNotify(false);
+    }
+  }
+
+  async function regenerateKey() {
+    if (
+      !confirm(
+        "Weet u zeker dat u een nieuwe sleutel wilt genereren? De oude sleutel wordt ongeldig."
+      )
+    ) {
+      return;
+    }
+    setRegenerating(true);
+    try {
+      const res: any = await usersApi.regenerateApiKey();
+      const key = res?.data?.api_key ?? res?.data?.key ?? null;
+      setNewKey(key);
+      toast.success(
+        "Nieuwe sleutel gegenereerd — sla deze op, hij wordt niet opnieuw getoond"
+      );
+      await refresh();
+    } catch {
+      toast.error("Kon geen nieuwe sleutel genereren");
+    } finally {
+      setRegenerating(false);
+    }
+  }
+
+  async function copyKey(value: string) {
+    try {
+      await navigator.clipboard.writeText(value);
+      toast.success("Gekopieerd naar klembord");
+    } catch {
+      toast.error("Kopiëren mislukt");
+    }
+  }
+
+  const apiKeyMasked = user?.api_key
+    ? `sk-••••${user.api_key.slice(-4)}`
+    : "";
 
   return (
     <div className="space-y-8">
@@ -170,50 +265,48 @@ export default function SettingsPage() {
                 Accountgegevens
               </h2>
             </div>
-            <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-              <div>
-                <label className={labelCls}>Naam</label>
-                <input
-                  className={inputCls}
-                  value={account.name}
-                  onChange={(e) =>
-                    setAccount({ ...account, name: e.target.value })
-                  }
-                  placeholder="Jan Jansen"
-                />
-              </div>
-              <div>
-                <label className={labelCls}>E-mailadres</label>
-                <input
-                  className={inputCls}
-                  type="email"
-                  value={account.email}
-                  onChange={(e) =>
-                    setAccount({ ...account, email: e.target.value })
-                  }
-                  placeholder="jan@bedrijf.nl"
-                />
-              </div>
-              <div className="md:col-span-2">
-                <label className={labelCls}>Bedrijfsnaam</label>
-                <input
-                  className={inputCls}
-                  value={account.company}
-                  onChange={(e) =>
-                    setAccount({ ...account, company: e.target.value })
-                  }
-                  placeholder="CyberPulse B.V."
-                />
-              </div>
-            </div>
-            <div className="mt-6">
-              <PrimaryButton
-                onClick={() => toast.success("Instellingen opgeslagen")}
-              >
-                <Save className="h-4 w-4" />
-                Opslaan
-              </PrimaryButton>
-            </div>
+
+            {!user ? (
+              <LoginPrompt message="Log in om uw account te beheren" />
+            ) : (
+              <>
+                <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+                  <div>
+                    <label className={labelCls}>Naam</label>
+                    <input
+                      className={inputCls}
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder="Jan Jansen"
+                    />
+                  </div>
+                  <div>
+                    <label className={labelCls}>E-mailadres</label>
+                    <input
+                      className={`${inputCls} opacity-60`}
+                      type="email"
+                      value={user.email ?? ""}
+                      readOnly
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className={labelCls}>Bedrijfsnaam</label>
+                    <input
+                      className={inputCls}
+                      value={company}
+                      onChange={(e) => setCompany(e.target.value)}
+                      placeholder="CyberPulse B.V."
+                    />
+                  </div>
+                </div>
+                <div className="mt-6">
+                  <PrimaryButton onClick={saveAccount} disabled={savingAccount}>
+                    <Save className="h-4 w-4" />
+                    {savingAccount ? "Opslaan..." : "Opslaan"}
+                  </PrimaryButton>
+                </div>
+              </>
+            )}
           </GlowCard>
         </motion.div>
       )}
@@ -233,62 +326,68 @@ export default function SettingsPage() {
               </h2>
             </div>
 
-            <div className="flex items-center justify-between rounded-lg border border-grid bg-app px-4 py-3">
-              <div>
-                <div className="text-[13px] text-ink">
-                  E-mail bij voltooide scan
+            {!user ? (
+              <LoginPrompt message="Log in om uw notificaties te beheren" />
+            ) : (
+              <>
+                <div className="flex items-center justify-between rounded-lg border border-grid bg-app px-4 py-3">
+                  <div>
+                    <div className="text-[13px] text-ink">
+                      E-mail bij voltooide scan
+                    </div>
+                    <div className="text-[11px] text-ink-muted">
+                      Ontvang een bericht zodra een scan klaar is
+                    </div>
+                  </div>
+                  <button
+                    role="switch"
+                    aria-checked={notifyOn}
+                    onClick={() => setNotifyOn((v) => !v)}
+                    className={`relative h-6 w-11 rounded-full border transition-colors ${
+                      notifyOn
+                        ? "border-cyan bg-cyan/30"
+                        : "border-grid bg-card2"
+                    }`}
+                  >
+                    <motion.span
+                      layout
+                      transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                      className={`absolute top-1/2 h-4 w-4 -translate-y-1/2 rounded-full ${
+                        notifyOn
+                          ? "right-1 bg-cyan shadow-glow-cyan"
+                          : "left-1 bg-ink-muted"
+                      }`}
+                    />
+                  </button>
                 </div>
-                <div className="text-[11px] text-ink-muted">
-                  Ontvang een bericht zodra een scan klaar is
-                </div>
-              </div>
-              <button
-                role="switch"
-                aria-checked={notifyOn}
-                onClick={() => setNotifyOn((v) => !v)}
-                className={`relative h-6 w-11 rounded-full border transition-colors ${
-                  notifyOn
-                    ? "border-cyan bg-cyan/30"
-                    : "border-grid bg-card2"
-                }`}
-              >
-                <motion.span
-                  layout
-                  transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                  className={`absolute top-1/2 h-4 w-4 -translate-y-1/2 rounded-full ${
-                    notifyOn
-                      ? "right-1 bg-cyan shadow-glow-cyan"
-                      : "left-1 bg-ink-muted"
-                  }`}
-                />
-              </button>
-            </div>
 
-            {notifyOn && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                className="mt-5 overflow-hidden"
-              >
-                <label className={labelCls}>E-mailadres voor notificaties</label>
-                <input
-                  className={inputCls}
-                  type="email"
-                  value={notifyEmail}
-                  onChange={(e) => setNotifyEmail(e.target.value)}
-                  placeholder="alerts@bedrijf.nl"
-                />
-              </motion.div>
+                {notifyOn && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    className="mt-5 overflow-hidden"
+                  >
+                    <label className={labelCls}>
+                      E-mailadres voor notificaties
+                    </label>
+                    <input
+                      className={inputCls}
+                      type="email"
+                      value={notifyEmail}
+                      onChange={(e) => setNotifyEmail(e.target.value)}
+                      placeholder="alerts@bedrijf.nl"
+                    />
+                  </motion.div>
+                )}
+
+                <div className="mt-6">
+                  <PrimaryButton onClick={saveNotifications} disabled={savingNotify}>
+                    <Save className="h-4 w-4" />
+                    {savingNotify ? "Opslaan..." : "Opslaan"}
+                  </PrimaryButton>
+                </div>
+              </>
             )}
-
-            <div className="mt-6">
-              <PrimaryButton
-                onClick={() => toast.success("Instellingen opgeslagen")}
-              >
-                <Save className="h-4 w-4" />
-                Opslaan
-              </PrimaryButton>
-            </div>
           </GlowCard>
         </motion.div>
       )}
@@ -308,47 +407,70 @@ export default function SettingsPage() {
               </h2>
             </div>
 
-            <label className={labelCls}>Uw sleutel</label>
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-              <code className="flex-1 select-all rounded-lg border border-grid bg-app px-3 py-2 font-mono text-[13px] text-neon-green">
-                {keyRevealed ? apiKey : maskedKey}
-              </code>
-              <button
-                onClick={() => setKeyRevealed((v) => !v)}
-                className="inline-flex items-center justify-center gap-2 rounded-lg border border-grid bg-card2 px-4 py-2 text-[12px] text-ink-muted transition-colors hover:border-cyan/40 hover:text-ink"
-              >
-                {keyRevealed ? (
-                  <>
-                    <EyeOff className="h-4 w-4" /> Verberg
-                  </>
-                ) : (
-                  <>
-                    <Eye className="h-4 w-4" /> Toon sleutel
-                  </>
+            {!user ? (
+              <LoginPrompt message="Log in om uw API-sleutel te beheren" />
+            ) : (
+              <>
+                <label className={labelCls}>Uw sleutel</label>
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                  <code className="flex-1 select-all rounded-lg border border-grid bg-app px-3 py-2 font-mono text-[13px] text-neon-green">
+                    {user.api_key
+                      ? keyRevealed
+                        ? user.api_key
+                        : apiKeyMasked
+                      : "Geen sleutel ingesteld"}
+                  </code>
+                  {user.api_key && (
+                    <button
+                      onClick={() => setKeyRevealed((v) => !v)}
+                      className="inline-flex items-center justify-center gap-2 rounded-lg border border-grid bg-card2 px-4 py-2 text-[12px] text-ink-muted transition-colors hover:border-cyan/40 hover:text-ink"
+                    >
+                      {keyRevealed ? (
+                        <>
+                          <EyeOff className="h-4 w-4" /> Verberg
+                        </>
+                      ) : (
+                        <>
+                          <Eye className="h-4 w-4" /> Toon sleutel
+                        </>
+                      )}
+                    </button>
+                  )}
+                </div>
+
+                {newKey && (
+                  <div className="mt-4 rounded-lg border border-cyan/40 bg-cyan/5 p-4">
+                    <p className="mb-2 text-[12px] text-cyan">
+                      Nieuwe sleutel — sla deze nu op, hij wordt niet opnieuw
+                      getoond:
+                    </p>
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                      <code className="flex-1 select-all break-all rounded-lg border border-grid bg-app px-3 py-2 font-mono text-[13px] text-neon-green">
+                        {newKey}
+                      </code>
+                      <button
+                        onClick={() => copyKey(newKey)}
+                        className="inline-flex items-center justify-center gap-2 rounded-lg border border-grid bg-card2 px-4 py-2 text-[12px] text-ink-muted transition-colors hover:border-cyan/40 hover:text-ink"
+                      >
+                        <Copy className="h-4 w-4" /> Kopieer
+                      </button>
+                    </div>
+                  </div>
                 )}
-              </button>
-            </div>
 
-            <p className="mt-3 text-[12px] text-ink-muted">
-              Gebruik deze sleutel voor programmatische toegang tot CyberPulse.
-            </p>
+                <p className="mt-3 text-[12px] text-ink-muted">
+                  Gebruik deze sleutel voor programmatische toegang tot
+                  CyberPulse.
+                </p>
 
-            <div className="mt-6">
-              <PrimaryButton
-                onClick={() => {
-                  if (
-                    confirm(
-                      "Weet u zeker dat u een nieuwe sleutel wilt genereren? De oude sleutel wordt ongeldig."
-                    )
-                  ) {
-                    toast.success("Nieuwe sleutel gegenereerd");
-                  }
-                }}
-              >
-                <RefreshCw className="h-4 w-4" />
-                Genereer nieuwe sleutel
-              </PrimaryButton>
-            </div>
+                <div className="mt-6">
+                  <PrimaryButton onClick={regenerateKey} disabled={regenerating}>
+                    <RefreshCw className="h-4 w-4" />
+                    {regenerating ? "Genereren..." : "Genereer nieuwe sleutel"}
+                  </PrimaryButton>
+                </div>
+              </>
+            )}
           </GlowCard>
         </motion.div>
       )}

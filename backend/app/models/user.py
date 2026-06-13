@@ -30,6 +30,18 @@ class User(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
+    # Real authentication + commercial fields (migration 0003)
+    name: Mapped[str | None] = mapped_column(String(255))
+    company_name: Mapped[str | None] = mapped_column(String(255))
+    password_hash: Mapped[str | None] = mapped_column(String(255))
+    api_key: Mapped[str | None] = mapped_column(String(255), index=True)
+    terms_accepted: Mapped[bool] = mapped_column(Boolean, server_default="false", default=False)
+    terms_accepted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    terms_version: Mapped[str | None] = mapped_column(String(20))
+    onboarding_completed: Mapped[bool] = mapped_column(Boolean, server_default="false", default=False)
+    notify_on_complete: Mapped[bool] = mapped_column(Boolean, server_default="false", default=False)
+    notification_email: Mapped[str | None] = mapped_column(String(320))
+
     # Relationships
     targets = relationship("Target", back_populates="user", cascade="all, delete-orphan")
     scans = relationship("Scan", back_populates="user", cascade="all, delete-orphan")

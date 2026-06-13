@@ -2,10 +2,27 @@ import axios from "axios";
 
 const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_BACKEND_URL || "/api",
+  withCredentials: true,
   headers: {
     "Content-Type": "application/json",
   },
 });
+
+// ── Auth ──────────────────────────────────────────────────────────────────────
+export const authApi = {
+  register: (d: any) => api.post("/auth/register", d),
+  login: (d: any) => api.post("/auth/login", d),
+  logout: () => api.post("/auth/logout"),
+  me: () => api.get("/auth/me"),
+  completeOnboarding: () => api.post("/auth/complete-onboarding"),
+  acceptTerms: (version = "1.0") => api.post("/auth/accept-terms", { version }),
+};
+
+// ── Users ─────────────────────────────────────────────────────────────────────
+export const usersApi = {
+  updateMe: (d: any) => api.patch("/users/me", d),
+  regenerateApiKey: () => api.post("/users/me/regenerate-api-key"),
+};
 
 // API functions
 export const targetsApi = {
@@ -13,6 +30,8 @@ export const targetsApi = {
   get: (id: string) => api.get(`/targets/${id}`),
   create: (data: any) => api.post("/targets", data),
   delete: (id: string) => api.delete(`/targets/${id}`),
+  verify: (id: string, method: "dns" | "file" = "dns") =>
+    api.post(`/targets/${id}/verify`, { method }),
 };
 
 export const scansApi = {
@@ -71,11 +90,12 @@ export const assetsApi = {
 
 // ── Schedules ─────────────────────────────────────────────────────────────────
 export const schedulesApi = {
-  list: (): Promise<any[]> => api.get('/schedules').then(r => r.data).catch(() => []),
-  create: (data: any): Promise<any> => api.post('/schedules', data).then(r => r.data),
-  remove: (id: string): Promise<void> => api.delete(`/schedules/${id}`).then(() => {}),
-  toggle: (id: string, enabled: boolean): Promise<any> =>
-    api.patch(`/schedules/${id}/toggle?enabled=${enabled}`).then(r => r.data),
+  list: (): Promise<any[]> => api.get('/schedule').then(r => r.data).catch(() => []),
+  create: (data: any): Promise<any> => api.post('/schedule', data).then(r => r.data),
+  remove: (id: string): Promise<void> => api.delete(`/schedule/${id}`).then(() => {}),
+  // Backend PATCH /schedule/{id} toggles is_active (no query param needed)
+  toggle: (id: string, _enabled?: boolean): Promise<any> =>
+    api.patch(`/schedule/${id}`).then(r => r.data),
 };
 
 // ── AI Chat ───────────────────────────────────────────────────────────────────

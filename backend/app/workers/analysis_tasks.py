@@ -12,6 +12,7 @@ from app.core.config import get_settings
 import app.models  # registers all models with SQLAlchemy before any query runs
 from app.models.scan import Scan
 from app.models.target import Target
+from app.models.notification import Notification
 from app.services.ai_analysis import analyze_scan_sync_streaming
 from app.workers.celery_app import celery_app
 
@@ -138,6 +139,22 @@ def analyze_scan(self, scan_id: str):
             scan_id, report.get("risk_level"), report.get("risk_score"),
             len(report.get("findings", [])),
         )
+
+        # Create an in-app notification for the scan owner (best-effort).
+        # A notification failure must never break the analysis result.
+        try:
+            notif = Notification(
+                user_id=scan.user_id,
+                type="scan_complete",
+                title="Scan voltooid",
+                message=f"Scan van {target_obj.value} voltooid — {report.get('risk_score', 0)}/100",
+                scan_id=scan.id,
+                is_read=False,
+            )
+            db.add(notif)
+            db.commit()
+        except Exception as exc:
+            logger.warning("Scan-complete notification skipped: %s", exc)
 
         # Best-effort email notification. Gated on NOTIFY_EMAIL env var so it is
         # fully optional; the email service itself no-ops without SMTP config.

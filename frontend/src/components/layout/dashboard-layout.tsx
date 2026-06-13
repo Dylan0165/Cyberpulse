@@ -3,8 +3,13 @@
 import { Sidebar, MobileNav } from "./sidebar";
 import { HeaderBell } from "./header-bell";
 import { PageTransition } from "@/components/cyber/page-transition";
+import { TermsModal } from "@/components/cyber/terms-modal";
+import { useAuth } from "@/contexts/auth-context";
 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
+  const { user, refresh } = useAuth();
+  const mustAcceptTerms = user != null && user.terms_accepted === false;
+
   return (
     <div className="flex h-screen overflow-hidden bg-app">
       <Sidebar />
@@ -18,6 +23,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
         </div>
       </main>
       <MobileNav />
+      {mustAcceptTerms && <TermsModal open onAccepted={refresh} />}
     </div>
   );
 }

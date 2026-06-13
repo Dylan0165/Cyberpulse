@@ -139,6 +139,82 @@ async def delete_target(
     return {"message": "Target deleted"}
 
 
+@router.post("/{target_id}/verify")
+async def verify_target(
+    target_id: uuid.UUID,
+    body: dict,
+    db: AsyncSession = Depends(get_db),
+    current_user: dict = Depends(get_current_user),
+):
+    """Verify ownership via DNS TXT record or a well-known file.
+    Private/loopback IPs are auto-verified (internal/demo scans)."""
+    import ipaddress
+
+    result = await db.execute(select(Target).where(Target.id == target_id))
+    target = result.scalar_one_or_none()
+    if not target:
+        raise HTTPException(status_code=404, detail="Doel niet gevonden")
+
+    host = (target.value or "").strip()
+    if "://" in host:
+        host = host.split("://", 1)[1]
+    host = host.split("/")[0].split(":")[0]
+
+    # Private IP → auto-verify
+    try:
+        ip_obj = ipaddress.ip_address(host)
+        if ip_obj.is_private or ip_obj.is_loopback:
+            target.is_verified = True
+            target.verified_at = datetime.now(timezone.utc)
+            target.verification_method = "private_ip"
+            await db.commit()
+            return {"verified": True}
+    except ValueError:
+        pass
+
+    token = target.verification_token
+    if not token:
+        import secrets as _secrets
+        token = _secrets.token_hex(16)
+        target.verification_token = token
+        await db.commit()
+        await db.refresh(target)
+
+    method = (body or {}).get("method", "dns")
+
+    if method == "dns":
+        try:
+            import dns.resolver
+            answers = dns.resolver.resolve(host, "TXT")
+            for ans in answers:
+                if f"cyberpulse-verify={token}" in str(ans):
+                    target.is_verified = True
+                    target.verified_at = datetime.now(timezone.utc)
+                    target.verification_method = "dns_txt"
+                    await db.commit()
+                    return {"verified": True}
+        except Exception:
+            pass
+        raise HTTPException(status_code=400, detail="DNS-record niet gevonden. Controleer of het TXT-record correct is ingesteld en probeer opnieuw.")
+
+    if method == "file":
+        try:
+            import httpx
+            async with httpx.AsyncClient(timeout=10.0, verify=False) as client:
+                resp = await client.get(f"http://{host}/.well-known/cyberpulse-verify.txt")
+            if resp.status_code == 200 and token in resp.text:
+                target.is_verified = True
+                target.verified_at = datetime.now(timezone.utc)
+                target.verification_method = "file_upload"
+                await db.commit()
+                return {"verified": True}
+        except Exception:
+            pass
+        raise HTTPException(status_code=400, detail="Bestand niet gevonden of onjuiste inhoud. Controleer en probeer opnieuw.")
+
+    raise HTTPException(status_code=400, detail="Onbekende verificatiemethode")
+
+
 def _target_dict(t: Target) -> dict:
     """Serialize a Target to a plain dict the frontend can consume."""
     return {

@@ -19,6 +19,9 @@ from app.api.endpoints import (
     scanner,
     stats,
     settings as settings_routes,
+    auth,
+    notifications,
+    schedule,
 )
 
 logging.basicConfig(level=logging.INFO)
@@ -67,6 +70,9 @@ app.include_router(tools.router, prefix="/api")
 app.include_router(scanner.router, prefix="/api")
 app.include_router(stats.router, prefix="/api")
 app.include_router(settings_routes.router, prefix="/api")
+app.include_router(auth.router, prefix="/api")
+app.include_router(notifications.router, prefix="/api")
+app.include_router(schedule.router, prefix="/api")
 
 # WebSocket Routes
 app.include_router(websocket.router)

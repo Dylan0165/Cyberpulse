@@ -8,8 +8,27 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
+import ipaddress
+import secrets as _secrets
+
 from app.core.database import get_db
-from app.core.auth import get_current_user, get_client_ip
+from app.core.auth import get_current_user, get_client_ip, get_optional_user
+from app.models.user import User
+
+
+def _is_private_target(value: str) -> bool:
+    """Private/loopback IPs are auto-verified (internal/demo scans never blocked).
+    Domain names and public IPs are NOT auto-verified."""
+    host = (value or "").strip()
+    # strip scheme/path if a URL was stored
+    if "://" in host:
+        host = host.split("://", 1)[1]
+    host = host.split("/")[0].split(":")[0]
+    try:
+        ip = ipaddress.ip_address(host)
+        return ip.is_private or ip.is_loopback
+    except ValueError:
+        return False
 from app.core.redis import get_redis
 from app.models.scan import Scan
 from app.models.target import Target
@@ -56,6 +75,7 @@ async def create_scan(
     request: Request,
     db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(get_current_user),
+    auth_user: User | None = Depends(get_optional_user),
 ):
     user = await _student_user(db)
 
@@ -64,6 +84,26 @@ async def create_scan(
     target = result.scalar_one_or_none()
     if not target:
         raise HTTPException(status_code=404, detail="Target not found")
+
+    # ── Terms enforcement — only for real authenticated users (demo unaffected) ──
+    if auth_user is not None and not getattr(auth_user, "terms_accepted", False):
+        raise HTTPException(status_code=403, detail={
+            "error": "terms_not_accepted",
+            "message": "U moet de gebruiksvoorwaarden accepteren voordat u een scan kunt uitvoeren",
+        })
+
+    # ── Ownership verification — public targets only; private IPs auto-verified ──
+    if not _is_private_target(target.value) and not target.is_verified:
+        if not target.verification_token:
+            target.verification_token = _secrets.token_hex(16)
+            await db.commit()
+            await db.refresh(target)
+        raise HTTPException(status_code=403, detail={
+            "error": "verification_required",
+            "target_id": str(target.id),
+            "token": target.verification_token,
+            "message": "Verifieer eigendom van dit systeem voordat u een scan start",
+        })
 
     # Determine Kali phases from preset, then append any custom modules
     # from body.phases so user-selected m09-m14 are never dropped.

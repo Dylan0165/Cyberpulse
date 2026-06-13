@@ -15,6 +15,8 @@ from app.models.user import User
 from app.models.target import Target
 from app.models.scan import Scan
 from app.models.legal import NDAAcceptance, AuditLog
+from app.models.notification import Notification
+from app.models.scheduled_scan import ScheduledScan
 
 config = context.config
 settings = get_settings()

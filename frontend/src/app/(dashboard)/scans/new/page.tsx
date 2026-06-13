@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { GlowCard } from "@/components/cyber/glow-card";
+import { VerificationModal } from "@/components/cyber/verification-modal";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -136,6 +137,15 @@ function NewScanContent() {
   ];
   const lastStep = STEPS[STEPS.length - 1].n;
 
+  // Verification flow state (set when backend returns 403 verification_required)
+  const [verification, setVerification] = useState<{
+    targetId: string;
+    token: string;
+    domain: string;
+  } | null>(null);
+  // Last payload sent — kept so we can retry after successful verification
+  const [lastPayload, setLastPayload] = useState<any>(null);
+
   const { data: targets } = useQuery({
     queryKey: ["targets"],
     queryFn: dashboardApi.listTargets,
@@ -149,7 +159,32 @@ function NewScanContent() {
       router.push(`/scans/${res.data.id}`);
     },
     onError: (err: any) => {
-      toast.error(err?.response?.data?.detail ?? "Scan aanmaken mislukt");
+      const detail = err?.response?.data?.detail;
+      if (err?.response?.status === 403 && detail && typeof detail === "object") {
+        if (detail.error === "verification_required") {
+          const target_obj = allTargets.find((t: any) => t.id === selectedTarget);
+          const domain =
+            target_obj?.hostname ??
+            target_obj?.value ??
+            detail.target_id ??
+            selectedTarget;
+          setVerification({
+            targetId: detail.target_id ?? selectedTarget,
+            token: detail.token ?? "",
+            domain,
+          });
+          return;
+        }
+        if (detail.error === "terms_not_accepted") {
+          toast.error(detail.message ?? "Accepteer eerst de gebruiksvoorwaarden");
+          return;
+        }
+        toast.error(detail.message ?? "Scan aanmaken mislukt");
+        return;
+      }
+      toast.error(
+        (typeof detail === "string" ? detail : null) ?? "Scan aanmaken mislukt"
+      );
     },
   });
 
@@ -161,7 +196,7 @@ function NewScanContent() {
     if (bearerToken)    creds.bearer_token   = bearerToken;
     if (customHeaders)  creds.custom_headers = customHeaders;
 
-    createScanMutation.mutate({
+    const payload = {
       target_id:   selectedTarget,
       scan_type:   scanType,
       // Kali phases + selected custom modules combined into one list
@@ -169,7 +204,16 @@ function NewScanContent() {
       scan_mode:   scanMode,
       target_type: targetType,
       credentials: creds,
-    });
+    };
+    setLastPayload(payload);
+    createScanMutation.mutate(payload);
+  };
+
+  const handleVerified = () => {
+    setVerification(null);
+    if (lastPayload) {
+      createScanMutation.mutate(lastPayload);
+    }
   };
 
   // When scan type changes, update default phases
@@ -747,6 +791,17 @@ function NewScanContent() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {verification && (
+        <VerificationModal
+          open
+          targetId={verification.targetId}
+          token={verification.token}
+          domain={verification.domain}
+          onVerified={handleVerified}
+          onClose={() => setVerification(null)}
+        />
+      )}
     </div>
   );
 }

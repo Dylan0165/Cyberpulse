@@ -41,5 +41,9 @@ celery_app.conf.update(
             "task": "app.workers.scan_tasks.cleanup_containers",
             "schedule": crontab(minute="*/15"),
         },
+        "run-scheduled-scans": {
+            "task": "app.workers.scan_tasks.run_scheduled_scans",
+            "schedule": crontab(minute="*/15"),
+        },
     },
 )

@@ -1,11 +1,12 @@
 """User account endpoints and Clerk webhook handler."""
 
 from fastapi import APIRouter, Depends, HTTPException, Request
+from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
-from app.core.auth import get_current_user, get_client_ip
+from app.core.auth import get_current_user, get_client_ip, get_required_user
 from app.models.user import User
 from app.schemas.user import UserResponse
 from app.services.audit import log_action
@@ -14,9 +15,64 @@ from app.core.config import get_settings
 import hashlib
 import hmac
 import json
+import secrets
 
 router = APIRouter(prefix="/users", tags=["users"])
 settings = get_settings()
+
+
+def _user_dict(u: User) -> dict:
+    return {
+        "id": str(u.id),
+        "email": u.email,
+        "name": u.name or u.full_name,
+        "company_name": u.company_name or u.company,
+        "api_key": u.api_key,
+        "terms_accepted": u.terms_accepted,
+        "terms_accepted_at": u.terms_accepted_at.isoformat() if u.terms_accepted_at else None,
+        "onboarding_completed": u.onboarding_completed,
+        "notify_on_complete": u.notify_on_complete,
+        "notification_email": u.notification_email,
+        "plan": u.plan,
+        "created_at": u.created_at.isoformat() if u.created_at else None,
+    }
+
+
+class UpdateMeBody(BaseModel):
+    name: str | None = None
+    company_name: str | None = None
+    notify_on_complete: bool | None = None
+    notification_email: str | None = None
+
+
+@router.patch("/me")
+async def update_me(
+    body: UpdateMeBody,
+    user: User = Depends(get_required_user),
+    db: AsyncSession = Depends(get_db),
+):
+    data = body.model_dump(exclude_unset=True)
+    if "name" in data:
+        user.name = data["name"]
+    if "company_name" in data:
+        user.company_name = data["company_name"]
+    if "notify_on_complete" in data:
+        user.notify_on_complete = data["notify_on_complete"]
+    if "notification_email" in data:
+        user.notification_email = data["notification_email"]
+    await db.commit()
+    await db.refresh(user)
+    return _user_dict(user)
+
+
+@router.post("/me/regenerate-api-key")
+async def regenerate_api_key(
+    user: User = Depends(get_required_user),
+    db: AsyncSession = Depends(get_db),
+):
+    user.api_key = secrets.token_hex(32)
+    await db.commit()
+    return {"api_key": user.api_key}
 
 
 @router.get("/me", response_model=UserResponse)
