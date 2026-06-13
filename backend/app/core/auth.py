@@ -37,18 +37,21 @@ _MOCK_USER = {
 
 
 # ── Password hashing ────────────────────────────────────────────────────────
+# Use the `bcrypt` library directly. passlib 1.7.4 + bcrypt 4.x is a well-known
+# source of runtime errors (reads removed bcrypt.__about__), so we avoid passlib.
+# bcrypt has a hard 72-byte input limit — truncate before hashing/verifying.
 
 def hash_password(password: str) -> str:
-    from passlib.context import CryptContext
-    ctx = CryptContext(schemes=["bcrypt"], deprecated="auto")
-    return ctx.hash(password)
+    import bcrypt
+    pw = (password or "").encode("utf-8")[:72]
+    return bcrypt.hashpw(pw, bcrypt.gensalt()).decode("utf-8")
 
 
 def verify_password(password: str, password_hash: str) -> bool:
     try:
-        from passlib.context import CryptContext
-        ctx = CryptContext(schemes=["bcrypt"], deprecated="auto")
-        return ctx.verify(password, password_hash)
+        import bcrypt
+        pw = (password or "").encode("utf-8")[:72]
+        return bcrypt.checkpw(pw, (password_hash or "").encode("utf-8"))
     except Exception:
         return False
 
