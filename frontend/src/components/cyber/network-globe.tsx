@@ -37,7 +37,7 @@ function GlobeScene({ targets }: { targets: GlobeTarget[] }) {
 
   useFrame((_, delta) => {
     if (group.current && !hovered) {
-      group.current.rotation.y += delta * 0.12;
+      group.current.rotation.y += delta * 0.06; // 50% slower, more restrained
     }
   });
 
@@ -55,7 +55,7 @@ function GlobeScene({ targets }: { targets: GlobeTarget[] }) {
       {/* Wireframe sphere */}
       <mesh>
         <sphereGeometry args={[radius, 32, 32]} />
-        <meshBasicMaterial color="#0A2035" wireframe transparent opacity={0.5} />
+        <meshBasicMaterial color="#0D1F35" wireframe transparent opacity={0.08} />
       </mesh>
       <mesh>
         <sphereGeometry args={[radius * 0.99, 32, 32]} />

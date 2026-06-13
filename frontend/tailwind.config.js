@@ -9,9 +9,10 @@ module.exports = {
         app:    "#020408",
         panel:  "#050D14",
         card2:  "#080F18",
-        cyan:   "#00D4FF",
+        cyan:   "#00B4D8",
+        "cyan-bright": "#00D4FF",
         neon: {
-          cyan:   "#00D4FF",
+          cyan:   "#00B4D8",
           green:  "#00FF88",
           red:    "#FF2D55",
           orange: "#FF8C00",
@@ -22,7 +23,8 @@ module.exports = {
           DEFAULT: "#E8F4F8",
           muted:   "#4A6880",
         },
-        grid: "#0A2035",
+        grid: "#0D1F35",
+        "grid-subtle": "#080F1C",
 
         // shadcn token bridge (existing ui/* components)
         border: "hsl(var(--border-hsl))",
@@ -66,9 +68,9 @@ module.exports = {
         sm: "calc(var(--radius) - 4px)",
       },
       boxShadow: {
-        "glow-cyan": "0 0 20px rgba(0, 212, 255, 0.3)",
-        "glow-red": "0 0 20px rgba(255, 45, 85, 0.3)",
-        "glow-green": "0 0 20px rgba(0, 255, 136, 0.25)",
+        "glow-cyan": "0 0 12px rgba(0, 180, 216, 0.15)",
+        "glow-red": "0 0 12px rgba(255, 45, 85, 0.15)",
+        "glow-green": "0 0 12px rgba(0, 255, 136, 0.15)",
       },
     },
   },

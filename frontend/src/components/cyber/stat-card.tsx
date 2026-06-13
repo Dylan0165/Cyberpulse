@@ -9,10 +9,11 @@ export function StatCard({
   label,
   value,
   icon: Icon,
-  color = "#00D4FF",
+  color = "#00B4D8",
   trend,
   index = 0,
   suffix = "",
+  accent,
 }: {
   label: string;
   value: number;
@@ -21,17 +22,18 @@ export function StatCard({
   trend?: string;
   index?: number;
   suffix?: string;
+  accent?: string;
 }) {
   const animated = useCountUp(value, 1200);
   const display = Number.isInteger(value) ? Math.round(animated) : animated.toFixed(1);
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 16 }}
+      initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.08, duration: 0.4, ease: "easeOut" }}
+      transition={{ delay: index * 0.06, duration: 0.3, ease: "easeOut" }}
     >
-      <GlowCard glowColor={color} className="p-5">
+      <GlowCard accentBorder={accent} className="p-5">
         <div className="flex items-start justify-between">
           <span className="text-[11px] font-medium uppercase tracking-wider text-ink-muted">
             {label}

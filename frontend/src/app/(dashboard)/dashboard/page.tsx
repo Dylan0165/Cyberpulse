@@ -182,6 +182,7 @@ export default function DashboardPage() {
             value={statCriticalOpen}
             icon={AlertTriangle}
             color="#FF2D55"
+            accent={statCriticalOpen > 0 ? "#FF2D55" : undefined}
             index={2}
           />
           <StatCard

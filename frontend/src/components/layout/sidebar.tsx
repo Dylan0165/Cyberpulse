@@ -54,8 +54,8 @@ export function Sidebar() {
       {/* Logo */}
       <div className="flex h-16 items-center gap-3 px-[18px]">
         <div className="relative flex h-7 w-7 flex-shrink-0 items-center justify-center">
-          <Shield className="h-6 w-6 text-cyan" style={{ filter: "drop-shadow(0 0 6px #00D4FF88)" }} />
-          <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-neon-green animate-pulse-dot" />
+          <Shield className="h-6 w-6 text-cyan" />
+          <span className="absolute -right-0.5 -top-0.5 h-1.5 w-1.5 rounded-full bg-neon-green" />
         </div>
         {expanded && (
           <motion.span
@@ -79,20 +79,17 @@ export function Sidebar() {
               href={item.href}
               className="group relative flex h-10 items-center gap-3 rounded-md px-3 transition-colors"
               style={{
-                background: active ? "rgba(0,212,255,0.08)" : "transparent",
-                color: active ? "#00D4FF" : "#4A6880",
+                background: active ? "rgba(0,180,216,0.05)" : "transparent",
+                color: active ? "#00B4D8" : "#4A6880",
+                opacity: active ? 1 : 0.7,
               }}
-              onMouseEnter={(e) => {
-                if (!active) e.currentTarget.style.background = "rgba(0,212,255,0.05)";
-              }}
-              onMouseLeave={(e) => {
-                if (!active) e.currentTarget.style.background = "transparent";
-              }}
+              onMouseEnter={(e) => { if (!active) e.currentTarget.style.opacity = "1"; }}
+              onMouseLeave={(e) => { if (!active) e.currentTarget.style.opacity = "0.7"; }}
             >
               {active && (
                 <span
-                  className="absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-r"
-                  style={{ background: "#00D4FF", boxShadow: "0 0 8px #00D4FF" }}
+                  className="absolute left-0 top-1/2 h-6 w-[2px] -translate-y-1/2"
+                  style={{ background: "#00B4D8" }}
                 />
               )}
               <Icon className="h-[18px] w-[18px] flex-shrink-0 transition-colors group-hover:text-cyan" />
@@ -118,7 +115,7 @@ export function Sidebar() {
       <div className="border-t border-grid px-3 py-4">
         <div className="flex items-center gap-2.5">
           <span
-            className={`h-2 w-2 flex-shrink-0 rounded-full ${kaliOnline ? "animate-pulse-dot" : ""}`}
+            className="h-1.5 w-1.5 flex-shrink-0 rounded-full"
             style={{ background: kaliOnline === null ? "#FF8C00" : kaliOnline ? "#00FF88" : "#FF2D55" }}
           />
           {expanded && (

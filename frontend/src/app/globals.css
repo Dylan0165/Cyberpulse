@@ -8,7 +8,8 @@
     --bg-primary:   #020408;
     --bg-secondary: #050D14;
     --bg-card:      #080F18;
-    --accent-cyan:   #00D4FF;
+    --accent-cyan:        #00B4D8;   /* restrained, professional */
+    --accent-cyan-bright: #00D4FF;   /* CTAs only */
     --accent-green:  #00FF88;
     --accent-red:    #FF2D55;
     --accent-orange: #FF8C00;
@@ -16,10 +17,11 @@
     --accent-blue:   #0A84FF;
     --text-primary: #E8F4F8;
     --text-muted:   #4A6880;
-    --border:       #0A2035;
-    --glow-cyan: 0 0 20px rgba(0, 212, 255, 0.3);
-    --glow-red:  0 0 20px rgba(255, 45, 85, 0.3);
-    --glow-green: 0 0 20px rgba(0, 255, 136, 0.25);
+    --border:        #0D1F35;        /* slightly more visible */
+    --border-subtle: #080F1C;        /* idle cards */
+    --glow-cyan: 0 0 12px rgba(0, 180, 216, 0.15);
+    --glow-red:  0 0 12px rgba(255, 45, 85, 0.15);
+    --glow-green: 0 0 12px rgba(0, 255, 136, 0.15);
 
     /* shadcn token bridge (kept so existing ui/* components still work) */
     --background: 210 60% 2%;
@@ -158,25 +160,21 @@ body > div:not(.grid-bg):not(.scanlines) {
 }
 ::-webkit-scrollbar-thumb:hover { background: #133050; }
 
-/* ── Animations ── */
+/* ── Animations — restrained: opacity only, no box-shadow pulsing ── */
 @keyframes pulse-dot {
-  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(0, 255, 136, 0.5); }
-  50%      { opacity: 0.7; box-shadow: 0 0 0 6px rgba(0, 255, 136, 0); }
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.55; }
 }
-.animate-pulse-dot { animation: pulse-dot 2s ease-in-out infinite; }
+.animate-pulse-dot { animation: pulse-dot 2.4s ease-in-out infinite; }
 
-@keyframes pulse-ring {
-  0%   { box-shadow: 0 0 0 0 rgba(0, 212, 255, 0.4); }
-  70%  { box-shadow: 0 0 0 8px rgba(0, 212, 255, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(0, 212, 255, 0); }
-}
-.animate-pulse-ring { animation: pulse-ring 1.8s ease-out infinite; }
+/* Kept as a no-op alias so existing class refs don't break, but no pulsing. */
+.animate-pulse-ring { animation: pulse-dot 2.4s ease-in-out infinite; }
+.animate-pulse-red-border { /* static — no pulse */ }
 
-@keyframes pulse-red-border {
-  0%, 100% { border-color: rgba(255, 45, 85, 0.4); }
-  50%      { border-color: rgba(255, 45, 85, 1); }
+/* Top progress bar (GitHub/Linear style) */
+@keyframes top-progress-fade {
+  to { opacity: 0; }
 }
-.animate-pulse-red-border { animation: pulse-red-border 2s ease-in-out infinite; }
 
 @keyframes shimmer {
   0%   { background-position: -200% 0; }

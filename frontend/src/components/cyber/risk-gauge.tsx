@@ -11,7 +11,7 @@ function gaugeColor(score: number): string {
 /**
  * SVG arc gauge, 0–100. Animates from 0 on mount. Outer ring pulses if score > 60.
  */
-export function RiskGauge({ score, size = 180 }: { score: number; size?: number }) {
+export function RiskGauge({ score, size = 140 }: { score: number; size?: number }) {
   const animated = useCountUp(score, 1500);
   const color = gaugeColor(score);
 
@@ -34,7 +34,6 @@ export function RiskGauge({ score, size = 180 }: { score: number; size?: number 
       <svg
         width={size}
         height={size}
-        className={score > 60 ? "animate-pulse-ring rounded-full" : ""}
         style={{ transform: `rotate(${startAngle}deg)` }}
       >
         {/* Track */}
@@ -43,7 +42,7 @@ export function RiskGauge({ score, size = 180 }: { score: number; size?: number 
           cy={cy}
           r={r}
           fill="none"
-          stroke="#0A2035"
+          stroke="#0D1F35"
           strokeWidth={stroke}
           strokeDasharray={`${arcLen} ${circumference}`}
           strokeLinecap="round"
@@ -58,13 +57,13 @@ export function RiskGauge({ score, size = 180 }: { score: number; size?: number 
           strokeWidth={stroke}
           strokeDasharray={`${arcLen * progress} ${circumference}`}
           strokeLinecap="round"
-          style={{ filter: `drop-shadow(0 0 8px ${color}aa)`, transition: "stroke 0.4s ease" }}
+          style={{ transition: "stroke 0.4s ease" }}
         />
       </svg>
       <div className="absolute flex flex-col items-center">
         <span
-          className="font-display text-[44px] font-bold leading-none tabular-nums"
-          style={{ color, textShadow: `0 0 18px ${color}66` }}
+          className="font-display text-[36px] font-bold leading-none tabular-nums"
+          style={{ color }}
         >
           {Math.round(animated)}
         </span>

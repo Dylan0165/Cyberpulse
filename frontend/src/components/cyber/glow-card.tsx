@@ -21,29 +21,23 @@ export function GlowCard({
   return (
     <motion.div
       onClick={onClick}
-      whileHover={hoverLift ? { y: -2 } : undefined}
-      transition={{ type: "spring", stiffness: 300, damping: 24 }}
+      whileHover={hoverLift ? { y: -1 } : undefined}
+      transition={{ type: "tween", duration: 0.15, ease: "easeOut" }}
       className={cn(
-        "group relative rounded-lg border bg-card2 transition-colors duration-200",
+        "group relative rounded-lg border bg-card2 transition-colors duration-150",
+        // idle: subtle border; hover: slightly more visible border, no glow
+        "border-grid-subtle hover:border-grid",
         onClick && "cursor-pointer",
         className
       )}
-      style={{
-        borderColor: accentBorder ?? "var(--border)",
-        background: "var(--bg-card)",
-      }}
+      style={{ background: "var(--bg-card)" }}
     >
       {accentBorder && (
         <span
           className="absolute left-0 top-0 h-full w-[2px] rounded-l-lg"
-          style={{ background: accentBorder, boxShadow: `0 0 12px ${accentBorder}` }}
+          style={{ background: accentBorder }}
         />
       )}
-      {/* Hover glow ring */}
-      <span
-        className="pointer-events-none absolute inset-0 rounded-lg opacity-0 transition-opacity duration-200 group-hover:opacity-100"
-        style={{ boxShadow: `0 0 0 1px ${glowColor}55, 0 0 24px ${glowColor}22` }}
-      />
       {children}
     </motion.div>
   );

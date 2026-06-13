@@ -17,6 +17,7 @@ import { GlowCard } from "@/components/cyber/glow-card";
 import { RiskBadge, severityColor } from "@/components/cyber/risk-badge";
 import { RiskGauge } from "@/components/cyber/risk-gauge";
 import { TerminalOutput, type TermLine } from "@/components/cyber/terminal-output";
+import { TopProgressBar } from "@/components/cyber/top-progress-bar";
 import { AttackSurfacePanel } from "@/components/cyber/attack-surface-lazy";
 import type { SurfaceNode } from "@/components/cyber/attack-surface";
 
@@ -336,6 +337,11 @@ export default function ScanDetailPage() {
 
   return (
     <div className="space-y-6">
+      <TopProgressBar
+        active={["running", "analyzing", "pending"].includes(scan.status)}
+        progress={scan.progress ?? 0}
+        complete={scan.status === "completed"}
+      />
       {/* ── Header ── */}
       <div className="flex flex-wrap items-center gap-4">
         <Link
@@ -598,8 +604,12 @@ export default function ScanDetailPage() {
                     transition={{ delay: Math.min(i * 0.03, 0.3) }}
                   >
                     <div
-                      className={`overflow-hidden rounded-lg border bg-card2 ${critical ? "animate-pulse-red-border" : "border-grid"}`}
-                      style={!critical ? { borderLeft: `2px solid ${severityColor(sev)}` } : { borderLeftWidth: 2 }}
+                      className="overflow-hidden rounded-lg border border-grid bg-card2"
+                      style={
+                        sev === "critical" ? { borderLeft: "2px solid #FF2D55" }
+                        : sev === "high"   ? { borderLeft: "2px solid #FF8C00" }
+                        : undefined
+                      }
                     >
                       <button
                         onClick={() => setExpandedFinding(open ? null : i)}
@@ -822,7 +832,7 @@ function ActionButton({
                             { background: "#080F18", color: "#E8F4F8", border: "1px solid #0A2035" };
   return (
     <motion.button
-      whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+      whileHover={{ filter: "brightness(1.08)" }}
       onClick={onClick} disabled={disabled}
       className="flex items-center gap-1.5 rounded-md px-3.5 py-2 font-mono text-[12px] font-medium uppercase tracking-wider transition-opacity disabled:opacity-50"
       style={styles}
