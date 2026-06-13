@@ -3,10 +3,14 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { motion } from "framer-motion";
 import { Shield, Eye, EyeOff, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/auth-context";
+
+// Client-only intro overlay (video needs the browser). Plays once per session.
+const LogoIntro = dynamic(() => import("@/components/LogoIntro"), { ssr: false });
 
 export default function LoginPage() {
   const router = useRouter();
@@ -36,6 +40,7 @@ export default function LoginPage() {
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-app px-4 py-12">
+      <LogoIntro />
       <motion.div
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
