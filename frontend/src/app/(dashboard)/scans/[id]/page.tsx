@@ -122,20 +122,30 @@ export default function ScanDetailPage() {
     onError: (err: any) => toast.error(err?.response?.data?.detail ?? "Annuleren mislukt"),
   });
 
-  // Initialise phases from PHASE_META, filtered by which phases this scan has
+  // Initialise phases from PHASE_META, filtered by which phases this scan has.
+  // For historical/completed scans, mark phases that already produced output
+  // (or are in phases_completed) as done so the sidebar isn't all "pending".
   useEffect(() => {
     const scanPhaseSet = new Set<string>(scan?.phases ?? []);
+    const completedSet = new Set<string>((scan as any)?.phases_completed ?? []);
+    const outputs = (scan as any)?.tool_outputs as Record<string, unknown> | undefined;
+    const scanDone = scan?.status === "completed";
     setPhases(
       Object.entries(PHASE_META)
         .filter(([name]) => !CUSTOM_MODULE_KEYS.has(name) || scanPhaseSet.has(name))
-        .map(([name, meta], i) => ({
-          name, display: meta.display, num: i + 1,
-          status: "pending",
-          tools: meta.tools.map(t => ({ name: t, done: false, success: true, output: "" })),
-          expanded: false,
-        }))
+        .map(([name, meta], i) => {
+          const hasOutput = !!(outputs && outputs[name]);
+          const done = completedSet.has(name) || hasOutput || (scanDone && name === "ai_analysis");
+          return {
+            name, display: meta.display, num: i + 1,
+            status: (done ? "done" : "pending") as PhaseState["status"],
+            tools: meta.tools.map(t => ({ name: t, done, success: true, output: "" })),
+            expanded: false,
+          };
+        })
     );
-  }, [scan?.phases?.join(",")]); // eslint-disable-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [scan?.phases?.join(","), scan?.status, (scan as any)?.phases_completed?.join?.(",")]);
 
   // WebSocket connection
   useEffect(() => {
@@ -234,20 +244,52 @@ export default function ScanDetailPage() {
     setTerminalLines(prev => [...prev.slice(-500), line]);
   }
 
+  function lineKind(line: string): TermLine["kind"] {
+    if (line.includes("✓") || line.includes("GEVONDEN") || line.includes("voltooid")) return "success";
+    if (line.includes("✗") || /fout|mislukt|refused|geweigerd|error/i.test(line)) return "error";
+    if (line.includes("═══")) return "phase";
+    if (line.includes("⚠️") || line.includes("⊘") || line.includes("NIET GEDETECTEERD")) return "warn";
+    if (line.includes("⏳") || line.startsWith("  ")) return "dim";
+    return "out";
+  }
+
   // Convert raw terminal strings → styled TermLines for <TerminalOutput/>
   const termLines: TermLine[] = useMemo(
-    () => terminalLines.map((line): TermLine => {
-      let kind: TermLine["kind"] = "out";
-      if (line.includes("✓")) kind = "success";
-      else if (line.includes("✗")) kind = "error";
-      else if (line.includes("═══")) kind = "phase";
-      else if (line.includes("⊘")) kind = "warn";
-      else if (line.includes("⏳")) kind = "dim";
-      else if (line.startsWith("         ")) kind = "dim";
-      return { text: line, kind };
-    }),
+    () => terminalLines.map((line): TermLine => ({ text: line, kind: lineKind(line) })),
     [terminalLines]
   );
+
+  // Historical fallback: rebuild the terminal from stored tool_outputs so a
+  // completed scan (no live events) still shows every phase + custom module.
+  const historicalTermLines: TermLine[] = useMemo(() => {
+    const outputs = (scan as any)?.tool_outputs as Record<string, Record<string, string>> | undefined;
+    if (!outputs) return [];
+    const lines: TermLine[] = [];
+    const orderedKeys = [
+      ...Object.keys(PHASE_META),                       // recon..ai_analysis, m09..m14
+      ...Object.keys(outputs).filter(k => !(k in PHASE_META)), // anything else
+    ];
+    const seen = new Set<string>();
+    for (const phase of orderedKeys) {
+      if (seen.has(phase)) continue;
+      seen.add(phase);
+      const tools = outputs[phase];
+      if (!tools) continue;
+      const display = PHASE_META[phase]?.display ?? phase;
+      lines.push({ text: `═══ ${display} ═══`, kind: "phase" });
+      for (const [toolName, text] of Object.entries(tools)) {
+        if (!text) continue;
+        if (toolName !== "module") lines.push({ text: `  ${toolName}:`, kind: "dim" });
+        for (const ln of String(text).split("\n")) {
+          if (ln.trim()) lines.push({ text: `  ${ln}`, kind: lineKind(ln) });
+        }
+      }
+    }
+    return lines;
+  }, [scan]);
+
+  // Prefer the live stream; fall back to the stored output for historical scans.
+  const displayLines = termLines.length > 0 ? termLines : historicalTermLines;
 
   const findings = report?.report_data?.findings ?? report?.findings ?? [];
   const aiReport = report?.report_data ?? report ?? null;
@@ -492,7 +534,7 @@ export default function ScanDetailPage() {
 
             {/* Terminal */}
             <div className="lg:col-span-3">
-              <TerminalOutput lines={termLines} complete={scan.status === "completed"} />
+              <TerminalOutput lines={displayLines} complete={scan.status === "completed"} />
             </div>
           </motion.div>
         )}

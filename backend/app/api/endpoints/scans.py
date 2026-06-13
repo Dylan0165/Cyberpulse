@@ -36,6 +36,7 @@ from app.models.user import User
 from app.schemas.scan import (
     ScanCreate,
     ScanResponse,
+    ScanDetailResponse,
     ScanListResponse,
     ScanReportResponse,
     QUICK_PHASES,
@@ -189,7 +190,7 @@ async def list_scans(
     return ScanListResponse(scans=scans, total=total or 0, page=page, page_size=page_size)
 
 
-@router.get("/{scan_id}", response_model=ScanResponse)
+@router.get("/{scan_id}", response_model=ScanDetailResponse)
 async def get_scan(
     scan_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),

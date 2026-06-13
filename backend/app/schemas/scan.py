@@ -70,6 +70,14 @@ class ScanResponse(BaseModel):
     model_config = {"from_attributes": True}
 
 
+class ScanDetailResponse(ScanResponse):
+    # Detail-only: the full per-phase/per-tool output so the scan-detail
+    # terminal can be rebuilt for historical scans. Kept OUT of the list
+    # response (ScanResponse) so listing stays lean.
+    tool_outputs: dict | None = None
+    phases_completed: list | None = None
+
+
 class ScanListResponse(BaseModel):
     scans: list[ScanResponse]
     total: int
