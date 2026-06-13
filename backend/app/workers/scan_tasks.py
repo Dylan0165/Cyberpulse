@@ -289,12 +289,24 @@ def _run_smart_credential(scan_id: str, target: str, all_outputs: dict, runner) 
         import re as _re
         import ipaddress as _ip
 
-        # Combine all earlier tool output for title extraction
+        # Build combined output but DROP error/stderr lines so they can never be
+        # mistaken for a page title (e.g. "[STDERR] ERROR ... Connection refused").
+        _DROP = ("stderr", "error", "connection refused", "refused", "warning")
         combined = ""
         for phase_data in all_outputs.values():
             for output in phase_data.values():
-                if output:
-                    combined += output + "\n"
+                if not output:
+                    continue
+                for raw in output.splitlines():
+                    if any(d in raw.lower() for d in _DROP):
+                        continue
+                    combined += raw + "\n"
+
+        def _bad_name(s: str) -> bool:
+            sl = s.lower()
+            banned = ("stderr", "error", "connection", "refused", "warning",
+                      "http", "https", "404", "403")
+            return len(s) <= 2 or s.isdigit() or any(b in sl for b in banned)
 
         name = ""
         source = "standaard"
@@ -309,28 +321,32 @@ def _run_smart_credential(scan_id: str, target: str, all_outputs: dict, runner) 
                 "",
             )
             cleaned = _re.sub(r"[^a-zA-Z0-9]", "", token).lower()
-            if len(cleaned) >= 3:
+            if cleaned and not _bad_name(cleaned):
                 name = cleaned
                 source = "paginatitel"
 
         # 3) domain name (only when the target is NOT a pure IP)
+        is_ip = True
         if not name:
             host = target.split("://")[-1].split("/")[0].split(":")[0]
-            is_ip = True
             try:
                 _ip.ip_address(host)
             except ValueError:
                 is_ip = False
             if not is_ip and "." in host:
                 cleaned = _re.sub(r"[^a-zA-Z0-9]", "", host.split(".")[0]).lower()
-                if len(cleaned) >= 2:
+                if cleaned and not _bad_name(cleaned):
                     name = cleaned
                     source = "domeinnaam"
 
-        # Username to brute-force: a name rarely is the login, so default to admin.
+        # 4) pure IP and no clean title → no derived name, default usernames.
+        if not name and is_ip:
+            lines.append("[M12] Puur IP-adres — standaard gebruikersnamen")
+
+        # Username to brute-force: a name rarely is the login, default to admin.
         username = "admin"
 
-        # Name-derived passwords (only if we actually found a meaningful name)
+        # Name-derived passwords only if we found a meaningful, validated name.
         name_words = (
             [name, name + "123", name + "2024", name + "2025", name + "@123",
              name.capitalize() + "!"]
@@ -339,10 +355,9 @@ def _run_smart_credential(scan_id: str, target: str, all_outputs: dict, runner) 
         base_words = [
             "admin", "administrator", "welkom01", "Welkom01!",
             "welkom2024", "Welkom2024!", "test", "test123",
-            "password", "Password1!", "changeme", "toor",
+            "password", "Password1!", "changeme", "root", "ubuntu", "kali",
         ]
-        # Deduplicate, preserve order
-        words = list(dict.fromkeys(name_words + base_words))
+        words = list(dict.fromkeys(name_words + base_words))  # dedupe, keep order
 
         lines.append(f"[M12] Gebruikte naam: '{name or '(geen)'}' uit {source}")
         lines.append(f"[M12] Wordlist met {len(words)} wachtwoorden, gebruiker '{username}'.")
@@ -502,17 +517,51 @@ def _run_ai_adaptive(scan_id: str, target: str, all_outputs: dict, runner) -> st
         client = OpenAI(api_key=settings.deepseek_api_key, base_url=settings.deepseek_base_url)
         prompt = (
             f"You are a penetration tester. Based on these scan results for {target}:\n{summary}\n\n"
-            "Suggest exactly 3 additional specific security tests. Respond ONLY with valid JSON "
-            '(no other text): [{"test":"name","command":"exact command using the target","reason":"why"}]'
+            "Suggest exactly 3 additional specific security tests. "
+            "Respond ONLY with a JSON array, no markdown, no explanation, no code blocks. "
+            'Just the raw JSON: [{"test":"name","command":"cmd using the target","reason":"why"}]'
         )
-        resp = client.chat.completions.create(
-            model=settings.deepseek_model,
-            messages=[{"role": "user", "content": prompt}],
-            temperature=0.2, max_tokens=700,
-        )
+
+        logger.info("[%s] M13: sending %d chars to DeepSeek", scan_id, len(prompt))
+        try:
+            resp = client.chat.completions.create(
+                model=settings.deepseek_model,
+                messages=[{"role": "user", "content": prompt}],
+                temperature=0.2, max_tokens=700, timeout=30,
+            )
+        except Exception as call_exc:
+            msg = str(call_exc).lower()
+            logger.warning("[%s] M13: DeepSeek call failed: %s", scan_id, call_exc)
+            if "timeout" in msg or "timed out" in msg:
+                lines.append("[M13] Timeout — AI niet bereikbaar binnen 30 seconden")
+            else:
+                lines.append("[M13] AI-analyse tijdelijk niet beschikbaar — probeer opnieuw")
+            return "\n".join(lines)
+
         raw = (resp.choices[0].message.content or "").strip()
-        start, end = raw.find("["), raw.rfind("]") + 1
-        suggestions = _json.loads(raw[start:end]) if (start >= 0 and end > 0) else []
+        logger.info("[%s] M13: raw response: %s", scan_id, raw[:500])
+
+        # Strip markdown code fences (```json ... ```), then isolate the JSON array.
+        clean = raw
+        if clean.startswith("```"):
+            parts = clean.split("```")
+            clean = parts[1] if len(parts) > 1 else clean
+            if clean.lstrip().lower().startswith("json"):
+                clean = clean.lstrip()[4:]
+        clean = clean.strip()
+        if not clean.startswith("["):
+            s, e = clean.find("["), clean.rfind("]") + 1
+            if s >= 0 and e > 0:
+                clean = clean[s:e]
+
+        try:
+            suggestions = _json.loads(clean)
+            if not isinstance(suggestions, list):
+                raise ValueError("response is not a JSON array")
+        except Exception as parse_exc:
+            logger.warning("[%s] M13: JSON parse failed: %s | raw=%s", scan_id, parse_exc, raw[:300])
+            lines.append("[M13] AI-analyse tijdelijk niet beschikbaar — probeer opnieuw")
+            return "\n".join(lines)
 
         lines.append(f"[M13] {len(suggestions)} AI-aanbevolen tests:")
         allowed = {"nmap", "nuclei", "nikto", "curl", "httpx-pd", "whatweb"}
