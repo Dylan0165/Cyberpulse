@@ -19,6 +19,7 @@ from app.models.scan import Scan
 from app.models.target import Target
 from app.reports.pdf_generator import generate_pdf_report
 from app.services.audit import log_action
+from app.services.nis2_report import generate_nis2_report
 
 router = APIRouter(prefix="/reports", tags=["reports"])
 
@@ -72,6 +73,36 @@ async def export_pdf(
         io.BytesIO(pdf_bytes),
         media_type="application/pdf",
         headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
+@router.get("/{scan_id}/nis2")
+async def export_nis2(
+    scan_id: uuid.UUID,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+    current_user: dict = Depends(get_current_user),
+):
+    result = await db.execute(select(Scan).where(Scan.id == scan_id))
+    scan = result.scalar_one_or_none()
+    if not scan:
+        raise HTTPException(status_code=404, detail="Scan not found")
+
+    report_data = await _get_report_data(scan, scan_id)
+    if not report_data:
+        raise HTTPException(status_code=404, detail="Rapport niet beschikbaar")
+
+    target_result = await db.execute(select(Target).where(Target.id == scan.target_id))
+    target = target_result.scalar_one_or_none()
+    target_value = target.value if target else "Unknown"
+
+    scan_date = scan.created_at.strftime("%d-%m-%Y")
+    pdf = generate_nis2_report(report_data, target_value, scan_date)
+
+    return StreamingResponse(
+        io.BytesIO(pdf),
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'attachment; filename="nis2-{scan_id}.pdf"'},
     )
 
 

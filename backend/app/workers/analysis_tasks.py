@@ -138,3 +138,24 @@ def analyze_scan(self, scan_id: str):
             scan_id, report.get("risk_level"), report.get("risk_score"),
             len(report.get("findings", [])),
         )
+
+        # Best-effort email notification. Gated on NOTIFY_EMAIL env var so it is
+        # fully optional; the email service itself no-ops without SMTP config.
+        # Never let email failures affect the scan result.
+        try:
+            import os
+            notify_to = os.getenv("NOTIFY_EMAIL", "")
+            if notify_to:
+                from app.services.email import send_scan_complete_email
+                send_scan_complete_email(
+                    to_email=notify_to,
+                    target=target_obj.value,
+                    risk_score=report.get("risk_score", 0),
+                    critical=counts.get("critical", 0),
+                    high=counts.get("high", 0),
+                    medium=counts.get("medium", 0),
+                    low=counts.get("low", 0),
+                    scan_id=str(scan_id),
+                )
+        except Exception as exc:
+            logger.warning("Scan-complete email skipped: %s", exc)

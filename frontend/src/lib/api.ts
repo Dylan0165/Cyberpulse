@@ -34,6 +34,8 @@ export const reportsApi = {
     api.get(`/reports/${scanId}/csv`, { responseType: "blob" }),
   downloadXml: (scanId: string) =>
     api.get(`/reports/${scanId}/xml`, { responseType: "blob" }),
+  downloadNis2: (scanId: string) =>
+    api.get(`/reports/${scanId}/nis2`, { responseType: "blob" }),
 };
 
 export const toolsApi = {

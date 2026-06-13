@@ -217,6 +217,184 @@ def _run_cve_correlator(scan_id: str, target: str, all_outputs: dict, r) -> str:
     return "\n".join(lines)
 
 
+def _run_visual_recon(target: str) -> str:
+    """M11 — Visual Recon: probe for exposed sensitive files over HTTP."""
+    import requests as _req
+
+    paths = [
+        "/.git/HEAD", "/.env", "/config.php", "/wp-config.php", "/phpinfo.php",
+        "/info.php", "/.htaccess", "/robots.txt", "/sitemap.xml",
+    ]
+
+    base = target if target.startswith("http") else f"http://{target}"
+    base = base.rstrip("/")
+
+    lines: list[str] = ["[M11] Visual Recon — gevoelige bestanden controle"]
+    disallow_entries: list[str] = []
+    found_count = 0
+
+    for path in paths:
+        url = f"{base}{path}"
+        try:
+            resp = _req.get(
+                url, timeout=5, verify=False, allow_redirects=False,
+                headers={"User-Agent": "CyberPulse/1.0"},
+            )
+            status = resp.status_code
+            body = resp.text or ""
+
+            if path == "/.git/HEAD" and status == 200 and body.lstrip().startswith("ref:"):
+                found_count += 1
+                lines.append(f"  {path} → {status} ⚠️ GIT BLOOTGESTELD (Git repository blootgesteld)")
+            elif status == 200:
+                found_count += 1
+                lines.append(f"  {path} → {status} ⚠️ GEVONDEN")
+            else:
+                lines.append(f"  {path} → {status}")
+
+            if path == "/robots.txt" and status == 200:
+                for raw in body.splitlines():
+                    stripped = raw.strip()
+                    if stripped.lower().startswith("disallow:"):
+                        entry = stripped.split(":", 1)[1].strip()
+                        if entry:
+                            disallow_entries.append(entry)
+        except Exception as exc:
+            lines.append(f"  {path} → fout ({exc})")
+
+    lines.append(f"[M11] {found_count} gevoelige bestand(en) blootgesteld.")
+    if disallow_entries:
+        lines.append("Disallow-regels in robots.txt:")
+        for entry in disallow_entries:
+            lines.append(f"  - {entry}")
+
+    return "\n".join(lines)
+
+
+def _run_smart_credential(scan_id: str, target: str, all_outputs: dict, runner) -> str:
+    """M12 — Smart Credential Attack: build a target-specific wordlist and run hydra."""
+    lines: list[str] = ["[M12] Smart Credential Attack — doelspecifieke aanval"]
+    try:
+        import re as _re
+
+        # Extract a company/site name from earlier tool outputs (whatweb/httpx Title:)
+        name = ""
+        for phase_data in all_outputs.values():
+            for output in phase_data.values():
+                if not output:
+                    continue
+                for raw in output.splitlines():
+                    if "Title:" in raw:
+                        after = raw.split("Title:", 1)[1].strip()
+                        token = after.split()[0] if after.split() else ""
+                        if token:
+                            name = token
+                            break
+                if name:
+                    break
+            if name:
+                break
+
+        if not name:
+            name = target.split(".")[0].split("/")[-1]
+
+        # Clean: lowercase, strip non-alphanumeric
+        name = _re.sub(r"[^a-zA-Z0-9]", "", name).lower() or "admin"
+
+        words = [
+            name, name + "123", name + "2024", name + "2025", name + "@123",
+            name.capitalize() + "!", "admin", "administrator", "test",
+            "welkom01", "Welkom2024", "password", "toor",
+        ]
+
+        lines.append(f"[M12] Gebruikte naam: '{name}' — wordlist met {len(words)} wachtwoorden.")
+
+        wl = "\\n".join(words)
+        wordlist_path = f"/opt/cyberpulse/custom_{scan_id}.txt"
+        runner.run_safe(
+            "bash",
+            f"-c \"mkdir -p /opt/cyberpulse && printf '{wl}\\n' > {wordlist_path}\"",
+            10,
+        )
+
+        result = runner.run_safe(
+            "hydra",
+            f"-l admin -P {wordlist_path} -t 4 -f -V {target} ssh",
+            120,
+        )
+        hydra_out = result.stdout or (result.stderr or "")
+
+        creds = _parse_hydra_findings(hydra_out)
+        if creds:
+            lines.append(f"[M12] Doelspecifieke credentials GEVONDEN ({len(creds)}):")
+            for c in creds:
+                lines.append(f"  {c['login']}:{c['password']} via {c['service']}:{c['port']}")
+        else:
+            lines.append("[M12] Geen doelspecifieke credentials gevonden.")
+
+        tail = "\n".join(hydra_out.strip().splitlines()[-8:])
+        if tail:
+            lines.append("[M12] Hydra output (laatste regels):")
+            lines.append(tail)
+    except Exception as exc:
+        lines.append(f"[M12] Fout tijdens uitvoering: {exc}")
+
+    return "\n".join(lines)
+
+
+def _run_scan_comparator(scan_id: str, target: str, db, scan) -> str:
+    """M14 — Scan Comparator: diff the current scan against the previous one for this target."""
+    try:
+        prev = (
+            db.query(Scan)
+            .filter(
+                Scan.target_id == scan.target_id,
+                Scan.id != scan.id,
+                Scan.status == "completed",
+            )
+            .order_by(Scan.created_at.desc())
+            .first()
+        )
+
+        if not prev:
+            return "[M14] Eerste scan voor dit doel — geen vergelijking mogelijk."
+
+        def _key(f: dict) -> str:
+            return f"{f.get('title', '')}|{f.get('severity', '')}"
+
+        curr_findings = scan.findings or []
+        prev_findings = prev.findings or []
+
+        curr_map = {_key(f): f for f in curr_findings if isinstance(f, dict)}
+        prev_map = {_key(f): f for f in prev_findings if isinstance(f, dict)}
+
+        new_keys = [k for k in curr_map if k not in prev_map]
+        fixed_keys = [k for k in prev_map if k not in curr_map]
+        unchanged_keys = [k for k in curr_map if k in prev_map]
+
+        prev_risk = round(100 - (prev.security_score or 100))
+        curr_risk = round(100 - (scan.security_score or 100))
+        delta = curr_risk - prev_risk
+        delta_str = f"+{delta}" if delta > 0 else str(delta)
+
+        lines: list[str] = [
+            f"[M14] Vergelijking met scan van {prev.created_at:%d-%m-%Y}:",
+            f"Risicoscore: {prev_risk} → {curr_risk} ({delta_str})",
+            "",
+            f"🆕 NIEUW ({len(new_keys)}):",
+        ]
+        for k in new_keys:
+            lines.append(f"  - {curr_map[k].get('title', k)}")
+        lines.append(f"✅ OPGELOST ({len(fixed_keys)}):")
+        for k in fixed_keys:
+            lines.append(f"  - {prev_map[k].get('title', k)}")
+        lines.append(f"⚪ ONGEWIJZIGD ({len(unchanged_keys)})")
+
+        return "\n".join(lines)
+    except Exception as exc:
+        return f"[M14] Vergelijking niet mogelijk door fout: {exc}"
+
+
 def _should_run_phase(phase_name: str, scan_mode: str, phases_enabled: list | None) -> bool:
     # Auth phase runs in ALL modes — blackbox uses default wordlists,
     # graybox/whitebox use provided credentials (substituted in args template).
@@ -439,6 +617,18 @@ def run_scan(self, scan_id: str):
                 logger.info("[%s] M10 CVE Correlator starting", scan_id)
                 mod_output = _run_cve_correlator(scan_id, target, all_outputs, r)
                 logger.info("[%s] M10 CVE Correlator done — output %d bytes", scan_id, len(mod_output))
+            elif mod_id == "m11":
+                logger.info("[%s] M11 Visual Recon starting", scan_id)
+                mod_output = _run_visual_recon(target)
+                logger.info("[%s] M11 Visual Recon done — output %d bytes", scan_id, len(mod_output))
+            elif mod_id == "m12":
+                logger.info("[%s] M12 Smart Credential Attack starting", scan_id)
+                mod_output = _run_smart_credential(scan_id, target, all_outputs, runner)
+                logger.info("[%s] M12 Smart Credential Attack done — output %d bytes", scan_id, len(mod_output))
+            elif mod_id == "m14":
+                logger.info("[%s] M14 Scan Comparator starting", scan_id)
+                mod_output = _run_scan_comparator(scan_id, target, db, scan)
+                logger.info("[%s] M14 Scan Comparator done — output %d bytes", scan_id, len(mod_output))
             else:
                 mod_output = f"Module {mod_id} geselecteerd — wordt in toekomstige versie geïntegreerd."
                 logger.info("[%s] Custom module %s: not yet in pipeline", scan_id, mod_id)

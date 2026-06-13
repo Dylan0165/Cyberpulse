@@ -5,20 +5,30 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import {
-  LayoutDashboard, ScanLine, Target, FileText, Terminal,
-  Plus, Database, GitCompare, Shield,
+  LayoutDashboard, Radar, Target, FileText, Calendar,
+  Wrench, Settings, Shield,
 } from "lucide-react";
 
 const NAV = [
-  { name: "Dashboard",   href: "/dashboard",      icon: LayoutDashboard },
-  { name: "Scans",       href: "/scans",          icon: ScanLine },
-  { name: "New Scan",    href: "/scans/new",      icon: Plus },
-  { name: "Targets",     href: "/targets",        icon: Target },
-  { name: "Reports",     href: "/reports",        icon: FileText },
-  { name: "Tools",       href: "/tools",          icon: Terminal },
-  { name: "CVE Database", href: "/vulnerabilities", icon: Database },
-  { name: "Compare",     href: "/compare",        icon: GitCompare },
+  { name: "Dashboard",    href: "/dashboard", icon: LayoutDashboard },
+  { name: "Scans",        href: "/scans",     icon: Radar },
+  { name: "Doelen",       href: "/targets",   icon: Target },
+  { name: "Rapporten",    href: "/reports",   icon: FileText },
+  { name: "Planning",     href: "/schedule",  icon: Calendar },
+  { name: "Tools",        href: "/tools",     icon: Wrench },
+  { name: "Instellingen", href: "/settings",  icon: Settings },
 ];
+
+const MOBILE_NAV = [
+  { name: "Dashboard",    href: "/dashboard", icon: LayoutDashboard },
+  { name: "Scans",        href: "/scans",     icon: Radar },
+  { name: "Doelen",       href: "/targets",   icon: Target },
+  { name: "Rapporten",    href: "/reports",   icon: FileText },
+  { name: "Instellingen", href: "/settings",  icon: Settings },
+];
+
+const isActive = (pathname: string, href: string) =>
+  pathname === href || pathname.startsWith(href + "/");
 
 export function Sidebar() {
   const pathname = usePathname();
@@ -32,18 +42,13 @@ export function Sidebar() {
       .catch(() => setKaliOnline(false));
   }, []);
 
-  const isActive = (href: string) =>
-    href === "/scans"
-      ? pathname === "/scans" || (pathname.startsWith("/scans/") && !pathname.startsWith("/scans/new"))
-      : pathname === href || pathname.startsWith(href + "/");
-
   return (
     <motion.aside
       onHoverStart={() => setExpanded(true)}
       onHoverEnd={() => setExpanded(false)}
       animate={{ width: expanded ? 240 : 64 }}
       transition={{ type: "spring", stiffness: 300, damping: 30 }}
-      className="relative z-20 flex h-screen flex-col border-r border-grid"
+      className="relative z-20 hidden h-screen flex-col border-r border-grid md:flex"
       style={{ background: "var(--bg-secondary)" }}
     >
       {/* Logo */}
@@ -66,7 +71,7 @@ export function Sidebar() {
       {/* Nav */}
       <nav className="flex-1 space-y-1 px-2 py-3">
         {NAV.map((item) => {
-          const active = isActive(item.href);
+          const active = isActive(pathname, item.href);
           const Icon = item.icon;
           return (
             <Link
@@ -77,10 +82,16 @@ export function Sidebar() {
                 background: active ? "rgba(0,212,255,0.08)" : "transparent",
                 color: active ? "#00D4FF" : "#4A6880",
               }}
+              onMouseEnter={(e) => {
+                if (!active) e.currentTarget.style.background = "rgba(0,212,255,0.05)";
+              }}
+              onMouseLeave={(e) => {
+                if (!active) e.currentTarget.style.background = "transparent";
+              }}
             >
               {active && (
                 <span
-                  className="absolute left-0 top-1/2 h-5 w-[2px] -translate-y-1/2 rounded-r"
+                  className="absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-r"
                   style={{ background: "#00D4FF", boxShadow: "0 0 8px #00D4FF" }}
                 />
               )}
@@ -121,5 +132,35 @@ export function Sidebar() {
         </div>
       </div>
     </motion.aside>
+  );
+}
+
+export function MobileNav() {
+  const pathname = usePathname();
+
+  return (
+    <nav
+      className="fixed bottom-0 left-0 right-0 z-30 flex h-[60px] items-stretch md:hidden"
+      style={{
+        background: "var(--bg-secondary)",
+        borderTop: "1px solid var(--border)",
+      }}
+    >
+      {MOBILE_NAV.map((item) => {
+        const active = isActive(pathname, item.href);
+        const Icon = item.icon;
+        return (
+          <Link
+            key={item.name}
+            href={item.href}
+            className="flex flex-1 flex-col items-center justify-center gap-1 transition-colors"
+            style={{ color: active ? "#00D4FF" : "#4A6880" }}
+          >
+            <Icon className="h-[20px] w-[20px]" />
+            <span className="text-[10px] font-medium">{item.name}</span>
+          </Link>
+        );
+      })}
+    </nav>
   );
 }

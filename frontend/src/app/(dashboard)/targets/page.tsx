@@ -4,20 +4,27 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { targetsApi } from "@/lib/api";
 import Link from "next/link";
 import { useState } from "react";
-import { Target, Plus, Globe, Server, Network, ExternalLink, Trash2, Loader2 } from "lucide-react";
-
-const TYPE_ICON: Record<string, React.ElementType> = {
-  url: Globe, domain: Globe,
-  ip: Server, ip_range: Network,
-  web_application: Globe, network: Network, api: Globe,
-};
+import { motion, AnimatePresence } from "framer-motion";
+import { Target, Plus, ExternalLink, Trash2, Loader2, X } from "lucide-react";
+import { GlowCard } from "@/components/cyber/glow-card";
+import { SkeletonCard } from "@/components/cyber/skeleton";
 
 const TYPE_OPTIONS = [
   { value: "url",      label: "Web Application / URL" },
-  { value: "domain",   label: "Domain" },
+  { value: "domain",   label: "Domein" },
   { value: "ip",       label: "IP-adres (server)" },
   { value: "ip_range", label: "IP-range / Netwerk" },
 ];
+
+const TYPE_LABEL: Record<string, string> = {
+  url: "Web / URL",
+  domain: "Domein",
+  ip: "IP-adres",
+  ip_range: "IP-range",
+  web_application: "Web App",
+  network: "Netwerk",
+  api: "API",
+};
 
 export default function TargetsPage() {
   const queryClient = useQueryClient();
@@ -59,7 +66,7 @@ export default function TargetsPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg("");
-    if (!form.value.trim()) { setErrorMsg("Voer een target-adres in"); return; }
+    if (!form.value.trim()) { setErrorMsg("Voer een IP-adres of domein in"); return; }
     createMutation.mutate({
       value:       form.value.trim(),
       name:        form.name.trim() || form.value.trim(),
@@ -71,151 +78,177 @@ export default function TargetsPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-4">
         <div>
-          <h1 className="text-[28px] font-bold" style={{ letterSpacing: "-0.03em" }}>Targets</h1>
-          <p className="text-[15px] text-muted-foreground mt-0.5">Beheer penetratietest doelwitten</p>
+          <h1 className="font-display text-[28px] font-bold text-ink" style={{ letterSpacing: "-0.03em" }}>
+            Doelen
+          </h1>
+          <p className="mt-1 text-[14px] text-ink-muted">
+            Beheer de systemen die u regelmatig wilt laten testen
+          </p>
         </div>
         <button
-          onClick={() => { setShowAdd(!showAdd); setErrorMsg(""); }}
-          className="inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-[14px] font-semibold transition-opacity hover:opacity-90"
-          style={{ background: "#0071e3", color: "#fff" }}
+          onClick={() => { setShowAdd((s) => !s); setErrorMsg(""); }}
+          className="inline-flex shrink-0 items-center gap-2 rounded-lg bg-cyan px-5 py-2.5 text-[14px] font-semibold text-black transition-shadow hover:shadow-glow-cyan"
         >
-          <Plus className="h-4 w-4" />
-          Target toevoegen
+          {showAdd ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+          Doel toevoegen
         </button>
       </div>
 
       {/* Add form */}
-      {showAdd && (
-        <div className="rounded-2xl border border-border bg-card shadow-apple p-6">
-          <h2 className="text-[17px] font-semibold mb-4">Nieuw target</h2>
-          {errorMsg && (
-            <p className="mb-4 rounded-xl border px-4 py-3 text-[13px]"
-               style={{ borderColor: "rgba(255,59,48,0.3)", background: "rgba(255,59,48,0.04)", color: "#ff3b30" }}>
-              {errorMsg}
-            </p>
-          )}
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-[13px] font-medium mb-1.5">Adres (URL, IP, domein)</label>
-              <input
-                type="text"
-                placeholder="https://example.com  of  192.168.1.0/24"
-                value={form.value}
-                onChange={(e) => setForm({ ...form, value: e.target.value })}
-                required
-                className="w-full rounded-xl border border-border bg-secondary px-4 py-2.5 text-[14px] placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
-              />
-            </div>
-            <div>
-              <label className="block text-[13px] font-medium mb-1.5">Naam (optioneel)</label>
-              <input
-                type="text"
-                placeholder="Bijv. Productie webserver"
-                value={form.name}
-                onChange={(e) => setForm({ ...form, name: e.target.value })}
-                className="w-full rounded-xl border border-border bg-secondary px-4 py-2.5 text-[14px] placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
-              />
-            </div>
-            <div>
-              <label className="block text-[13px] font-medium mb-1.5">Type</label>
-              <select
-                value={form.target_type}
-                onChange={(e) => setForm({ ...form, target_type: e.target.value })}
-                className="w-full rounded-xl border border-border bg-secondary px-4 py-2.5 text-[14px] focus:outline-none focus:ring-2 focus:ring-primary/30"
-              >
-                {TYPE_OPTIONS.map((o) => (
-                  <option key={o.value} value={o.value}>{o.label}</option>
-                ))}
-              </select>
-            </div>
-            <div className="flex gap-3 pt-2">
-              <button
-                type="submit"
-                disabled={createMutation.isPending}
-                className="inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-[14px] font-semibold transition-opacity hover:opacity-90 disabled:opacity-50"
-                style={{ background: "#0071e3", color: "#fff" }}
-              >
-                {createMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-                {createMutation.isPending ? "Aanmaken..." : "Aanmaken"}
-              </button>
-              <button
-                type="button"
-                onClick={() => { setShowAdd(false); setErrorMsg(""); }}
-                className="rounded-xl border border-border px-5 py-2.5 text-[14px] font-medium text-muted-foreground hover:text-foreground transition-colors"
-              >
-                Annuleren
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
+      <AnimatePresence>
+        {showAdd && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.25 }}
+            className="overflow-hidden"
+          >
+            <GlowCard glowColor="#00D4FF" className="p-6" hoverLift={false}>
+              <h2 className="font-display text-[17px] font-semibold text-ink mb-4">Nieuw doel</h2>
+              {errorMsg && (
+                <p className="mb-4 rounded-lg border border-neon-red/30 bg-neon-red/5 px-4 py-3 text-[13px] text-neon-red">
+                  {errorMsg}
+                </p>
+              )}
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div>
+                  <label className="mb-1.5 block text-[13px] font-medium text-ink-muted">Vriendelijke naam</label>
+                  <input
+                    type="text"
+                    placeholder="Bijv. Productie webserver"
+                    value={form.name}
+                    onChange={(e) => setForm({ ...form, name: e.target.value })}
+                    className="w-full rounded-lg border border-grid bg-app px-4 py-2.5 font-mono text-[14px] text-ink placeholder:text-ink-muted focus:border-cyan focus:outline-none focus:ring-1 focus:ring-cyan/40"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1.5 block text-[13px] font-medium text-ink-muted">IP-adres of domein</label>
+                  <input
+                    type="text"
+                    placeholder="https://example.com  of  192.168.1.0/24"
+                    value={form.value}
+                    onChange={(e) => setForm({ ...form, value: e.target.value })}
+                    required
+                    className="w-full rounded-lg border border-grid bg-app px-4 py-2.5 font-mono text-[14px] text-ink placeholder:text-ink-muted focus:border-cyan focus:outline-none focus:ring-1 focus:ring-cyan/40"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1.5 block text-[13px] font-medium text-ink-muted">Type</label>
+                  <select
+                    value={form.target_type}
+                    onChange={(e) => setForm({ ...form, target_type: e.target.value })}
+                    className="w-full rounded-lg border border-grid bg-app px-4 py-2.5 text-[14px] text-ink focus:border-cyan focus:outline-none focus:ring-1 focus:ring-cyan/40"
+                  >
+                    {TYPE_OPTIONS.map((o) => (
+                      <option key={o.value} value={o.value}>{o.label}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="flex gap-3 pt-1">
+                  <button
+                    type="submit"
+                    disabled={createMutation.isPending}
+                    className="inline-flex items-center gap-2 rounded-lg bg-cyan px-5 py-2.5 text-[14px] font-semibold text-black transition-shadow hover:shadow-glow-cyan disabled:opacity-50"
+                  >
+                    {createMutation.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+                    {createMutation.isPending ? "Aanmaken..." : "Aanmaken"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setShowAdd(false); setErrorMsg(""); }}
+                    className="rounded-lg border border-grid px-5 py-2.5 text-[14px] font-medium text-ink-muted transition-colors hover:text-ink"
+                  >
+                    Annuleren
+                  </button>
+                </div>
+              </form>
+            </GlowCard>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Target list */}
       {isLoading ? (
-        <div className="flex items-center justify-center py-16 text-muted-foreground text-[14px]">
-          <Loader2 className="h-5 w-5 animate-spin mr-2" /> Laden...
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />)}
         </div>
       ) : targets.length === 0 ? (
-        <div className="rounded-2xl border border-border bg-card shadow-apple p-16 text-center">
-          <Target className="h-12 w-12 text-muted-foreground/20 mx-auto mb-4" />
-          <p className="text-[17px] font-semibold mb-2">Nog geen targets</p>
-          <p className="text-[14px] text-muted-foreground mb-6">
-            Voeg je eerste target toe om een penetratietest te starten.
+        <div className="rounded-lg border border-grid bg-card2 p-16 text-center">
+          <Target className="mx-auto mb-4 h-12 w-12 text-ink-muted/30" />
+          <p className="font-display text-[17px] font-semibold text-ink mb-2">Nog geen doelen</p>
+          <p className="mb-6 text-[14px] text-ink-muted">
+            Voeg uw eerste doel toe om te beginnen
           </p>
           <button
             onClick={() => setShowAdd(true)}
-            className="inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-[14px] font-semibold transition-opacity hover:opacity-90"
-            style={{ background: "#0071e3", color: "#fff" }}
+            className="inline-flex items-center gap-2 rounded-lg bg-cyan px-5 py-2.5 text-[14px] font-semibold text-black transition-shadow hover:shadow-glow-cyan"
           >
-            <Plus className="h-4 w-4" /> Target toevoegen
+            <Plus className="h-4 w-4" /> Doel toevoegen
           </button>
         </div>
       ) : (
-        <div className="grid gap-3">
-          {targets.map((target: any) => {
-            const Icon = TYPE_ICON[target.target_type] ?? Server;
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {targets.map((target: any, idx: number) => {
             const display = target.hostname ?? target.value ?? target.name ?? "—";
             return (
-              <div
+              <motion.div
                 key={target.id}
-                className="rounded-2xl border border-border bg-card shadow-apple hover:shadow-apple-md transition-shadow"
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: idx * 0.05 }}
               >
-                <div className="flex items-center justify-between p-5">
-                  <Link href={`/targets/${target.id}`} className="flex items-center gap-4 min-w-0 flex-1">
-                    <div className="h-11 w-11 rounded-xl flex items-center justify-center flex-shrink-0"
-                         style={{ background: "rgba(0,113,227,0.08)" }}>
-                      <Icon className="h-5 w-5" style={{ color: "#0071e3" }} />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-[15px] font-semibold truncate">{display}</p>
-                      <p className="text-[13px] text-muted-foreground mt-0.5 capitalize">
-                        {(target.target_type ?? "").replace(/_/g, " ")}
-                        {target.is_verified && (
-                          <span className="ml-2 text-[11px] font-medium"
-                                style={{ color: "#34c759" }}>✓ Geverifieerd</span>
-                        )}
-                      </p>
-                    </div>
-                  </Link>
+                <GlowCard glowColor="#00D4FF" className="flex h-full flex-col p-5">
+                  {/* Top */}
+                  <div className="flex items-start justify-between gap-2">
+                    <p className="min-w-0 break-all font-mono text-[15px] font-bold text-ink">
+                      {display}
+                    </p>
+                    {target.is_verified && (
+                      <span className="shrink-0 rounded-md border border-neon-green/30 bg-neon-green/10 px-2 py-0.5 text-[11px] font-medium text-neon-green">
+                        Geverifieerd
+                      </span>
+                    )}
+                  </div>
 
-                  <div className="flex items-center gap-3 flex-shrink-0">
-                    <Link href={`/scans/new?target=${target.id}`}
-                      className="rounded-lg border border-border px-3 py-1.5 text-[12px] font-medium text-muted-foreground hover:text-foreground transition-colors">
-                      Scan starten
+                  {target.name && target.name !== display && (
+                    <p className="mt-1 truncate text-[13px] text-ink-muted">{target.name}</p>
+                  )}
+
+                  <div className="mt-3">
+                    <span className="inline-block rounded-md border border-cyan/30 bg-cyan/10 px-2.5 py-0.5 text-[11px] font-medium text-cyan">
+                      {TYPE_LABEL[target.target_type] ?? (target.target_type ?? "—")}
+                    </span>
+                  </div>
+
+                  {/* Bottom buttons */}
+                  <div className="mt-auto flex items-center gap-2 pt-5">
+                    <Link
+                      href={`/scans/new?target=${target.id}`}
+                      className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-cyan/10 px-3 py-2 text-[12px] font-semibold text-cyan transition-colors hover:bg-cyan/20"
+                    >
+                      Scan nu
+                    </Link>
+                    <Link
+                      href={`/targets/${target.id}`}
+                      className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-grid px-3 py-2 text-[12px] font-medium text-ink-muted transition-colors hover:text-ink"
+                    >
+                      Bekijken
+                      <ExternalLink className="h-3 w-3" />
                     </Link>
                     <button
                       onClick={() => deleteMutation.mutate(target.id)}
                       disabled={deleteMutation.isPending}
-                      className="h-8 w-8 rounded-lg flex items-center justify-center transition-colors hover:bg-secondary text-muted-foreground hover:text-red-500"
+                      aria-label="Verwijderen"
+                      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-grid text-ink-muted transition-colors hover:border-neon-red/40 hover:text-neon-red"
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>
-                    <ExternalLink className="h-4 w-4 text-muted-foreground/40" />
                   </div>
-                </div>
-              </div>
+                </GlowCard>
+              </motion.div>
             );
           })}
         </div>

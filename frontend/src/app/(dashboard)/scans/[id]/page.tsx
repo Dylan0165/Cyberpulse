@@ -614,10 +614,41 @@ export default function ScanDetailPage() {
                 <GlowCard className="flex flex-wrap items-center gap-8 p-6">
                   <RiskGauge score={aiReport.risk_score ?? riskScore} size={150} />
                   <div className="flex-1">
-                    <p className="font-mono text-[11px] uppercase tracking-widest text-ink-muted">risk level</p>
+                    <p className="font-mono text-[11px] uppercase tracking-widest text-ink-muted">risico niveau</p>
                     <p className="mt-1 font-display text-3xl font-bold" style={{ color: severityColor(aiReport.risk_level ?? "info") }}>
                       {aiReport.risk_level ?? "—"}
                     </p>
+                  </div>
+                  {/* Export buttons */}
+                  <div className="flex flex-wrap gap-2">
+                    <ActionButton variant="primary" onClick={async () => {
+                      const res = await reportsApi.downloadPdf(scanId);
+                      const url = URL.createObjectURL(new Blob([res.data]));
+                      Object.assign(document.createElement("a"), { href: url, download: `rapport-${scanId}.pdf` }).click();
+                      URL.revokeObjectURL(url);
+                    }}>
+                      <FileText className="h-3.5 w-3.5" />PDF
+                    </ActionButton>
+                    <ActionButton variant="ghost" onClick={async () => {
+                      const res = await reportsApi.downloadJson(scanId);
+                      const url = URL.createObjectURL(new Blob([res.data]));
+                      Object.assign(document.createElement("a"), { href: url, download: `rapport-${scanId}.json` }).click();
+                      URL.revokeObjectURL(url);
+                    }}>
+                      JSON
+                    </ActionButton>
+                    <ActionButton variant="ghost" onClick={async () => {
+                      try {
+                        const res = await reportsApi.downloadNis2(scanId);
+                        const url = URL.createObjectURL(new Blob([res.data]));
+                        Object.assign(document.createElement("a"), { href: url, download: `nis2-${scanId}.pdf` }).click();
+                        URL.revokeObjectURL(url);
+                      } catch {
+                        toast.error("NIS2-rapport kon niet worden gedownload");
+                      }
+                    }}>
+                      <Shield className="h-3.5 w-3.5" />NIS2 Rapport
+                    </ActionButton>
                   </div>
                 </GlowCard>
 
