@@ -302,11 +302,33 @@ def _run_smart_credential(scan_id: str, target: str, all_outputs: dict, runner) 
                         continue
                     combined += raw + "\n"
 
+        # Definitive blocklist — any extracted name containing one of these
+        # substrings, or exactly matching a common stop-word, is rejected.
+        _BLOCK_SUBSTR = (
+            "info", "stderr", "error", "warning", "connection", "refused",
+            "failed", "timeout", "none", "null", "unknown", "undefined",
+            "http", "https", "ftp", "ssh", "tcp", "udp", "ssl", "tls",
+            "nikto", "nmap", "sqlmap", "nuclei", "hydra", "ffuf", "whatweb",
+            "404", "403", "401", "500", "200", "301", "302",
+            "target", "host", "port", "scan", "test", "debug",
+            "localhost", "server", "client", "socket",
+        )
+        _BLOCK_EXACT = {
+            "the", "and", "or", "not", "with", "from", "this", "that",
+            "voor", "van", "met", "het", "een", "niet", "maar", "zijn",
+        }
+
         def _bad_name(s: str) -> bool:
             sl = s.lower()
-            banned = ("stderr", "error", "connection", "refused", "warning",
-                      "http", "https", "404", "403")
-            return len(s) <= 2 or s.isdigit() or any(b in sl for b in banned)
+            if len(sl) <= 4:                      # min length > 4
+                return True
+            if not any(c.isalpha() for c in sl):  # must contain a letter
+                return True
+            if sl in _BLOCK_EXACT:
+                return True
+            if any(b in sl for b in _BLOCK_SUBSTR):
+                return True
+            return False
 
         name = ""
         source = "standaard"
@@ -339,9 +361,9 @@ def _run_smart_credential(scan_id: str, target: str, all_outputs: dict, runner) 
                     name = cleaned
                     source = "domeinnaam"
 
-        # 4) pure IP and no clean title → no derived name, default usernames.
-        if not name and is_ip:
-            lines.append("[M12] Puur IP-adres — standaard gebruikersnamen")
+        # 4) No valid name survived filtering → definitive generic fallback.
+        if not name:
+            lines.append("[M12] Geen geldige bedrijfsnaam gevonden — standaard aanval op gebruiker 'admin'")
 
         # Username to brute-force: a name rarely is the login, default to admin.
         username = "admin"
