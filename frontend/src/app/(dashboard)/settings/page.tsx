@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import {
@@ -80,22 +80,42 @@ export default function SettingsPage() {
   const [kaliIp, setKaliIp] = useState("192.168.121.28");
   const [kaliPort, setKaliPort] = useState("5001");
   const [conn, setConn] = useState<"idle" | "testing" | "ok" | "fail">("idle");
-  const [toolCount, setToolCount] = useState<number | null>(null);
+  const [responseMs, setResponseMs] = useState<number | null>(null);
+
+  // Optional prefill of host/port from backend (graceful — ignore failures).
+  useEffect(() => {
+    if (tab !== "kali") return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/settings/kali");
+        if (!res.ok) return;
+        const data: any = await res.json();
+        if (cancelled || !data) return;
+        const host = data.host ?? data.ip ?? data.kali_ip;
+        const port = data.port ?? data.kali_port;
+        if (host) setKaliIp(String(host));
+        if (port != null) setKaliPort(String(port));
+      } catch {
+        /* graceful — keep defaults */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [tab]);
 
   async function testConnection() {
     setConn("testing");
-    setToolCount(null);
+    setResponseMs(null);
     try {
-      const res = await fetch("/api/tools/available");
+      const res = await fetch("/api/settings/kali/test", { method: "POST" });
       if (!res.ok) throw new Error("bad response");
-      const data: unknown = await res.json();
-      const tools = Array.isArray(data)
-        ? data
-        : Array.isArray((data as { tools?: unknown[] })?.tools)
-        ? (data as { tools: unknown[] }).tools
-        : null;
-      if (!tools) throw new Error("no tools");
-      setToolCount(tools.length);
+      const data: any = await res.json();
+      if (!data?.connected) throw new Error("not connected");
+      setResponseMs(
+        typeof data.response_time_ms === "number" ? data.response_time_ms : null
+      );
       setConn("ok");
     } catch {
       setConn("fail");
@@ -379,22 +399,27 @@ export default function SettingsPage() {
               {conn === "ok" && (
                 <span className="inline-flex items-center gap-1.5 text-[13px] font-medium text-neon-green">
                   <CheckCircle2 className="h-4 w-4" />
-                  Verbonden ✓
+                  {responseMs !== null
+                    ? `Verbonden — ${responseMs}ms reactietijd`
+                    : "Verbonden"}
                 </span>
               )}
               {conn === "fail" && (
                 <span className="inline-flex items-center gap-1.5 text-[13px] font-medium text-neon-red">
                   <XCircle className="h-4 w-4" />
-                  Geen verbinding ✗
+                  Geen verbinding — controleer IP en poort
                 </span>
               )}
             </div>
 
-            {conn === "ok" && toolCount !== null && (
-              <p className="mt-3 font-mono text-[12px] text-ink-muted">
-                {toolCount} tools gedetecteerd op de Kali VM.
-              </p>
-            )}
+            <div className="mt-6">
+              <PrimaryButton
+                onClick={() => toast.success("Instellingen opgeslagen")}
+              >
+                <Save className="h-4 w-4" />
+                Opslaan
+              </PrimaryButton>
+            </div>
 
             <p className="mt-5 text-[12px] text-ink-muted">
               Wijzigingen vereisen een herstart van de server.

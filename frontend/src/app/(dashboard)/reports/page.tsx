@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { dashboardApi, reportsApi, targetsApi } from "@/lib/api";
+import { toast } from "sonner";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Download, ArrowRight, Plus, Search, FileSearch } from "lucide-react";
@@ -53,7 +54,7 @@ export default function ReportsPage() {
       a.click();
       URL.revokeObjectURL(url);
     } catch {
-      alert("Download mislukt. Probeer opnieuw.");
+      toast.error("Download mislukt. Probeer opnieuw.");
     }
   };
 

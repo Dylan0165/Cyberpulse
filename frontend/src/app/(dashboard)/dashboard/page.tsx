@@ -67,6 +67,21 @@ export default function DashboardPage() {
     queryFn: dashboardApi.listTargets,
   });
 
+  // Backend aggregate stats (optional) — graceful fallback to local computation.
+  const { data: apiStats } = useQuery({
+    queryKey: ["dashboard-stats"],
+    queryFn: async (): Promise<any | null> => {
+      try {
+        const res = await fetch("/api/stats");
+        if (!res.ok) return null;
+        return await res.json();
+      } catch {
+        return null;
+      }
+    },
+    retry: false,
+  });
+
   const isLoading = scansLoading || targetsLoading;
 
   const recentScans: any[] = scansData?.items ?? [];
@@ -84,10 +99,8 @@ export default function DashboardPage() {
       )
     : 0;
 
-  const avgRiskColor = avgRisk >= 60 ? "#FF2D55" : avgRisk >= 30 ? "#FF8C00" : "#00FF88";
-
-  // Risk trend — last 10 scans, chronological
-  const trendData = [...recentScans]
+  // Risk trend — last 10 scans, chronological (local fallback)
+  const localTrendData = [...recentScans]
     .reverse()
     .slice(-10)
     .map((s: any) => ({
@@ -97,6 +110,26 @@ export default function DashboardPage() {
       }),
       risk: riskScore(s),
     }));
+
+  // ── Resolve stats: prefer GET /api/stats, fall back to local computation ──
+  const statTotalScans = apiStats?.total_scans ?? recentScans.length;
+  const statActiveTargets = apiStats?.active_targets ?? totalTargets;
+  const statCriticalOpen = apiStats?.critical_open ?? criticalFindings;
+  const statAvgRisk = apiStats?.avg_risk_score ?? avgRisk;
+
+  const avgRiskColor =
+    statAvgRisk >= 60 ? "#FF2D55" : statAvgRisk >= 30 ? "#FF8C00" : "#00FF88";
+
+  // API trend may be an array of numbers or {date,risk} objects; normalize.
+  const apiTrend: any[] | null = Array.isArray(apiStats?.risk_trend)
+    ? apiStats.risk_trend.map((p: any, i: number) =>
+        typeof p === "number"
+          ? { date: `#${i + 1}`, risk: p }
+          : { date: p.date ?? `#${i + 1}`, risk: p.risk ?? p.value ?? 0 }
+      )
+    : null;
+
+  const trendData = apiTrend && apiTrend.length > 0 ? apiTrend : localTrendData;
 
   // Globe targets
   const globeTargets = recentScans.slice(0, 12).map((s: any) => ({
@@ -131,29 +164,29 @@ export default function DashboardPage() {
       ) : (
         <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
           <StatCard
-            label="Total Scans"
-            value={recentScans.length}
+            label="Uitgevoerde scans"
+            value={statTotalScans}
             icon={ScanLine}
             color="#00D4FF"
             index={0}
           />
           <StatCard
-            label="Active Targets"
-            value={totalTargets}
+            label="Actieve doelen"
+            value={statActiveTargets}
             icon={Target}
             color="#0A84FF"
             index={1}
           />
           <StatCard
-            label="Critical Findings"
-            value={criticalFindings}
+            label="Kritieke bevindingen"
+            value={statCriticalOpen}
             icon={AlertTriangle}
             color="#FF2D55"
             index={2}
           />
           <StatCard
-            label="Avg Risk Score"
-            value={avgRisk}
+            label="Gemiddelde risicoscore"
+            value={statAvgRisk}
             icon={BarChart3}
             color={avgRiskColor}
             index={3}
