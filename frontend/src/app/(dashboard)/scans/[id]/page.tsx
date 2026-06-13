@@ -188,8 +188,14 @@ export default function ScanDetailPage() {
       case "tool_done":
         addTermLine(`[${ts}]   ${ev.success ? "✓" : "✗"} ${ev.tool} (${ev.duration ?? 0}s)`);
         if (ev.output) {
-          const preview = ev.output.split("\n").slice(0, 3).join("\n");
-          if (preview.trim()) addTermLine(`         ${preview}`);
+          // Custom modules (m09–m14) get their full curated output rendered;
+          // raw Kali tool output stays capped at a 3-line preview.
+          const isCustom = /^m\d\d$/.test(ev.phase ?? "");
+          const outLines = ev.output.split("\n");
+          const shown = isCustom ? outLines : outLines.slice(0, 3);
+          for (const ln of shown) {
+            if (ln.trim()) addTermLine(`         ${ln}`);
+          }
         }
         setPhases(prev => prev.map(p => {
           if (p.name !== ev.phase) return p;

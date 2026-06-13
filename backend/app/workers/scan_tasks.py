@@ -396,6 +396,109 @@ def _run_scan_comparator(scan_id: str, target: str, db, scan) -> str:
         return f"[M14] Vergelijking niet mogelijk door fout: {exc}"
 
 
+def _run_business_logic(target: str) -> str:
+    """M09 — Business Logic Tester: probe admin/sensitive endpoints + rate limiting."""
+    lines: list[str] = ["[M09] Business Logic Tester — endpoint & rate-limit controle"]
+    try:
+        import requests as _req
+        base = target if target.startswith("http") else f"http://{target}"
+        base = base.rstrip("/")
+        paths = [
+            "/admin", "/administrator", "/dashboard", "/api/admin", "/api/users",
+            "/backup", "/config", "/.env", "/phpinfo.php", "/server-status",
+            "/.git/config", "/wp-admin",
+        ]
+        exposed = 0
+        for p in paths:
+            try:
+                r = _req.get(base + p, timeout=5, verify=False, allow_redirects=False,
+                             headers={"User-Agent": "CyberPulse/1.0"})
+                if r.status_code == 200:
+                    exposed += 1
+                    lines.append(f"  {p} → 200 ⚠️ TOEGANKELIJK")
+                elif r.status_code == 403:
+                    exposed += 1
+                    lines.append(f"  {p} → 403 (bestaat, afgeschermd)")
+                else:
+                    lines.append(f"  {p} → {r.status_code}")
+            except Exception:
+                lines.append(f"  {p} → geen verbinding")
+
+        # Rate-limit test: 20 snelle verzoeken
+        codes = []
+        try:
+            for _ in range(20):
+                rr = _req.get(base + "/", timeout=3, verify=False)
+                codes.append(rr.status_code)
+        except Exception:
+            pass
+        if codes and 429 not in codes and 503 not in codes:
+            lines.append(f"[M09] Ratelimiting: NIET GEDETECTEERD ⚠️ ({len(codes)} snelle verzoeken, geen 429/503)")
+        elif codes:
+            lines.append("[M09] Ratelimiting: gedetecteerd (429/503 ontvangen)")
+        else:
+            lines.append("[M09] Ratelimiting: geen webserver bereikbaar")
+        lines.append(f"[M09] {exposed} interessante endpoint(s) gevonden.")
+    except Exception as exc:
+        lines.append(f"[M09] Fout tijdens uitvoering: {exc}")
+    return "\n".join(lines)
+
+
+def _run_ai_adaptive(scan_id: str, target: str, all_outputs: dict, runner) -> str:
+    """M13 — AI Adaptive Scanner: ask DeepSeek for 3 follow-up tests and run safe ones."""
+    lines: list[str] = ["[M13] AI Adaptive Scanner — DeepSeek vervolgtests"]
+    try:
+        if not settings.deepseek_api_key:
+            lines.append("[M13] DeepSeek API-sleutel niet geconfigureerd — overgeslagen.")
+            return "\n".join(lines)
+
+        import json as _json
+        from openai import OpenAI
+
+        summary = ""
+        for phase, tools in all_outputs.items():
+            for tname, out in tools.items():
+                if out:
+                    summary += f"\n## {phase}/{tname}\n{out[:800]}"
+        summary = summary[:3000] or "(geen eerdere output)"
+
+        client = OpenAI(api_key=settings.deepseek_api_key, base_url=settings.deepseek_base_url)
+        prompt = (
+            f"You are a penetration tester. Based on these scan results for {target}:\n{summary}\n\n"
+            "Suggest exactly 3 additional specific security tests. Respond ONLY with valid JSON "
+            '(no other text): [{"test":"name","command":"exact command using the target","reason":"why"}]'
+        )
+        resp = client.chat.completions.create(
+            model=settings.deepseek_model,
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.2, max_tokens=700,
+        )
+        raw = (resp.choices[0].message.content or "").strip()
+        start, end = raw.find("["), raw.rfind("]") + 1
+        suggestions = _json.loads(raw[start:end]) if (start >= 0 and end > 0) else []
+
+        lines.append(f"[M13] {len(suggestions)} AI-aanbevolen tests:")
+        allowed = {"nmap", "nuclei", "nikto", "curl", "httpx-pd", "whatweb"}
+        for i, s in enumerate(suggestions[:3], 1):
+            test = s.get("test", "test")
+            reason = s.get("reason", "")
+            command = s.get("command", "")
+            lines.append(f"{i}. {test}: {reason}")
+            lines.append(f"   Commando: {command}")
+            parts = command.split()
+            tool = parts[0] if parts else ""
+            if tool in allowed:
+                args = " ".join(parts[1:]).replace("{target}", target)
+                res = runner.run_safe(tool, args, 60)
+                out = (res.stdout or res.stderr or "").strip()
+                lines.append(f"   Resultaat ({len(out)} bytes): {out[:300]}")
+            else:
+                lines.append(f"   (tool '{tool}' niet automatisch uitgevoerd)")
+    except Exception as exc:
+        lines.append(f"[M13] Fout: {exc}")
+    return "\n".join(lines)
+
+
 def _should_run_phase(phase_name: str, scan_mode: str, phases_enabled: list | None) -> bool:
     # Auth phase runs in ALL modes — blackbox uses default wordlists,
     # graybox/whitebox use provided credentials (substituted in args template).
@@ -613,26 +716,26 @@ def run_scan(self, scan_id: str):
                 "display": _MODULE_DISPLAY.get(mod_id, mod_id),
                 "timestamp": time.time(),
             })
-            mod_output = ""
-            if mod_id == "m10":
-                logger.info("[%s] M10 CVE Correlator starting", scan_id)
-                mod_output = _run_cve_correlator(scan_id, target, all_outputs, r)
-                logger.info("[%s] M10 CVE Correlator done — output %d bytes", scan_id, len(mod_output))
-            elif mod_id == "m11":
-                logger.info("[%s] M11 Visual Recon starting", scan_id)
-                mod_output = _run_visual_recon(target)
-                logger.info("[%s] M11 Visual Recon done — output %d bytes", scan_id, len(mod_output))
-            elif mod_id == "m12":
-                logger.info("[%s] M12 Smart Credential Attack starting", scan_id)
-                mod_output = _run_smart_credential(scan_id, target, all_outputs, runner)
-                logger.info("[%s] M12 Smart Credential Attack done — output %d bytes", scan_id, len(mod_output))
-            elif mod_id == "m14":
-                logger.info("[%s] M14 Scan Comparator starting", scan_id)
-                mod_output = _run_scan_comparator(scan_id, target, db, scan)
-                logger.info("[%s] M14 Scan Comparator done — output %d bytes", scan_id, len(mod_output))
-            else:
-                mod_output = f"Module {mod_id} geselecteerd — wordt in toekomstige versie geïntegreerd."
-                logger.info("[%s] Custom module %s: not yet in pipeline", scan_id, mod_id)
+            logger.info("[%s] %s starting", scan_id, mod_id.upper())
+            try:
+                if mod_id == "m09":
+                    mod_output = _run_business_logic(target)
+                elif mod_id == "m10":
+                    mod_output = _run_cve_correlator(scan_id, target, all_outputs, r)
+                elif mod_id == "m11":
+                    mod_output = _run_visual_recon(target)
+                elif mod_id == "m12":
+                    mod_output = _run_smart_credential(scan_id, target, all_outputs, runner)
+                elif mod_id == "m13":
+                    mod_output = _run_ai_adaptive(scan_id, target, all_outputs, runner)
+                elif mod_id == "m14":
+                    mod_output = _run_scan_comparator(scan_id, target, db, scan)
+                else:
+                    mod_output = f"Module {mod_id} geselecteerd — nog niet geïmplementeerd."
+            except Exception as exc:  # a module must NEVER crash the scan
+                logger.exception("[%s] Custom module %s failed", scan_id, mod_id)
+                mod_output = f"[{mod_id.upper()}] Module mislukt: {exc}"
+            logger.info("[%s] %s done — output %d bytes", scan_id, mod_id.upper(), len(mod_output))
 
             all_outputs[mod_id] = {"module": mod_output}
             current_tool_outputs = scan.tool_outputs or {}
@@ -642,9 +745,21 @@ def run_scan(self, scan_id: str):
             completed.append(mod_id)
             scan.phases_completed = completed
             db.commit()
+
+            # Emit the FULL module output as a tool_done event so the live
+            # terminal renders every line (phase_complete alone showed nothing).
+            _pub(r, scan_id, {
+                "type":   "tool_done",
+                "phase":  mod_id,
+                "tool":   _MODULE_DISPLAY.get(mod_id, mod_id),
+                "success": not mod_output.lower().startswith(f"[{mod_id}] module mislukt"),
+                "duration": 0,
+                "output": mod_output,
+                "timestamp": time.time(),
+            })
             _pub(r, scan_id, {
                 "type": "phase_complete", "phase": mod_id,
-                "output": mod_output[:500], "timestamp": time.time(),
+                "output": mod_output, "timestamp": time.time(),
             })
 
         # ── Phase 8: AI Analysis (uses all phase + custom module output) ──────
