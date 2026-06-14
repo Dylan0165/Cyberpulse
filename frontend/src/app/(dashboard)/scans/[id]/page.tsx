@@ -62,13 +62,15 @@ const PHASE_META: Record<string, { display: string; tools: string[] }> = {
   auth:        { display: "Phase 5 — Authentication Tests",  tools: ["hydra"] },
   ssl:         { display: "Phase 6 — SSL/TLS Analysis",      tools: ["testssl.sh"] },
   osint:       { display: "Phase 7 — OSINT & Secrets",       tools: ["theharvester","gitleaks"] },
-  ai_analysis: { display: "Phase 8 — AI Analysis",           tools: ["DeepSeek"] },
+  // Custom modules run after the Kali phases…
   m09: { display: "M09 — Business Logic Tester",    tools: ["custom"] },
   m10: { display: "M10 — CVE Correlator",           tools: ["NVD API"] },
   m11: { display: "M11 — Visual Recon",             tools: ["Playwright"] },
   m12: { display: "M12 — Smart Credential Attack",  tools: ["hydra"] },
   m13: { display: "M13 — AI Adaptive Scanner",      tools: ["DeepSeek"] },
   m14: { display: "M14 — Scan Comparator",          tools: ["diff"] },
+  // …and AI Analysis is ALWAYS the final step.
+  ai_analysis: { display: "Phase 8 — AI Analysis",           tools: ["DeepSeek"] },
 };
 
 const CUSTOM_MODULE_KEYS = new Set(["m09", "m10", "m11", "m12", "m13", "m14"]);
@@ -136,7 +138,10 @@ export default function ScanDetailPage() {
         .filter(([name]) => !CUSTOM_MODULE_KEYS.has(name) || scanPhaseSet.has(name))
         .map(([name, meta], i) => {
           const hasOutput = !!(outputs && outputs[name]);
-          const done = completedSet.has(name) || hasOutput || (scanDone && name === "ai_analysis");
+          // A completed scan = every selected phase is done (green). Never show
+          // a pending circle on a completed scan. While running, a phase is done
+          // once it's in phases_completed or has produced output.
+          const done = scanDone || completedSet.has(name) || hasOutput;
           return {
             name, display: meta.display, num: i + 1,
             status: (done ? "done" : "pending") as PhaseState["status"],
@@ -230,6 +235,14 @@ export default function ScanDetailPage() {
       case "scan_complete":
         addTermLine(`[${ts}] ✓ Scan voltooid — risicoscore: ${ev.risk_score}/100 (${ev.risk_level})`);
         addTermLine(`         Bevindingen: ${ev.findings ?? 0} (${ev.critical ?? 0} kritiek, ${ev.high ?? 0} hoog)`);
+        // Mark every remaining phase node green immediately — no reload needed.
+        setPhases(prev => prev.map(p =>
+          p.status === "failed" ? p : {
+            ...p,
+            status: "done",
+            tools: p.tools.map(t => ({ ...t, done: true })),
+          }
+        ));
         queryClient.invalidateQueries({ queryKey: ["scan", scanId] });
         queryClient.invalidateQueries({ queryKey: ["scan-report", scanId] });
         setTab("report");
