@@ -69,11 +69,14 @@ const PHASE_META: Record<string, { display: string; tools: string[] }> = {
   m12: { display: "M12 — Smart Credential Attack",  tools: ["hydra"] },
   m13: { display: "M13 — AI Adaptive Scanner",      tools: ["DeepSeek"] },
   m14: { display: "M14 — Scan Comparator",          tools: ["diff"] },
+  m15: { display: "M15 — Autonomous Attack Agent",  tools: ["DeepSeek"] },
+  m16: { display: "M16 — Exploit Verificatie",      tools: ["Metasploit"] },
+  m17: { display: "M17 — Cloud Scanner",            tools: ["AWS","Azure","GCP"] },
   // …and AI Analysis is ALWAYS the final step.
   ai_analysis: { display: "Phase 8 — AI Analysis",           tools: ["DeepSeek"] },
 };
 
-const CUSTOM_MODULE_KEYS = new Set(["m09", "m10", "m11", "m12", "m13", "m14"]);
+const CUSTOM_MODULE_KEYS = new Set(["m09", "m10", "m11", "m12", "m13", "m14", "m15", "m16", "m17"]);
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 

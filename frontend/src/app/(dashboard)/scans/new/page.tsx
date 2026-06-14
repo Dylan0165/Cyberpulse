@@ -75,6 +75,9 @@ const CUSTOM_MODULE_OPTIONS = [
   { value: "m12", label: "M12 — Smart Credential Attack",  description: "Doelspecifieke wordlist + Hydra",              defaultChecked: false },
   { value: "m13", label: "M13 — AI Adaptive Scanner",      description: "DeepSeek bepaalt follow-up scans",             defaultChecked: false },
   { value: "m14", label: "M14 — Scan Comparator",          description: "Diff met vorige scan op hetzelfde target",     defaultChecked: false },
+  { value: "m15", label: "M15 — Autonomous Attack Agent",  description: "AI koppelt kwetsbaarheden samen in een aanvalsketen", defaultChecked: false },
+  { value: "m16", label: "M16 — Exploit Verificatie",      description: "Bewijst welke kwetsbaarheden echt exploiteerbaar zijn via Metasploit check-modus", defaultChecked: false },
+  { value: "m17", label: "M17 — Cloud Scanner",            description: "Controleert AWS, Azure en GCP op misconfiguraties en exposed storage", defaultChecked: false },
 ];
 
 const SCAN_TYPES = [
@@ -128,6 +131,14 @@ function NewScanContent() {
   const [bearerToken, setBearerToken] = useState("");
   const [customHeaders, setCustomHeaders] = useState("");
 
+  // Cloud credentials (optioneel, alleen relevant bij M17 — Cloud Scanner)
+  const [showCloudCreds, setShowCloudCreds] = useState(false);
+  const [cloudCreds, setCloudCreds] = useState({
+    aws_access_key: "",
+    aws_secret_key: "",
+    aws_region: "eu-west-1",
+  });
+
   const STEPS = [
     { n: 1, label: "Target" },
     { n: 2, label: "Modus" },
@@ -160,6 +171,10 @@ function NewScanContent() {
     },
     onError: (err: any) => {
       const detail = err?.response?.data?.detail;
+      if (err?.response?.status === 429) {
+        toast.error(detail?.message ?? "Te veel actieve scans. Probeer het later opnieuw.");
+        return;
+      }
       if (err?.response?.status === 403 && detail && typeof detail === "object") {
         if (detail.error === "verification_required") {
           const target_obj = allTargets.find((t: any) => t.id === selectedTarget);
@@ -196,7 +211,7 @@ function NewScanContent() {
     if (bearerToken)    creds.bearer_token   = bearerToken;
     if (customHeaders)  creds.custom_headers = customHeaders;
 
-    const payload = {
+    const payload: any = {
       target_id:   selectedTarget,
       scan_type:   scanType,
       // Kali phases + selected custom modules combined into one list
@@ -205,6 +220,20 @@ function NewScanContent() {
       target_type: targetType,
       credentials: creds,
     };
+
+    // Optionele cloud credentials — alleen meesturen als er iets is ingevuld.
+    // Worden niet opgeslagen na de scan (backend verwerkt config.cloud_credentials).
+    if (cloudCreds.aws_access_key || cloudCreds.aws_secret_key) {
+      payload.config = {
+        ...(payload.config ?? {}),
+        cloud_credentials: {
+          aws_access_key: cloudCreds.aws_access_key,
+          aws_secret_key: cloudCreds.aws_secret_key,
+          aws_region:     cloudCreds.aws_region,
+        },
+      };
+    }
+
     setLastPayload(payload);
     createScanMutation.mutate(payload);
   };
@@ -606,6 +635,80 @@ function NewScanContent() {
                 })}
               </motion.div>
             </div>
+
+            {/* Cloud credentials (optioneel) — alleen tonen wanneer M17 geselecteerd is */}
+            {selectedModules.has("m17") && (
+              <div className="space-y-3 border-t border-grid pt-5">
+                <button
+                  type="button"
+                  onClick={() => setShowCloudCreds((v) => !v)}
+                  className="flex w-full items-center justify-between rounded-lg border border-grid bg-card2 px-4 py-3 text-left transition-colors duration-150 hover:border-cyan/50"
+                >
+                  <span className="flex items-center gap-2">
+                    <Lock className="h-4 w-4 text-cyan" />
+                    <span className="font-mono text-[11px] uppercase tracking-[0.14em] text-ink-muted">
+                      Cloud credentials (optioneel)
+                    </span>
+                  </span>
+                  <ArrowRight
+                    className="h-4 w-4 text-ink-muted transition-transform duration-200"
+                    style={{ transform: showCloudCreds ? "rotate(90deg)" : "none" }}
+                  />
+                </button>
+
+                <AnimatePresence initial={false}>
+                  {showCloudCreds && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="overflow-hidden"
+                    >
+                      <div className="space-y-4 rounded-lg border border-grid bg-card2 p-5">
+                        <Field label="AWS Access Key">
+                          <input
+                            value={cloudCreds.aws_access_key}
+                            onChange={(e) =>
+                              setCloudCreds((c) => ({ ...c, aws_access_key: e.target.value }))
+                            }
+                            placeholder="AKIA..."
+                            className={inputCls}
+                          />
+                        </Field>
+
+                        <Field label="AWS Secret Key">
+                          <input
+                            type="password"
+                            value={cloudCreds.aws_secret_key}
+                            onChange={(e) =>
+                              setCloudCreds((c) => ({ ...c, aws_secret_key: e.target.value }))
+                            }
+                            placeholder="••••••••••••••••"
+                            className={inputCls}
+                          />
+                        </Field>
+
+                        <Field label="AWS Region">
+                          <input
+                            value={cloudCreds.aws_region}
+                            onChange={(e) =>
+                              setCloudCreds((c) => ({ ...c, aws_region: e.target.value }))
+                            }
+                            placeholder="eu-west-1"
+                            className={inputCls}
+                          />
+                        </Field>
+
+                        <p className="font-mono text-[10px] leading-snug text-ink-muted">
+                          Credentials worden niet opgeslagen na de scan.
+                        </p>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            )}
 
             <NavButtons onPrev={prevStep} onNext={nextStep} nextDisabled={selectedPhases.size === 0} />
           </motion.div>

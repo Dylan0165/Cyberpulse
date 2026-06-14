@@ -58,6 +58,12 @@ RULES:
 - Never include working exploit code.
 - If a phase produced no output or only errors, note it as INFO finding.
 - Be precise with CVSS scores.
+- If module M16 (Metasploit Verification) reports a finding as "BEWEZEN KWETSBAAR"
+  (proven exploitable), classify it as CRITICAL regardless of the CVSS score.
+- If module M17 (Cloud Scanner) reports exposed cloud metadata endpoints, public
+  storage buckets, or exposed cloud credentials, classify those as CRITICAL.
+- If module M15 (Autonomous Attack Agent) reports a successful multi-step attack
+  chain, treat the chained outcome as HIGH or CRITICAL based on the impact.
 """
 
 

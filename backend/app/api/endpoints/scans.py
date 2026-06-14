@@ -106,9 +106,32 @@ async def create_scan(
             "message": "Verifieer eigendom van dit systeem voordat u een scan start",
         })
 
+    # ── Rate limiting: global + per-user concurrent scans ──
+    _ACTIVE = ("pending", "running", "analyzing")
+    global_active = await db.scalar(
+        select(func.count(Scan.id)).where(Scan.status.in_(_ACTIVE))
+    ) or 0
+    if global_active >= 3:
+        raise HTTPException(status_code=429, detail={
+            "error": "too_many_scans",
+            "message": "Er draaien al 3 scans tegelijk. Wacht tot een scan voltooid is.",
+            "active_scans": global_active,
+        })
+    if auth_user is not None:
+        user_active = await db.scalar(
+            select(func.count(Scan.id)).where(
+                Scan.user_id == auth_user.id, Scan.status.in_(_ACTIVE)
+            )
+        ) or 0
+        if user_active >= 1:
+            raise HTTPException(status_code=429, detail={
+                "error": "scan_already_running",
+                "message": "U heeft al een actieve scan. Wacht tot deze voltooid is.",
+            })
+
     # Determine Kali phases from preset, then append any custom modules
-    # from body.phases so user-selected m09-m14 are never dropped.
-    _CUSTOM_MODULE_IDS = {"m09", "m10", "m11", "m12", "m13", "m14"}
+    # from body.phases so user-selected m09-m17 are never dropped.
+    _CUSTOM_MODULE_IDS = {"m09", "m10", "m11", "m12", "m13", "m14", "m15", "m16", "m17"}
     if body.scan_type == "quick":
         phases = list(QUICK_PHASES)
     elif body.scan_type == "full":

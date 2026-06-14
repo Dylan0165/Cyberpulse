@@ -103,6 +103,9 @@ _MODULE_DISPLAY = {
     "m12": "M12 — Smart Credential Attack",
     "m13": "M13 — AI Adaptive Scanner",
     "m14": "M14 — Scan Comparator",
+    "m15": "M15 — Autonomous Attack Agent",
+    "m16": "M16 — Exploit Verificatie",
+    "m17": "M17 — Cloud Scanner",
 }
 
 
@@ -607,6 +610,256 @@ def _run_ai_adaptive(scan_id: str, target: str, all_outputs: dict, runner) -> st
     return "\n".join(lines)
 
 
+# Tools M15/M17 are allowed to run; everything else (and any shell metachar) is blocked.
+_M15_ALLOWED_TOOLS = {"nmap", "curl", "httpx-pd", "nuclei", "ffuf", "nikto", "whatweb", "sqlmap", "gitleaks"}
+_FORBIDDEN_TOKENS = ("rm ", "wget", "chmod", "python", "bash", " sh ", "nc ", "netcat",
+                     "/bin/", ";", "&&", "||", "|", "`", "$(", ">", "<", "&")
+
+
+def _safe_chain_command(tool: str, args: str) -> bool:
+    if tool not in _M15_ALLOWED_TOOLS:
+        return False
+    blob = f" {tool} {args} ".lower()
+    return not any(tok in blob for tok in _FORBIDDEN_TOKENS)
+
+
+def _run_attack_agent(scan_id: str, target: str, all_outputs: dict, runner) -> str:
+    """M15 — Autonomous Attack Agent: DeepSeek chains findings into a safe attack path."""
+    lines: list[str] = ["[M15] Autonomous Attack Agent — aanvalsketen analyse"]
+    try:
+        if not settings.deepseek_api_key:
+            lines.append("[M15] DeepSeek niet geconfigureerd — overgeslagen.")
+            return "\n".join(lines)
+        import json as _json
+        from openai import OpenAI
+
+        context = ""
+        for phase, tools in all_outputs.items():
+            for tname, out in tools.items():
+                if out:
+                    context += f"\n## {phase}/{tname}\n{out[:600]}"
+        context = context[:4000] or "(geen output)"
+
+        client = OpenAI(api_key=settings.deepseek_api_key, base_url=settings.deepseek_base_url)
+        system = (
+            "You are an expert penetration tester. Based on scan results, generate an attack chain. "
+            "Respond ONLY with a raw JSON object, no markdown, no code blocks: "
+            '{"objective":"...","steps":[{"step":1,"name":"...","tool":"nmap|curl|httpx-pd|nuclei|ffuf|nikto|whatweb|sqlmap|gitleaks",'
+            '"command":"exact command with {target}","depends_on":"...","success_indicator":"..."}]} '
+            "Maximum 5 steps. Only read-only, non-destructive commands. No shell operators."
+        )
+        user = f"Target: {target}\nScan results:\n{context}"
+
+        logger.info("[%s] M15 starting", scan_id)
+        try:
+            resp = client.chat.completions.create(
+                model=settings.deepseek_model,
+                messages=[{"role": "system", "content": system}, {"role": "user", "content": user}],
+                temperature=0.2, max_tokens=900, timeout=30,
+            )
+        except Exception as call_exc:
+            msg = str(call_exc).lower()
+            lines.append("[M15] Timeout — AI niet bereikbaar binnen 30 seconden"
+                         if ("timeout" in msg or "timed out" in msg)
+                         else "[M15] AI tijdelijk niet beschikbaar — probeer opnieuw")
+            return "\n".join(lines)
+
+        raw = (resp.choices[0].message.content or "").strip()
+        clean = raw
+        if clean.startswith("```"):
+            parts = clean.split("```")
+            clean = parts[1] if len(parts) > 1 else clean
+            if clean.lstrip().lower().startswith("json"):
+                clean = clean.lstrip()[4:]
+        clean = clean.strip()
+        if not clean.startswith("{"):
+            s, e = clean.find("{"), clean.rfind("}") + 1
+            if s >= 0 and e > 0:
+                clean = clean[s:e]
+        try:
+            plan = _json.loads(clean)
+        except Exception:
+            logger.warning("[%s] M15: JSON parse failed | raw=%s", scan_id, raw[:300])
+            lines.append("[M15] Geen geldig aanvalsplan ontvangen — probeer opnieuw")
+            return "\n".join(lines)
+
+        objective = plan.get("objective", "onbekend")
+        steps = plan.get("steps", [])[:5]
+        lines.append(f"[M15] Doel: {objective}")
+        succeeded = 0
+        for st in steps:
+            num = st.get("step", "?")
+            name = st.get("name", "stap")
+            command = st.get("command", "")
+            indicator = st.get("success_indicator", "")
+            lines.append(f"[M15] Stap {num}: {name}")
+            lines.append(f"  Commando: {command}")
+            parts = command.split()
+            cmd_tool = parts[0] if parts else (st.get("tool") or "")
+            args = " ".join(parts[1:]).replace("{target}", target) if len(parts) > 1 else ""
+            if not _safe_chain_command(cmd_tool, args):
+                lines.append("  Status: OVERGESLAGEN (onveilig/niet-toegestaan commando) ✗")
+                continue
+            res = runner.run_safe(cmd_tool, args, 30)
+            out = (res.stdout or res.stderr or "").strip()
+            ok = bool(indicator) and indicator.lower()[:40] in out.lower()
+            lines.append(f"  Resultaat: {out[:300]}")
+            lines.append(f"  Status: {'GELUKT ✓' if ok else 'MISLUKT ✗'}")
+            if ok:
+                succeeded += 1
+        lines.append(f"[M15] Aanvalsketen voltooid — {succeeded} van {len(steps)} stappen geslaagd")
+        logger.info("[%s] M15 done — %d steps", scan_id, len(steps))
+    except Exception as exc:
+        logger.exception("[%s] M15 failed", scan_id)
+        lines.append(f"[M15] Attack agent niet beschikbaar — {exc}")
+    return "\n".join(lines)
+
+
+def _run_metasploit_verify(scan_id: str, target: str, all_outputs: dict, runner) -> str:
+    """M16 — Metasploit Verification: for M10 CVEs, run Metasploit `check` (non-destructive)."""
+    lines: list[str] = ["[M16] Metasploit Verificatie — exploit controle"]
+    try:
+        import re as _re
+        m10_text = ""
+        for v in (all_outputs.get("m10", {}) or {}).values():
+            if v:
+                m10_text += v + "\n"
+        cves = list(dict.fromkeys(_re.findall(r"CVE-\d{4}-\d{4,}", m10_text)))[:3]
+        if not cves:
+            lines.append("[M16] Geen CVEs van M10 om te verifiëren.")
+            return "\n".join(lines)
+
+        logger.info("[%s] M16 starting — %d CVEs", scan_id, len(cves))
+        # Availability probe
+        probe = runner.run_safe("msfconsole", "-v", 20)
+        probe_blob = ((probe.stdout or "") + (probe.stderr or "") + (getattr(probe, "error", "") or "")).lower()
+        if "not found" in probe_blob or (not probe.stdout and "framework" not in probe_blob and not probe.success):
+            lines.append("[M16] Metasploit niet beschikbaar op Kali VM")
+            lines.append("[M16] Installeer met: apt-get install metasploit-framework")
+            return "\n".join(lines)
+
+        proven = 0
+        for cve in cves:
+            lines.append(f"[M16] {cve}:")
+            search = runner.run_safe("msfconsole", f"-q -x \"search cve:{cve}; exit\"", 60)
+            sout = (search.stdout or "") + (search.stderr or "")
+            mod = _re.search(r"(exploit/\S+)", sout)
+            if not mod:
+                lines.append("  Module: geen Metasploit-module gevonden")
+                continue
+            module = mod.group(1)
+            lines.append(f"  Module: {module}")
+            chk = runner.run_safe(
+                "msfconsole",
+                f"-q -x \"use {module}; set RHOSTS {target}; check; exit\"",
+                90,
+            )
+            cl = ((chk.stdout or "") + (chk.stderr or "")).lower()
+            if "is vulnerable" in cl and "not vulnerable" not in cl:
+                proven += 1
+                lines.append("  Status: BEWEZEN KWETSBAAR ⚠️")
+                lines.append("  (Geen exploitatie uitgevoerd — check-only modus)")
+            elif "not vulnerable" in cl:
+                lines.append("  Status: Niet kwetsbaar op dit systeem ✓")
+            elif "does not support check" in cl:
+                lines.append("  Status: ONBEKEND (module ondersteunt check niet)")
+            else:
+                lines.append("  Status: NIET GETEST")
+        lines.append(f"[M16] Samenvatting: {len(cves)} CVEs getest, {proven} bewezen kwetsbaar")
+        logger.info("[%s] M16 done — %d proven", scan_id, proven)
+    except Exception as exc:
+        logger.exception("[%s] M16 failed", scan_id)
+        lines.append(f"[M16] Verificatie niet beschikbaar — {exc}")
+    return "\n".join(lines)
+
+
+def _run_cloud_scanner(scan_id: str, target: str, all_outputs: dict, scan, runner) -> str:
+    """M17 — Cloud Security Scanner: passive cloud-misconfig detection (+ optional creds)."""
+    lines: list[str] = ["[M17] Cloud Security Scanner"]
+    try:
+        import re as _re
+        import requests as _req
+
+        blob = ""
+        for tools in all_outputs.values():
+            for out in tools.values():
+                if out:
+                    blob += out + "\n"
+        bl = blob.lower()
+        if "amazonaws.com" in bl or "ec2" in bl or "169.254.169.254" in bl:
+            provider = "AWS"
+        elif "azure" in bl or "azurewebsites.net" in bl or "cloudapp.azure" in bl:
+            provider = "Azure"
+        elif "googleapis.com" in bl or "appspot.com" in bl or "metadata.google" in bl:
+            provider = "GCP"
+        else:
+            provider = "Onbekend"
+        lines.append(f"[M17] Cloud provider gedetecteerd: {provider}")
+
+        findings = 0
+        base = target if target.startswith("http") else f"http://{target}"
+        base = base.rstrip("/")
+
+        # Exposed metadata endpoints proxied through the target
+        for p in ("/latest/meta-data/", "/metadata/instance", "/computeMetadata/v1/"):
+            try:
+                r = _req.get(base + p, timeout=5, verify=False,
+                             headers={"Metadata-Flavor": "Google", "Metadata": "true"})
+                if r.status_code == 200 and r.text.strip():
+                    findings += 1
+                    lines.append(f"[M17] Metadata endpoint {p}: BEREIKBAAR ⚠️ KRITIEK")
+            except Exception:
+                pass
+
+        # Cloud-orchestration ports from nmap output
+        nmap_text = ""
+        for tname_tools in all_outputs.values():
+            for tname, out in tname_tools.items():
+                if "nmap" in tname.lower() and out:
+                    nmap_text += out + "\n"
+        port_svc = {"2375": "Docker API", "2376": "Docker API", "6443": "Kubernetes API",
+                    "10250": "Kubelet API", "8500": "Consul", "2379": "etcd", "4001": "etcd"}
+        for port, svc in port_svc.items():
+            if _re.search(rf"\b{port}/tcp\s+open", nmap_text):
+                findings += 1
+                lines.append(f"[M17] Poort {port} open: {svc} blootgesteld ⚠️")
+
+        # Optional active scan with user-supplied credentials (never persisted)
+        creds = (scan.config or {}).get("cloud_credentials") or {}
+        if creds.get("aws_access_key") and creds.get("aws_secret_key"):
+            lines.append("[M17] AWS credentials aanwezig — actieve scan...")
+            try:
+                import boto3  # type: ignore
+                sess = boto3.session.Session(
+                    aws_access_key_id=creds["aws_access_key"],
+                    aws_secret_access_key=creds["aws_secret_key"],
+                    region_name=creds.get("aws_region", "eu-west-1"),
+                )
+                s3 = sess.client("s3")
+                buckets = s3.list_buckets().get("Buckets", [])
+                lines.append(f"[M17] {len(buckets)} S3-buckets gevonden")
+                ec2 = sess.client("ec2")
+                for sg in ec2.describe_security_groups().get("SecurityGroups", []):
+                    for perm in sg.get("IpPermissions", []):
+                        for rng in perm.get("IpRanges", []):
+                            if rng.get("CidrIp") == "0.0.0.0/0":
+                                findings += 1
+                                lines.append(f"[M17] Security group {sg.get('GroupId')}: open voor internet ⚠️")
+            except ImportError:
+                lines.append("[M17] boto3 niet geïnstalleerd — actieve AWS-scan overgeslagen")
+            except Exception as exc:
+                lines.append(f"[M17] AWS-scan fout: {exc}")
+
+        if findings == 0:
+            lines.append("[M17] Geen cloud misconfiguraties gevonden ✓")
+        lines.append(f"[M17] Samenvatting: {findings} bevinding(en)")
+        logger.info("[%s] M17 done — %d findings", scan_id, findings)
+    except Exception as exc:
+        logger.exception("[%s] M17 failed", scan_id)
+        lines.append(f"[M17] Cloud scanner niet beschikbaar — {exc}")
+    return "\n".join(lines)
+
+
 def _should_run_phase(phase_name: str, scan_mode: str, phases_enabled: list | None) -> bool:
     # Auth phase runs in ALL modes — blackbox uses default wordlists,
     # graybox/whitebox use provided credentials (substituted in args template).
@@ -813,7 +1066,7 @@ def run_scan(self, scan_id: str):
 
         # ── Custom module phases (m09–m14) — run BEFORE AI analysis ───────────
         # so the AI analysis can use their output (e.g. M10's CVE data).
-        CUSTOM_MODULES = {"m09", "m10", "m11", "m12", "m13", "m14"}
+        CUSTOM_MODULES = {"m09", "m10", "m11", "m12", "m13", "m14", "m15", "m16", "m17"}
         custom_selected = [p for p in (scan.phases or []) if p in CUSTOM_MODULES]
         logger.info("[%s] Custom modules selected: %s", scan_id, custom_selected or "none")
 
@@ -838,6 +1091,12 @@ def run_scan(self, scan_id: str):
                     mod_output = _run_ai_adaptive(scan_id, target, all_outputs, runner)
                 elif mod_id == "m14":
                     mod_output = _run_scan_comparator(scan_id, target, db, scan)
+                elif mod_id == "m15":
+                    mod_output = _run_attack_agent(scan_id, target, all_outputs, runner)
+                elif mod_id == "m16":
+                    mod_output = _run_metasploit_verify(scan_id, target, all_outputs, runner)
+                elif mod_id == "m17":
+                    mod_output = _run_cloud_scanner(scan_id, target, all_outputs, scan, runner)
                 else:
                     mod_output = f"Module {mod_id} geselecteerd — nog niet geïmplementeerd."
             except Exception as exc:  # a module must NEVER crash the scan

@@ -9,7 +9,7 @@ VALID_PHASES = {
     # Kali VM phases
     "recon", "vulnerability", "webapp", "network", "auth", "ssl", "cloud", "osint",
     # Custom CyberPulse modules
-    "m09", "m10", "m11", "m12", "m13", "m14",
+    "m09", "m10", "m11", "m12", "m13", "m14", "m15", "m16", "m17",
 }
 VALID_SCAN_TYPES = {"quick", "full", "custom"}
 
