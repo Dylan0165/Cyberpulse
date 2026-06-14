@@ -8,7 +8,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
-from app.core.auth import get_current_user, get_client_ip
+from app.core.auth import get_current_user, get_client_ip, get_optional_user
 from app.models.target import Target
 from app.models.user import User
 from app.services.audit import log_action
@@ -16,6 +16,11 @@ from app.services.audit import log_action
 router = APIRouter(prefix="/targets", tags=["targets"])
 
 _STUDENT_USER_ID = uuid.UUID("00000000-0000-0000-0000-000000000001")
+
+
+def _owner_id(auth_user: User | None) -> uuid.UUID:
+    """Whose targets: the logged-in user, or the demo/student user."""
+    return auth_user.id if auth_user is not None else _STUDENT_USER_ID
 
 
 async def _student_user(db: AsyncSession) -> User:
@@ -46,8 +51,10 @@ async def create_target(
     request: Request,
     db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(get_current_user),
+    auth_user: User | None = Depends(get_optional_user),
 ):
-    user = await _student_user(db)
+    await _student_user(db)  # ensure the demo user exists
+    owner = _owner_id(auth_user)
 
     # Accept both 'value'/'hostname' and both 'name'/'hostname' field names
     value = body.get("value") or body.get("hostname") or body.get("url") or ""
@@ -68,7 +75,7 @@ async def create_target(
         target_type = "url"  # safe fallback
 
     target = Target(
-        user_id=user.id,
+        user_id=owner,
         name=name,
         target_type=target_type,
         value=value,
@@ -84,7 +91,7 @@ async def create_target(
 
     ip = await get_client_ip(request)
     await log_action(
-        db, "target_created", ip, user_id=user.id,
+        db, "target_created", ip, user_id=owner,
         resource_type="target", resource_id=str(target.id),
     )
 
@@ -95,9 +102,11 @@ async def create_target(
 async def list_targets(
     db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(get_current_user),
+    auth_user: User | None = Depends(get_optional_user),
 ):
+    owner = _owner_id(auth_user)
     result = await db.execute(
-        select(Target).order_by(Target.created_at.desc())
+        select(Target).where(Target.user_id == owner).order_by(Target.created_at.desc())
     )
     targets = result.scalars().all()
     return [_target_dict(t) for t in targets]
@@ -108,10 +117,11 @@ async def get_target(
     target_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(get_current_user),
+    auth_user: User | None = Depends(get_optional_user),
 ):
     result = await db.execute(select(Target).where(Target.id == target_id))
     target = result.scalar_one_or_none()
-    if not target:
+    if not target or target.user_id != _owner_id(auth_user):
         raise HTTPException(status_code=404, detail="Target not found")
     return _target_dict(target)
 
@@ -122,10 +132,11 @@ async def delete_target(
     request: Request,
     db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(get_current_user),
+    auth_user: User | None = Depends(get_optional_user),
 ):
     result = await db.execute(select(Target).where(Target.id == target_id))
     target = result.scalar_one_or_none()
-    if not target:
+    if not target or target.user_id != _owner_id(auth_user):
         raise HTTPException(status_code=404, detail="Target not found")
 
     await db.delete(target)

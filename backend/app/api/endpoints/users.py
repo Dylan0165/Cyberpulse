@@ -33,6 +33,9 @@ def _user_dict(u: User) -> dict:
         "onboarding_completed": u.onboarding_completed,
         "notify_on_complete": u.notify_on_complete,
         "notification_email": u.notification_email,
+        "ai_provider": getattr(u, "ai_provider", "deepseek") or "deepseek",
+        "ai_base_url": getattr(u, "ai_base_url", None),
+        "ai_api_key_set": bool(getattr(u, "ai_api_key", None)),
         "plan": u.plan,
         "created_at": u.created_at.isoformat() if u.created_at else None,
     }
@@ -43,6 +46,9 @@ class UpdateMeBody(BaseModel):
     company_name: str | None = None
     notify_on_complete: bool | None = None
     notification_email: str | None = None
+    ai_provider: str | None = None      # deepseek | anthropic | local
+    ai_api_key: str | None = None       # user's own key
+    ai_base_url: str | None = None      # for local models
 
 
 @router.patch("/me")
@@ -60,6 +66,12 @@ async def update_me(
         user.notify_on_complete = data["notify_on_complete"]
     if "notification_email" in data:
         user.notification_email = data["notification_email"]
+    if "ai_provider" in data and data["ai_provider"] in ("deepseek", "anthropic", "local"):
+        user.ai_provider = data["ai_provider"]
+    if "ai_api_key" in data:
+        user.ai_api_key = data["ai_api_key"] or None
+    if "ai_base_url" in data:
+        user.ai_base_url = data["ai_base_url"] or None
     await db.commit()
     await db.refresh(user)
     return _user_dict(user)

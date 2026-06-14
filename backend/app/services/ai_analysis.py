@@ -61,11 +61,35 @@ RULES:
 """
 
 
-def _get_client() -> OpenAI:
+def _get_client(ai_config: dict | None = None) -> OpenAI:
+    """Return an OpenAI-compatible client for the chosen provider.
+
+    - deepseek (default): platform DeepSeek key/base_url.
+    - local: the user's own base_url + API key (any OpenAI-compatible server).
+    - anthropic: not yet wired to the Anthropic SDK — falls back to DeepSeek
+      (this is the paid tier we add later).
+    """
+    ai_config = ai_config or {}
+    provider = (ai_config.get("provider") or "deepseek").lower()
+    if provider == "local" and ai_config.get("base_url"):
+        return OpenAI(
+            api_key=ai_config.get("api_key") or "no-key",
+            base_url=ai_config["base_url"],
+        )
+    if provider == "anthropic":
+        logger.info("AI provider 'anthropic' selected — not yet wired, using DeepSeek")
     return OpenAI(
         api_key=settings.deepseek_api_key or "no-key",
         base_url=settings.deepseek_base_url,
     )
+
+
+def _model_for(ai_config: dict | None) -> str:
+    ai_config = ai_config or {}
+    provider = (ai_config.get("provider") or "deepseek").lower()
+    if provider == "local":
+        return ai_config.get("model") or "local-model"
+    return settings.deepseek_model
 
 
 def analyze_scan_sync(
@@ -165,12 +189,14 @@ def analyze_scan_sync_streaming(
     phases_completed: list[str],
     all_outputs: dict[str, dict[str, str]],
     redis_client=None,
+    ai_config: dict | None = None,
 ) -> dict:
     """
     Like analyze_scan_sync but streams tokens to Redis channel
     `scan:{scan_id}:analysis` for live WebSocket updates.
     """
-    client = _get_client()
+    client = _get_client(ai_config)
+    _model = _model_for(ai_config)
 
     sections = []
     for phase, tools in all_outputs.items():
@@ -213,7 +239,7 @@ def analyze_scan_sync_streaming(
     accumulated = ""
     try:
         stream = client.chat.completions.create(
-            model=settings.deepseek_model,
+            model=_model,
             messages=[
                 {"role": "system", "content": SYSTEM_PROMPT},
                 {"role": "user",   "content": user_message},

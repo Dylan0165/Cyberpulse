@@ -18,19 +18,53 @@ import {
   XCircle,
   Copy,
   LogIn,
+  Cpu,
   type LucideIcon,
 } from "lucide-react";
 import { GlowCard } from "@/components/cyber/glow-card";
 import { useAuth } from "@/contexts/auth-context";
 import { usersApi } from "@/lib/api";
 
-type TabId = "account" | "notifications" | "apikey" | "kali";
+type TabId = "account" | "notifications" | "apikey" | "kali" | "aimodel";
 
 const TABS: { id: TabId; label: string; icon: LucideIcon }[] = [
   { id: "account", label: "Account", icon: User },
   { id: "notifications", label: "Notificaties", icon: Bell },
   { id: "apikey", label: "API Sleutel", icon: Key },
   { id: "kali", label: "Kali VM", icon: Server },
+  { id: "aimodel", label: "AI-model", icon: Cpu },
+];
+
+type AiProvider = "deepseek" | "anthropic" | "local";
+
+const AI_PROVIDERS: {
+  value: AiProvider;
+  title: string;
+  badge: string;
+  badgeColor: string;
+  desc: string;
+}[] = [
+  {
+    value: "deepseek",
+    title: "DeepSeek",
+    badge: "Goedkoopst",
+    badgeColor: "#00FF88",
+    desc: "Standaard model — snel en kostenefficiënt. Geen eigen sleutel nodig.",
+  },
+  {
+    value: "anthropic",
+    title: "Anthropic Claude",
+    badge: "Duurder",
+    badgeColor: "#FF8C00",
+    desc: "Hoogste kwaliteit analyse. (Binnenkort beschikbaar — vereist eigen API-sleutel.)",
+  },
+  {
+    value: "local",
+    title: "Lokaal model",
+    badge: "Duurst",
+    badgeColor: "#00B4D8",
+    desc: "Eigen/zelf-gehost model via uw API-endpoint. Volledige controle en privacy.",
+  },
 ];
 
 const inputCls =
@@ -102,13 +136,26 @@ export default function SettingsPage() {
   const [conn, setConn] = useState<"idle" | "testing" | "ok" | "fail">("idle");
   const [responseMs, setResponseMs] = useState<number | null>(null);
 
+  // AI-model
+  const [aiProvider, setAiProvider] = useState<AiProvider>("deepseek");
+  const [aiApiKey, setAiApiKey] = useState("");
+  const [aiBaseUrl, setAiBaseUrl] = useState("");
+  const [savingAi, setSavingAi] = useState(false);
+
   // Prefill form fields from the authenticated user.
   useEffect(() => {
     if (!user) return;
+    const u = user as any;
     setName(user.name ?? "");
     setCompany(user.company_name ?? "");
     setNotifyOn(!!user.notify_on_complete);
     setNotifyEmail(user.notification_email ?? "");
+    const provider = u.ai_provider;
+    setAiProvider(
+      provider === "anthropic" || provider === "local" ? provider : "deepseek"
+    );
+    setAiBaseUrl(u.ai_base_url ?? "");
+    setAiApiKey("");
   }, [user]);
 
   // Optional prefill of host/port from backend (graceful — ignore failures).
@@ -177,6 +224,28 @@ export default function SettingsPage() {
       toast.error("Kon instellingen niet opslaan");
     } finally {
       setSavingNotify(false);
+    }
+  }
+
+  async function saveAiModel() {
+    setSavingAi(true);
+    try {
+      const body: any = {
+        ai_provider: aiProvider,
+        ai_base_url: aiProvider === "local" ? aiBaseUrl : null,
+      };
+      // Only send a new key if the user actually typed one.
+      if (aiApiKey.trim() !== "") {
+        body.ai_api_key = aiApiKey;
+      }
+      await usersApi.updateMe(body);
+      toast.success("AI-model opgeslagen");
+      setAiApiKey("");
+      await refresh();
+    } catch {
+      toast.error("Opslaan mislukt");
+    } finally {
+      setSavingAi(false);
     }
   }
 
@@ -546,6 +615,121 @@ export default function SettingsPage() {
             <p className="mt-5 text-[12px] text-ink-muted">
               Wijzigingen vereisen een herstart van de server.
             </p>
+          </GlowCard>
+        </motion.div>
+      )}
+
+      {/* ── AI-model ── */}
+      {tab === "aimodel" && (
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.25 }}
+        >
+          <GlowCard className="p-6">
+            <div className="mb-1 flex items-center gap-2">
+              <Cpu className="h-4 w-4 text-cyan" />
+              <h2 className="text-[13px] font-semibold uppercase tracking-[0.1em] text-ink">
+                AI-model voor analyse
+              </h2>
+            </div>
+            <p className="mb-5 text-[13px] text-ink-muted">
+              Kies welk AI-model uw scanresultaten analyseert.
+            </p>
+
+            {!user ? (
+              <LoginPrompt message="Log in om uw AI-model te kiezen" />
+            ) : (
+              <>
+                <div
+                  role="radiogroup"
+                  aria-label="AI-model"
+                  className="grid grid-cols-1 gap-4 md:grid-cols-3"
+                >
+                  {AI_PROVIDERS.map((p) => {
+                    const selected = aiProvider === p.value;
+                    return (
+                      <button
+                        key={p.value}
+                        type="button"
+                        role="radio"
+                        aria-checked={selected}
+                        onClick={() => setAiProvider(p.value)}
+                        className={`flex flex-col rounded-lg border-2 bg-app p-4 text-left transition-colors ${
+                          selected
+                            ? "border-cyan"
+                            : "border-grid hover:border-cyan/30"
+                        }`}
+                      >
+                        <div className="mb-2 flex items-center justify-between gap-2">
+                          <span className="font-display text-[14px] font-semibold text-ink">
+                            {p.title}
+                          </span>
+                          <span
+                            className="rounded-full border px-2 py-0.5 text-[10px] font-medium uppercase tracking-[0.08em]"
+                            style={{
+                              color: p.badgeColor,
+                              borderColor: `${p.badgeColor}66`,
+                              backgroundColor: `${p.badgeColor}1a`,
+                            }}
+                          >
+                            {p.badge}
+                          </span>
+                        </div>
+                        <p className="text-[12px] leading-relaxed text-ink-muted">
+                          {p.desc}
+                        </p>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {(aiProvider === "anthropic" || aiProvider === "local") && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    className="mt-6 overflow-hidden"
+                  >
+                    <label className={labelCls}>Eigen API-sleutel</label>
+                    <input
+                      className={inputCls}
+                      type="password"
+                      value={aiApiKey}
+                      onChange={(e) => setAiApiKey(e.target.value)}
+                      placeholder={
+                        (user as any).ai_api_key_set
+                          ? "•••••• (opgeslagen)"
+                          : "sk-…"
+                      }
+                    />
+                  </motion.div>
+                )}
+
+                {aiProvider === "local" && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    className="mt-5 overflow-hidden"
+                  >
+                    <label className={labelCls}>API-endpoint (base URL)</label>
+                    <input
+                      className={inputCls}
+                      type="text"
+                      value={aiBaseUrl}
+                      onChange={(e) => setAiBaseUrl(e.target.value)}
+                      placeholder="http://localhost:11434/v1"
+                    />
+                  </motion.div>
+                )}
+
+                <div className="mt-6">
+                  <PrimaryButton onClick={saveAiModel} disabled={savingAi}>
+                    <Save className="h-4 w-4" />
+                    {savingAi ? "Opslaan..." : "Opslaan"}
+                  </PrimaryButton>
+                </div>
+              </>
+            )}
           </GlowCard>
         </motion.div>
       )}

@@ -84,7 +84,24 @@ def analyze_scan(self, scan_id: str):
                 "compliance_mapping": {"owasp_top10":[],"iso27001":[],"nis2":[]},
             }
         else:
-            # Stream DeepSeek output to the analysis WebSocket channel
+            # Resolve the scan owner's AI provider preference (default DeepSeek)
+            ai_config = None
+            try:
+                if scan.user_id:
+                    from app.models.user import User
+                    owner = db.query(User).filter(User.id == scan.user_id).first()
+                    if owner and getattr(owner, "ai_provider", "deepseek") != "deepseek":
+                        ai_config = {
+                            "provider": owner.ai_provider,
+                            "api_key": owner.ai_api_key,
+                            "base_url": owner.ai_base_url,
+                        }
+                        logger.info("Scan %s using AI provider '%s'", scan_id, owner.ai_provider)
+            except Exception as exc:
+                logger.warning("Could not load AI provider preference: %s", exc)
+                ai_config = None
+
+            # Stream analysis output to the WebSocket channel
             report = analyze_scan_sync_streaming(
                 scan_id=scan_id,
                 target=target_obj.value,
@@ -92,6 +109,7 @@ def analyze_scan(self, scan_id: str):
                 phases_completed=list(all_outputs.keys()),
                 all_outputs=all_outputs,
                 redis_client=r,
+                ai_config=ai_config,
             )
 
         # Extract finding counts from report
