@@ -851,36 +851,56 @@ def _run_cloud_scanner(scan_id: str, target: str, all_outputs: dict, scan, runne
     lines: list[str] = ["[M17] Cloud Security Scanner"]
     try:
         import re as _re
+        import ipaddress as _ip
         import requests as _req
 
+        # Privé IP-adressen zitten nooit in een publieke cloud — sla de hele
+        # cloudcheck over (AWS/Azure/GCP-metadata bevragen is dan zinloos).
+        host = (target or "").strip()
+        if "://" in host:
+            host = host.split("://", 1)[1]
+        host = host.split("/")[0].split(":")[0]
+        try:
+            ip_obj = _ip.ip_address(host)
+            is_private = ip_obj.is_private or ip_obj.is_loopback or ip_obj.is_link_local
+        except ValueError:
+            is_private = False  # hostname (geen IP) — gewoon doorgaan
+        if is_private:
+            lines.append("[M17] Privé IP-adres — geen cloud omgeving verwacht. Cloudcheck overgeslagen.")
+            return "\n".join(lines)
+
+        # Zwakke aanwijzing op basis van eerdere tooluitvoer (alleen sterke,
+        # ondubbelzinnige markers — losse substrings als "ec2" geven false
+        # positives). De definitieve bevestiging komt uit de metadata-endpoints.
         blob = ""
         for tools in all_outputs.values():
             for out in tools.values():
                 if out:
                     blob += out + "\n"
         bl = blob.lower()
-        if "amazonaws.com" in bl or "ec2" in bl or "169.254.169.254" in bl:
+        if "amazonaws.com" in bl or "169.254.169.254" in bl:
             provider = "AWS"
-        elif "azure" in bl or "azurewebsites.net" in bl or "cloudapp.azure" in bl:
+        elif "azurewebsites.net" in bl or "cloudapp.azure" in bl or "metadata.azure" in bl:
             provider = "Azure"
         elif "googleapis.com" in bl or "appspot.com" in bl or "metadata.google" in bl:
             provider = "GCP"
         else:
-            provider = "Onbekend"
-        lines.append(f"[M17] Cloud provider gedetecteerd: {provider}")
+            provider = None
+        cloud_detected = provider is not None
 
         findings = 0
         base = target if target.startswith("http") else f"http://{target}"
         base = base.rstrip("/")
 
-        # Exposed metadata endpoints — only flag if the body actually contains
-        # cloud-metadata markers (a bare 200 on these paths is a false positive).
+        # Exposed metadata endpoints — only flag (and only confirm a cloud
+        # provider) if the body actually contains cloud-metadata markers; a bare
+        # 200 on these paths is a false positive.
         _META_MARKERS = {
-            "/latest/meta-data/":     ("ami-id", "instance-id", "local-ipv4"),      # AWS
-            "/metadata/instance":     ("subscriptionid", "resourcegroupname", "vmid"),  # Azure
-            "/computeMetadata/v1/":   ("project-id", "numeric-project-id"),         # GCP
+            "/latest/meta-data/":     ("AWS",   ("ami-id", "instance-id", "local-ipv4")),
+            "/metadata/instance":     ("Azure", ("subscriptionid", "resourcegroupname", "vmid")),
+            "/computeMetadata/v1/":   ("GCP",   ("project-id", "numeric-project-id")),
         }
-        for p, markers in _META_MARKERS.items():
+        for p, (prov_name, markers) in _META_MARKERS.items():
             try:
                 r = _req.get(base + p, timeout=5, verify=False,
                              headers={"Metadata-Flavor": "Google", "Metadata": "true"})
@@ -889,11 +909,21 @@ def _run_cloud_scanner(scan_id: str, target: str, all_outputs: dict, scan, runne
                 body_l = r.text.lower()
                 if any(m in body_l for m in markers):
                     findings += 1
+                    cloud_detected = True
+                    provider = provider or prov_name
                     lines.append(f"[M17] Metadata endpoint {p}: BEREIKBAAR ⚠️ KRITIEK")
                 else:
-                    lines.append(f"[M17] Metadata pad {p} reageert maar bevat geen cloud metadata — geen cloud omgeving")
+                    lines.append(f"[M17] Metadata pad {p} reageert maar bevat geen cloud metadata")
             except Exception:
                 pass
+
+        # Alleen melden dat er een cloud provider is als er ook echt cloud-markers
+        # bevestigd zijn (sterke blob-marker of een metadata-endpoint met markers).
+        if cloud_detected:
+            lines.append(f"[M17] Cloud provider gedetecteerd: {provider}")
+        else:
+            lines.append("[M17] Geen cloud provider gedetecteerd")
+            lines.append("[M17] Systeem draait niet in een bekende cloudomgeving")
 
         # Cloud-orchestration ports from nmap output
         nmap_text = ""
