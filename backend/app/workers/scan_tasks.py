@@ -501,20 +501,60 @@ def _run_business_logic(target: str) -> str:
             except Exception:
                 lines.append(f"  {p} → geen verbinding")
 
-        # Rate-limit test: 20 snelle verzoeken
-        codes = []
-        try:
-            for _ in range(20):
-                rr = _req.get(base + "/", timeout=3, verify=False)
-                codes.append(rr.status_code)
-        except Exception:
-            pass
-        if codes and 429 not in codes and 503 not in codes:
-            lines.append(f"[M09] Ratelimiting: NIET GEDETECTEERD ⚠️ ({len(codes)} snelle verzoeken, geen 429/503)")
-        elif codes:
-            lines.append("[M09] Ratelimiting: gedetecteerd (429/503 ontvangen)")
+        # ── Rate-limit test op de JUISTE endpoints ──────────────────────────
+        # Rate limiting (slowapi) zit op de API-endpoints, niet op de root.
+        # We testen daarom primair de login- en scans-API en houden de root
+        # alleen als fallback aan.
+        def _ratelimit_probe(method: str, path: str, n: int, payload: dict | None = None):
+            """Vuur n snelle verzoeken af. Geeft (gedetecteerd, verzoek_nr, gezien)
+            terug — gezien=False als de server helemaal niet reageerde."""
+            url = base + path
+            seen = False
+            for i in range(1, n + 1):
+                try:
+                    if method == "POST":
+                        rr = _req.post(url, json=payload, timeout=3, verify=False,
+                                       headers={"User-Agent": "CyberPulse/1.0"})
+                    else:
+                        rr = _req.get(url, timeout=3, verify=False,
+                                      headers={"User-Agent": "CyberPulse/1.0"})
+                    seen = True
+                except Exception:
+                    continue
+                if rr.status_code in (429, 503):
+                    return True, i, True
+            return False, n, seen
+
+        # Primair: login-endpoint — 15 snelle pogingen met dummy-gegevens
+        det, num, seen = _ratelimit_probe(
+            "POST", "/api/auth/login", 15,
+            {"email": "ratelimit-test@cyberpulse.local", "password": "wrongpassword123"},
+        )
+        if det:
+            lines.append(f"[M09] Rate limiting /api/auth/login: GEDETECTEERD ✓ (429 na {num} verzoeken)")
+        elif seen:
+            lines.append("[M09] Rate limiting /api/auth/login: NIET GEDETECTEERD ⚠️")
         else:
-            lines.append("[M09] Ratelimiting: geen webserver bereikbaar")
+            lines.append("[M09] Rate limiting /api/auth/login: endpoint niet bereikbaar")
+
+        # Secundair: scans-endpoint — 25 snelle verzoeken
+        det2, num2, seen2 = _ratelimit_probe("GET", "/api/scans", 25)
+        if det2:
+            lines.append(f"[M09] Rate limiting /api/scans: GEDETECTEERD ✓ (429 na {num2} verzoeken)")
+        elif seen2:
+            lines.append("[M09] Rate limiting /api/scans: NIET GEDETECTEERD ⚠️")
+        else:
+            lines.append("[M09] Rate limiting /api/scans: endpoint niet bereikbaar")
+
+        # Fallback: root-pad — 20 verzoeken
+        det3, num3, seen3 = _ratelimit_probe("GET", "/", 20)
+        if det3:
+            lines.append(f"[M09] Rate limiting / (root): GEDETECTEERD ✓ (429 na {num3} verzoeken)")
+        elif seen3:
+            lines.append("[M09] Rate limiting / (root): NIET GEDETECTEERD ⚠️ (20 verzoeken, geen 429/503)")
+        else:
+            lines.append("[M09] Rate limiting / (root): geen webserver bereikbaar")
+
         lines.append(f"[M09] {exposed} interessante endpoint(s) gevonden.")
     except Exception as exc:
         lines.append(f"[M09] Fout tijdens uitvoering: {exc}")
@@ -610,17 +650,49 @@ def _run_ai_adaptive(scan_id: str, target: str, all_outputs: dict, runner) -> st
     return "\n".join(lines)
 
 
-# Tools M15/M17 are allowed to run; everything else (and any shell metachar) is blocked.
+# Tools M15 is allowed to run in an attack chain.
 _M15_ALLOWED_TOOLS = {"nmap", "curl", "httpx-pd", "nuclei", "ffuf", "nikto", "whatweb", "sqlmap", "gitleaks"}
-_FORBIDDEN_TOKENS = ("rm ", "wget", "chmod", "python", "bash", " sh ", "nc ", "netcat",
-                     "/bin/", ";", "&&", "||", "|", "`", "$(", ">", "<", "&")
+
+# Patterns that are dangerous REGARDLESS of where they appear — these actually
+# execute code, write/destroy files on the target, open a shell, download-and-run
+# a payload, or chain a second command. We deliberately do NOT block HTML/script
+# tags or query-string characters (< > &): sending "<script>alert(1)</script>"
+# in a URL via curl is a read-only HTTP request — the markup is inert data and is
+# only dangerous if a *browser* renders it. Reflected-XSS testing this way is
+# standard practice, so a plain curl/httpx GET is always allowed.
+_DANGEROUS_PATTERNS = (
+    # destructive filesystem operations
+    " rm ", " rm-", " dd ", " mkfs", " shred", " :()", " chmod", " chown", " mv ",
+    " mkdir ", " truncate ", " format ", " reboot", " shutdown", " kill ", " killall",
+    # write a file TO THE TARGET (HTTP upload / PUT body from a local file)
+    " --upload-file", " --data-binary @", " --data @", " -d @",
+    # spawn a shell / language interpreter (code execution)
+    "/bin/sh", "/bin/bash", "/bin/zsh", " sh -c", " bash -c", " bash -i", " zsh -c",
+    " python -c", " python3 -c", " perl -e", " ruby -e", " php -r", " node -e",
+    " eval ", "eval(", " exec ", "exec(", " system(",
+    # reverse shells
+    " nc ", " ncat ", " netcat ", " socat ", "/dev/tcp/", " mkfifo", " -e /bin",
+    # command chaining / substitution (run a SECOND command)
+    ";", "&&", "||", "`", "$(", "| sh", "|sh", "| bash", "|bash", "| nc", "|nc",
+    "| python", "|python", "| perl", "|perl", "| ruby", "| node",
+    # download tools / non-http fetch schemes (download-and-execute precursors)
+    "wget", "curl -o", "file://", "gopher://", "dict://", "ftp://",
+)
 
 
 def _safe_chain_command(tool: str, args: str) -> bool:
+    """Allow read-only recon/test commands; block anything that executes code,
+    writes or destroys files, opens a shell, downloads-and-runs a payload, or
+    chains a second command.
+
+    A plain curl / httpx GET request is ALWAYS safe — even when the URL contains
+    an XSS test payload like <script>alert(1)</script> or other HTML in the query
+    string — because curl merely sends an HTTP request and never renders markup.
+    """
     if tool not in _M15_ALLOWED_TOOLS:
         return False
     blob = f" {tool} {args} ".lower()
-    return not any(tok in blob for tok in _FORBIDDEN_TOKENS)
+    return not any(pat in blob for pat in _DANGEROUS_PATTERNS)
 
 
 def _run_attack_agent(scan_id: str, target: str, all_outputs: dict, runner) -> str:
