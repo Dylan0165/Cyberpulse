@@ -690,13 +690,14 @@ def _run_attack_agent(scan_id: str, target: str, all_outputs: dict, runner) -> s
         for st in steps:
             num = st.get("step", "?")
             name = st.get("name", "stap")
-            command = st.get("command", "")
+            # Replace the {target} placeholder in the WHOLE command before anything else.
+            command = (st.get("command", "") or "").replace("{target}", target)
             indicator = st.get("success_indicator", "")
             lines.append(f"[M15] Stap {num}: {name}")
             lines.append(f"  Commando: {command}")
             parts = command.split()
             cmd_tool = parts[0] if parts else (st.get("tool") or "")
-            args = " ".join(parts[1:]).replace("{target}", target) if len(parts) > 1 else ""
+            args = " ".join(parts[1:]) if len(parts) > 1 else ""
             if not _safe_chain_command(cmd_tool, args):
                 lines.append("  Status: OVERGESLAGEN (onveilig/niet-toegestaan commando) ✗")
                 continue
@@ -800,14 +801,25 @@ def _run_cloud_scanner(scan_id: str, target: str, all_outputs: dict, scan, runne
         base = target if target.startswith("http") else f"http://{target}"
         base = base.rstrip("/")
 
-        # Exposed metadata endpoints proxied through the target
-        for p in ("/latest/meta-data/", "/metadata/instance", "/computeMetadata/v1/"):
+        # Exposed metadata endpoints — only flag if the body actually contains
+        # cloud-metadata markers (a bare 200 on these paths is a false positive).
+        _META_MARKERS = {
+            "/latest/meta-data/":     ("ami-id", "instance-id", "local-ipv4"),      # AWS
+            "/metadata/instance":     ("subscriptionid", "resourcegroupname", "vmid"),  # Azure
+            "/computeMetadata/v1/":   ("project-id", "numeric-project-id"),         # GCP
+        }
+        for p, markers in _META_MARKERS.items():
             try:
                 r = _req.get(base + p, timeout=5, verify=False,
                              headers={"Metadata-Flavor": "Google", "Metadata": "true"})
-                if r.status_code == 200 and r.text.strip():
+                if r.status_code != 200 or not r.text.strip():
+                    continue
+                body_l = r.text.lower()
+                if any(m in body_l for m in markers):
                     findings += 1
                     lines.append(f"[M17] Metadata endpoint {p}: BEREIKBAAR ⚠️ KRITIEK")
+                else:
+                    lines.append(f"[M17] Metadata pad {p} reageert maar bevat geen cloud metadata — geen cloud omgeving")
             except Exception:
                 pass
 

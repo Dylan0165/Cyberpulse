@@ -60,6 +60,18 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Per-IP request rate limiting (slowapi). Decorators live on sensitive endpoints.
+try:
+    from app.core.ratelimit import limiter, SLOWAPI_AVAILABLE
+    if SLOWAPI_AVAILABLE:
+        from slowapi import _rate_limit_exceeded_handler
+        from slowapi.errors import RateLimitExceeded
+        app.state.limiter = limiter
+        app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+        logger.info("Rate limiting enabled (slowapi)")
+except Exception as exc:
+    logger.warning("Rate limiting not enabled: %s", exc)
+
 # API Routes
 app.include_router(users.router, prefix="/api")
 app.include_router(targets.router, prefix="/api")

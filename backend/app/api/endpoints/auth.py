@@ -10,10 +10,12 @@ import secrets
 import uuid
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends, HTTPException, Response
+from fastapi import APIRouter, Depends, HTTPException, Response, Request
 from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.core.ratelimit import limiter
 
 logger = logging.getLogger(__name__)
 
@@ -85,7 +87,9 @@ def _set_token_cookie(response: Response, token: str) -> None:
 # ── Endpoints ────────────────────────────────────────────────────────────────
 
 @router.post("/register")
+@limiter.limit("5/minute")
 async def register(
+    request: Request,
     body: RegisterBody,
     response: Response,
     db: AsyncSession = Depends(get_db),
@@ -133,7 +137,9 @@ async def register(
 
 
 @router.post("/login")
+@limiter.limit("10/minute")
 async def login(
+    request: Request,
     body: LoginBody,
     response: Response,
     db: AsyncSession = Depends(get_db),

@@ -13,6 +13,7 @@ import secrets as _secrets
 
 from app.core.database import get_db
 from app.core.auth import get_current_user, get_client_ip, get_optional_user
+from app.core.ratelimit import limiter
 from app.models.user import User
 
 
@@ -71,9 +72,10 @@ async def _student_user(db: AsyncSession) -> User:
 
 
 @router.post("/", response_model=ScanResponse)
+@limiter.limit("20/minute")
 async def create_scan(
-    body: ScanCreate,
     request: Request,
+    body: ScanCreate,
     db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(get_current_user),
     auth_user: User | None = Depends(get_optional_user),
