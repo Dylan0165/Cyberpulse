@@ -12,7 +12,7 @@ import ipaddress
 import secrets as _secrets
 
 from app.core.database import get_db
-from app.core.auth import get_current_user, get_client_ip, get_optional_user
+from app.core.auth import get_current_user, get_client_ip, get_required_user
 from app.core.ratelimit import limiter
 from app.models.user import User
 
@@ -78,7 +78,7 @@ async def create_scan(
     body: ScanCreate,
     db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(get_current_user),
-    auth_user: User | None = Depends(get_optional_user),
+    auth_user: User = Depends(get_required_user),
 ):
     user = await _student_user(db)
 
@@ -199,7 +199,7 @@ async def list_scans(
     page_size: int = 20,
     db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(get_current_user),
-    auth_user: User | None = Depends(get_optional_user),
+    auth_user: User = Depends(get_required_user),
 ):
     owner = _owner_id(auth_user, _STUDENT_USER_ID)
     total = await db.scalar(select(func.count(Scan.id)).where(Scan.user_id == owner))
@@ -220,7 +220,7 @@ async def get_scan(
     scan_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(get_current_user),
-    auth_user: User | None = Depends(get_optional_user),
+    auth_user: User = Depends(get_required_user),
 ):
     result = await db.execute(select(Scan).where(Scan.id == scan_id))
     scan = result.scalar_one_or_none()
@@ -240,9 +240,11 @@ async def start_scan(
     scan_id: uuid.UUID,
     request: Request,
     db: AsyncSession = Depends(get_db),
-    current_user: dict = Depends(get_current_user),
+    auth_user: User = Depends(get_required_user),
 ):
-    result = await db.execute(select(Scan).where(Scan.id == scan_id))
+    result = await db.execute(
+        select(Scan).where(Scan.id == scan_id, Scan.user_id == auth_user.id)
+    )
     scan = result.scalar_one_or_none()
     if not scan:
         raise HTTPException(status_code=404, detail="Scan not found")
@@ -261,7 +263,7 @@ async def start_scan(
 
     ip = await get_client_ip(request)
     await log_action(
-        db, "scan_started", ip, user_id=_STUDENT_USER_ID,
+        db, "scan_started", ip, user_id=auth_user.id,
         resource_type="scan", resource_id=str(scan.id),
     )
 
@@ -273,9 +275,11 @@ async def cancel_scan(
     scan_id: uuid.UUID,
     request: Request,
     db: AsyncSession = Depends(get_db),
-    current_user: dict = Depends(get_current_user),
+    auth_user: User = Depends(get_required_user),
 ):
-    result = await db.execute(select(Scan).where(Scan.id == scan_id))
+    result = await db.execute(
+        select(Scan).where(Scan.id == scan_id, Scan.user_id == auth_user.id)
+    )
     scan = result.scalar_one_or_none()
     if not scan:
         raise HTTPException(status_code=404, detail="Scan not found")
@@ -302,9 +306,11 @@ async def get_report(
     scan_id: uuid.UUID,
     request: Request,
     db: AsyncSession = Depends(get_db),
-    current_user: dict = Depends(get_current_user),
+    auth_user: User = Depends(get_required_user),
 ):
-    result = await db.execute(select(Scan).where(Scan.id == scan_id))
+    result = await db.execute(
+        select(Scan).where(Scan.id == scan_id, Scan.user_id == auth_user.id)
+    )
     scan = result.scalar_one_or_none()
     if not scan:
         raise HTTPException(status_code=404, detail="Scan not found")

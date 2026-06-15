@@ -8,7 +8,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
-from app.core.auth import get_current_user, get_client_ip, get_optional_user
+from app.core.auth import get_current_user, get_client_ip, get_required_user
 from app.models.target import Target
 from app.models.user import User
 from app.services.audit import log_action
@@ -51,7 +51,7 @@ async def create_target(
     request: Request,
     db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(get_current_user),
-    auth_user: User | None = Depends(get_optional_user),
+    auth_user: User = Depends(get_required_user),
 ):
     await _student_user(db)  # ensure the demo user exists
     owner = _owner_id(auth_user)
@@ -102,7 +102,7 @@ async def create_target(
 async def list_targets(
     db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(get_current_user),
-    auth_user: User | None = Depends(get_optional_user),
+    auth_user: User = Depends(get_required_user),
 ):
     owner = _owner_id(auth_user)
     result = await db.execute(
@@ -117,7 +117,7 @@ async def get_target(
     target_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(get_current_user),
-    auth_user: User | None = Depends(get_optional_user),
+    auth_user: User = Depends(get_required_user),
 ):
     result = await db.execute(select(Target).where(Target.id == target_id))
     target = result.scalar_one_or_none()
@@ -132,7 +132,7 @@ async def delete_target(
     request: Request,
     db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(get_current_user),
-    auth_user: User | None = Depends(get_optional_user),
+    auth_user: User = Depends(get_required_user),
 ):
     result = await db.execute(select(Target).where(Target.id == target_id))
     target = result.scalar_one_or_none()

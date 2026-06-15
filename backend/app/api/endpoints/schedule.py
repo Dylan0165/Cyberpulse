@@ -1,7 +1,6 @@
 """Scheduled-scan endpoints — manage recurring automated scans.
 
-Demo-friendly: uses get_optional_user so unauthenticated requests work.
-Celery Beat (run_scheduled_scans) picks up active schedules whose
+Login required. Celery Beat (run_scheduled_scans) picks up active schedules whose
 next_run_at has passed.
 """
 
@@ -14,7 +13,7 @@ from sqlalchemy import select, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
-from app.core.auth import get_optional_user
+from app.core.auth import get_required_user
 from app.models.scheduled_scan import ScheduledScan
 from app.models.user import User
 
@@ -65,7 +64,7 @@ def _user_cond(user: Optional[User]):
 @router.get("/")
 async def list_schedules(
     db: AsyncSession = Depends(get_db),
-    user: Optional[User] = Depends(get_optional_user),
+    user: User = Depends(get_required_user),
 ):
     """List scheduled scans for the current user (or demo/global)."""
     try:
@@ -84,7 +83,7 @@ async def list_schedules(
 async def create_schedule(
     body: ScheduleCreate,
     db: AsyncSession = Depends(get_db),
-    user: Optional[User] = Depends(get_optional_user),
+    user: User = Depends(get_required_user),
 ):
     """Create a new scheduled scan."""
     next_run_at = datetime.now(timezone.utc) + _interval(body.schedule_type)
@@ -109,7 +108,7 @@ async def create_schedule(
 async def toggle_schedule(
     schedule_id: str,
     db: AsyncSession = Depends(get_db),
-    user: Optional[User] = Depends(get_optional_user),
+    user: User = Depends(get_required_user),
 ):
     """Toggle the is_active flag of a scheduled scan."""
     result = await db.execute(
@@ -129,7 +128,7 @@ async def toggle_schedule(
 async def delete_schedule(
     schedule_id: str,
     db: AsyncSession = Depends(get_db),
-    user: Optional[User] = Depends(get_optional_user),
+    user: User = Depends(get_required_user),
 ):
     """Delete a scheduled scan."""
     result = await db.execute(

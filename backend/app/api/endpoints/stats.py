@@ -8,7 +8,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
-from app.core.auth import get_current_user, get_optional_user
+from app.core.auth import get_current_user, get_required_user
 from app.models.scan import Scan
 from app.models.user import User
 
@@ -33,7 +33,7 @@ def _risk_for_scan(scan: Scan) -> int:
 async def get_stats(
     db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(get_current_user),
-    auth_user: User | None = Depends(get_optional_user),
+    auth_user: User = Depends(get_required_user),
 ):
     try:
         owner = auth_user.id if auth_user is not None else _STUDENT_USER_ID

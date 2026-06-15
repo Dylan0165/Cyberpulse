@@ -1,18 +1,15 @@
 """Notification endpoints — in-app notifications (e.g. scan complete).
 
-Demo-friendly: uses get_optional_user so unauthenticated requests work.
-When a user is present, they see their own + global (NULL) notifications.
-When anonymous, only global (NULL) notifications are returned.
+Login required: each user sees their own notifications plus global (NULL)
+system notices.
 """
-
-from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select, or_, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
-from app.core.auth import get_optional_user
+from app.core.auth import get_required_user
 from app.models.notification import Notification
 from app.models.user import User
 
@@ -34,7 +31,7 @@ def _serialize(n: Notification) -> dict:
 @router.get("/")
 async def list_notifications(
     db: AsyncSession = Depends(get_db),
-    user: Optional[User] = Depends(get_optional_user),
+    user: User = Depends(get_required_user),
 ):
     """Return the last 20 notifications for the current user (or demo/global)."""
     try:
@@ -58,7 +55,7 @@ async def list_notifications(
 async def mark_read(
     notif_id: str,
     db: AsyncSession = Depends(get_db),
-    user: Optional[User] = Depends(get_optional_user),
+    user: User = Depends(get_required_user),
 ):
     """Mark a single notification as read (only if owned by user or global)."""
     if user is not None:
@@ -81,7 +78,7 @@ async def mark_read(
 @router.post("/read-all")
 async def mark_all_read(
     db: AsyncSession = Depends(get_db),
-    user: Optional[User] = Depends(get_optional_user),
+    user: User = Depends(get_required_user),
 ):
     """Mark all matching notifications as read."""
     if user is not None:
