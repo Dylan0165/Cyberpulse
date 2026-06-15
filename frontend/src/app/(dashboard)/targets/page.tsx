@@ -81,7 +81,7 @@ export default function TargetsPage() {
       <div className="flex items-center justify-between gap-4">
         <div>
           <h1 className="font-display text-[28px] font-bold text-ink" style={{ letterSpacing: "-0.03em" }}>
-            Doelen
+            Mijn systemen
           </h1>
           <p className="mt-1 text-[14px] text-ink-muted">
             Beheer de systemen die u regelmatig wilt laten testen

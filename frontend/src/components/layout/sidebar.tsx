@@ -6,25 +6,26 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import {
   LayoutDashboard, Radar, Target, FileText, Calendar,
-  Wrench, Settings, Shield,
+  Wrench, Settings, Shield, Sparkles,
 } from "lucide-react";
 
 const NAV = [
-  { name: "Dashboard",    href: "/dashboard", icon: LayoutDashboard },
-  { name: "Scans",        href: "/scans",     icon: Radar },
-  { name: "Doelen",       href: "/targets",   icon: Target },
-  { name: "Rapporten",    href: "/reports",   icon: FileText },
-  { name: "Planning",     href: "/schedule",  icon: Calendar },
-  { name: "Tools",        href: "/tools",     icon: Wrench },
-  { name: "Instellingen", href: "/settings",  icon: Settings },
+  { name: "Overzicht",          href: "/dashboard", icon: LayoutDashboard },
+  { name: "Beveiligingstests",  href: "/scans",     icon: Radar },
+  { name: "Mijn systemen",      href: "/targets",   icon: Target },
+  { name: "Rapporten",          href: "/reports",   icon: FileText },
+  { name: "Automatische tests", href: "/schedule",  icon: Calendar },
+  { name: "Tools",              href: "/tools",     icon: Wrench },
+  { name: "AI Upgraden",        href: "/upgrade",   icon: Sparkles },
+  { name: "Instellingen",       href: "/settings",  icon: Settings },
 ];
 
 const MOBILE_NAV = [
-  { name: "Dashboard",    href: "/dashboard", icon: LayoutDashboard },
-  { name: "Scans",        href: "/scans",     icon: Radar },
-  { name: "Doelen",       href: "/targets",   icon: Target },
-  { name: "Rapporten",    href: "/reports",   icon: FileText },
-  { name: "Instellingen", href: "/settings",  icon: Settings },
+  { name: "Overzicht",         href: "/dashboard", icon: LayoutDashboard },
+  { name: "Beveiligingstests", href: "/scans",     icon: Radar },
+  { name: "Mijn systemen",     href: "/targets",   icon: Target },
+  { name: "Rapporten",         href: "/reports",   icon: FileText },
+  { name: "Instellingen",      href: "/settings",  icon: Settings },
 ];
 
 const isActive = (pathname: string, href: string) =>

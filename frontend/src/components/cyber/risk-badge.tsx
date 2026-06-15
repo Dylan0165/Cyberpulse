@@ -1,15 +1,16 @@
 "use client";
 
 import { cn } from "@/lib/utils";
+import { SEVERITY } from "@/lib/labels";
 
 type Severity = "critical" | "high" | "medium" | "low" | "info";
 
-const STYLES: Record<Severity, { label: string; color: string; bg: string; glow: string }> = {
-  critical: { label: "CRITICAL", color: "#FF2D55", bg: "rgba(255,45,85,0.12)",  glow: "0 0 14px rgba(255,45,85,0.4)" },
-  high:     { label: "HIGH",     color: "#FF8C00", bg: "rgba(255,140,0,0.12)",  glow: "0 0 14px rgba(255,140,0,0.35)" },
-  medium:   { label: "MEDIUM",   color: "#FFD60A", bg: "rgba(255,214,10,0.12)", glow: "0 0 14px rgba(255,214,10,0.3)" },
-  low:      { label: "LOW",      color: "#0A84FF", bg: "rgba(10,132,255,0.12)", glow: "0 0 14px rgba(10,132,255,0.3)" },
-  info:     { label: "INFO",     color: "#4A6880", bg: "rgba(74,104,128,0.12)", glow: "none" },
+const STYLES: Record<Severity, { color: string; bg: string; glow: string }> = {
+  critical: { color: "#FF2D55", bg: "rgba(255,45,85,0.12)",  glow: "0 0 14px rgba(255,45,85,0.4)" },
+  high:     { color: "#FF8C00", bg: "rgba(255,140,0,0.12)",  glow: "0 0 14px rgba(255,140,0,0.35)" },
+  medium:   { color: "#FFD60A", bg: "rgba(255,214,10,0.12)", glow: "0 0 14px rgba(255,214,10,0.3)" },
+  low:      { color: "#0A84FF", bg: "rgba(10,132,255,0.12)", glow: "0 0 14px rgba(10,132,255,0.3)" },
+  info:     { color: "#4A6880", bg: "rgba(74,104,128,0.12)", glow: "none" },
 };
 
 export function RiskBadge({
@@ -25,10 +26,12 @@ export function RiskBadge({
 }) {
   const key = (severity || "info").toLowerCase() as Severity;
   const s = STYLES[key] ?? STYLES.info;
+  const meta = SEVERITY[key] ?? SEVERITY.info;
   return (
     <span
+      title={meta.tooltip}
       className={cn(
-        "inline-flex items-center rounded px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider font-mono",
+        "inline-flex items-center rounded px-2 py-0.5 text-[11px] font-semibold tracking-wide font-mono",
         "transition-shadow duration-200",
         className
       )}
@@ -39,7 +42,7 @@ export function RiskBadge({
         boxShadow: withGlow ? s.glow : "none",
       }}
     >
-      {children ?? s.label}
+      {children ?? meta.label}
     </span>
   );
 }

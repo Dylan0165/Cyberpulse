@@ -32,14 +32,14 @@ interface ToolsResponse {
 }
 
 const PHASE_LABELS: Record<number, string> = {
-  1: "Reconnaissance",
-  2: "Vulnerability Scan",
-  3: "Web Application",
-  4: "Network",
-  5: "Authentication",
-  6: "SSL / TLS",
-  7: "OSINT",
-  0: "Other",
+  1: "Verkenning",
+  2: "Zwakke plekken zoeken",
+  3: "Website testen",
+  4: "Netwerk",
+  5: "Wachtwoorden testen",
+  6: "Beveiligde verbinding",
+  7: "Openbare informatie",
+  0: "Overig",
 };
 
 // Only the tools CyberPulse actively uses in its scan phases.
@@ -173,12 +173,12 @@ export default function ToolsPage() {
       {/* ── Header ───────────────────────────────────────────── */}
       <div>
         <h1 className="font-display text-[32px] font-bold tracking-tight text-glow-cyan text-ink">
-          Security Arsenal
+          Onze gereedschappen
         </h1>
         <p className="mt-1 text-[15px] text-ink-muted">
           {data
-            ? `${data.available_count} / ${data.total} tools running on Kali Linux 2024`
-            : "15 professional tools running on Kali Linux 2024"}
+            ? `${data.available_count} / ${data.total} hulpmiddelen actief op Kali Linux 2024`
+            : "15 professionele hulpmiddelen actief op Kali Linux 2024"}
         </p>
       </div>
 
@@ -202,7 +202,7 @@ export default function ToolsPage() {
               <div>
                 <p className="flex items-center gap-2 font-mono text-[13px] font-semibold text-neon-red">
                   <span className="inline-block h-2 w-2 rounded-full bg-[#FF2D55]" />
-                  Kali VM OFFLINE
+                  Kali VM offline
                 </p>
                 <p className="mt-1 break-all font-mono text-[12px] text-[#FF2D55]/70">{error}</p>
                 <p className="mt-1 text-[11px] text-ink-muted">
@@ -213,11 +213,11 @@ export default function ToolsPage() {
               <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
                 <span className="flex items-center gap-2 font-mono text-[13px] font-semibold text-neon-green">
                   <span className="animate-pulse-dot inline-block h-2 w-2 rounded-full bg-[#00FF88]" />
-                  Kali VM ONLINE
+                  Kali VM online
                 </span>
                 <span className="font-mono text-[13px] text-ink-muted">{kaliVm}</span>
                 <span className="font-mono text-[12px] text-ink-muted">
-                  <span className="text-neon-green">{data?.available_count}</span>/{data?.total} tools
+                  <span className="text-neon-green">{data?.available_count}</span>/{data?.total} hulpmiddelen
                   beschikbaar
                 </span>
               </div>
@@ -248,7 +248,7 @@ export default function ToolsPage() {
               active={selectedPhase === ph}
               onClick={() => setSelectedPhase(selectedPhase === ph ? null : ph)}
             >
-              {ph > 0 ? PHASE_LABELS[ph] : "Other"}
+              {ph > 0 ? PHASE_LABELS[ph] : "Overig"}
             </FilterButton>
           ))}
         </div>
@@ -281,7 +281,7 @@ export default function ToolsPage() {
             <div key={ph} className="space-y-4">
               <div className="flex items-center gap-3">
                 <h2 className="font-display text-[18px] font-semibold text-ink">
-                  {ph > 0 ? `Phase ${ph} — ${PHASE_LABELS[ph]}` : PHASE_LABELS[0]}
+                  {ph > 0 ? `Stap ${ph} — ${PHASE_LABELS[ph]}` : PHASE_LABELS[0]}
                 </h2>
                 <span className="font-mono text-[12px] text-ink-muted">
                   {avail}/{phaseTools.length} beschikbaar
@@ -330,7 +330,7 @@ export default function ToolsPage() {
 
                           <div className="mt-4 flex items-center justify-between">
                             <span className="font-mono text-[11px] text-ink-muted">
-                              Phase {ph > 0 ? ph : "—"}
+                              Stap {ph > 0 ? ph : "—"}
                             </span>
                             <span
                               className="flex items-center gap-1.5 font-mono text-[11px] font-semibold uppercase tracking-wider"
@@ -340,7 +340,7 @@ export default function ToolsPage() {
                                 className={tool.available ? "animate-pulse-dot inline-block h-1.5 w-1.5 rounded-full" : "inline-block h-1.5 w-1.5 rounded-full"}
                                 style={{ background: tool.available ? "#00FF88" : "#FF2D55" }}
                               />
-                              {tool.available ? "READY" : "OFFLINE"}
+                              {tool.available ? "GEREED" : "OFFLINE"}
                             </span>
                           </div>
                         </div>
@@ -356,9 +356,9 @@ export default function ToolsPage() {
       {/* ── Custom Modules ───────────────────────────────────── */}
       <div className="space-y-4 border-t border-grid pt-6">
         <div className="flex items-center gap-3">
-          <h2 className="font-display text-[18px] font-semibold text-ink">Custom Modules</h2>
+          <h2 className="font-display text-[18px] font-semibold text-ink">Eigen modules</h2>
           <span className="font-mono text-[12px] text-ink-muted">
-            CyberPulse post-scan analyse modules
+            CyberPulse analysemodules na de scan
           </span>
         </div>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -390,7 +390,7 @@ export default function ToolsPage() {
                                 border: "1px solid rgba(0,212,255,0.3)",
                               }}
                             >
-                              Recommended
+                              Aanbevolen
                             </span>
                           )}
                         </div>
@@ -437,31 +437,31 @@ export default function ToolsPage() {
           <div className="p-5">
             <div className="mb-4 flex items-center gap-2">
               <span className="animate-pulse-dot inline-block h-2 w-2 rounded-full bg-[#00FF88]" />
-              <h2 className="font-display text-[16px] font-semibold text-ink">Live Kali VM Status</h2>
+              <h2 className="font-display text-[16px] font-semibold text-ink">Live status Kali VM</h2>
             </div>
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
               <div>
-                <p className="font-mono text-[10px] uppercase tracking-wider text-ink-muted">IP Address</p>
+                <p className="font-mono text-[10px] uppercase tracking-wider text-ink-muted">IP-adres</p>
                 <p className="mt-1 font-mono text-[15px] font-semibold text-ink">{kaliVm}</p>
               </div>
               <div>
-                <p className="font-mono text-[10px] uppercase tracking-wider text-ink-muted">Uptime</p>
+                <p className="font-mono text-[10px] uppercase tracking-wider text-ink-muted">Looptijd</p>
                 <p className="mt-1 font-mono text-[15px] font-semibold text-neon-cyan">
                   {pad(hh)}:{pad(mm)}:{pad(ss)}
                 </p>
               </div>
               <div>
-                <p className="font-mono text-[10px] uppercase tracking-wider text-ink-muted">Tools</p>
+                <p className="font-mono text-[10px] uppercase tracking-wider text-ink-muted">Hulpmiddelen</p>
                 <p className="mt-1 font-mono text-[15px] font-semibold text-ink">
                   <span className="text-neon-green">{data?.available_count ?? 0}</span> / {data?.total ?? 0}{" "}
-                  <span className="text-ink-muted">available</span>
+                  <span className="text-ink-muted">beschikbaar</span>
                 </p>
               </div>
               <div>
-                <p className="font-mono text-[10px] uppercase tracking-wider text-ink-muted">Last Ping</p>
+                <p className="font-mono text-[10px] uppercase tracking-wider text-ink-muted">Laatste contact</p>
                 <p className="mt-1 flex items-center gap-1.5 font-mono text-[15px] font-semibold text-ink">
                   <span className="animate-pulse-dot inline-block h-1.5 w-1.5 rounded-full bg-[#00FF88]" />
-                  {lastPing}s ago
+                  {lastPing}s geleden
                 </p>
               </div>
             </div>
@@ -508,33 +508,33 @@ interface CustomModule {
 
 const CUSTOM_MODULES: CustomModule[] = [
   {
-    id: "M09", name: "Business Logic Tester", category: "Exploitation",
-    description: "Test IDOR-kwetsbaarheden, rate limiting en blootgestelde admin-endpoints zonder authenticatie.",
+    id: "M09", name: "Toegangspunten testen", category: "Misbruik",
+    description: "Test op kwetsbaarheden waarbij gegevens van anderen zichtbaar worden, op te veel inlogpogingen en op onbeveiligde beheerpagina's.",
     icon: Bug, iconColor: "#FF2D55", iconBg: "rgba(255,45,85,0.10)",
   },
   {
-    id: "M10", name: "CVE Correlator", category: "Vulnerability Intelligence",
-    description: "Koppelt gedetecteerde service-versies aan bekende CVEs via de NVD REST API met CVSS-scores.",
+    id: "M10", name: "Bekende lekken opzoeken", category: "Kwetsbaarheden",
+    description: "Koppelt gevonden softwareversies aan bekende beveiligingslekken via de officiële NVD-database met risicoscores.",
     icon: Database, iconColor: "#FF8C00", iconBg: "rgba(255,140,0,0.10)",
   },
   {
-    id: "M11", name: "Visual Recon", category: "Reconnaissance",
-    description: "Maakt screenshots van alle webdiensten via Playwright voor visuele herkenning van aanvalsoppervlak.",
+    id: "M11", name: "Visuele verkenning", category: "Verkenning",
+    description: "Maakt schermafbeeldingen van alle webdiensten zodat het aanvalsoppervlak in één oogopslag zichtbaar is.",
     icon: Camera, iconColor: "#0A84FF", iconBg: "rgba(10,132,255,0.10)",
   },
   {
-    id: "M12", name: "Smart Credential Attack", category: "Authentication",
-    description: "Genereert doelspecifieke wachtwoordlijsten op basis van bedrijfsnaam en test credentials via Hydra.",
+    id: "M12", name: "Slimme wachtwoordtest", category: "Wachtwoorden",
+    description: "Bedenkt wachtwoordlijsten op maat op basis van de bedrijfsnaam en test of die toegang geven.",
     icon: KeyRound, iconColor: "#FFD60A", iconBg: "rgba(255,214,10,0.10)",
   },
   {
-    id: "M13", name: "AI Adaptive Scanner", category: "AI-Directed",
-    description: "DeepSeek analyseert alle bevindingen en bepaalt automatisch gerichte follow-up scans.",
+    id: "M13", name: "Slimme vervolgtest", category: "AI-gestuurd",
+    description: "Onze AI analyseert alle bevindingen en bepaalt automatisch welke gerichte vervolgtests nodig zijn.",
     icon: BrainCircuit, iconColor: "#BF5AF2", iconBg: "rgba(191,90,242,0.10)",
   },
   {
-    id: "M14", name: "Scan Comparator", category: "Reporting",
-    description: "Vergelijkt huidige scan met vorige scan op hetzelfde target en rapporteert nieuw/opgelost/persistent.",
+    id: "M14", name: "Vergelijking met vorige meting", category: "Rapportage",
+    description: "Vergelijkt deze scan met de vorige op hetzelfde systeem en meldt wat nieuw, opgelost of nog aanwezig is.",
     icon: GitCompare, iconColor: "#00FF88", iconBg: "rgba(0,255,136,0.10)",
   },
 ];

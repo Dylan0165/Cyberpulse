@@ -9,6 +9,7 @@ import type { ReportData, Target } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { statusLabel, severityLabel, scanTypeLabel } from "@/lib/labels";
 import {
   ArrowLeft, Download, ExternalLink, Share2, Shield,
   AlertTriangle, CheckCircle2, Clock, XCircle,
@@ -48,7 +49,7 @@ export default function ReportPage() {
           } catch { /* target info is optional */ }
         }
       } catch (e: any) {
-        setError(e.message || "Report not found");
+        setError("Rapport niet gevonden");
       }
       setLoading(false);
     };
@@ -77,9 +78,9 @@ export default function ReportPage() {
   if (error || !report) return (
     <div className="flex flex-col items-center justify-center h-64 space-y-4">
       <XCircle className="h-12 w-12 text-destructive" />
-      <p className="text-sm text-muted-foreground">{error || "Report not found"}</p>
+      <p className="text-sm text-muted-foreground">{error || "Rapport niet gevonden"}</p>
       <Button variant="outline" onClick={() => router.push("/scans")}>
-        <ArrowLeft className="mr-2 h-4 w-4" /> Back to Scans
+        <ArrowLeft className="mr-2 h-4 w-4" /> Terug naar scans
       </Button>
     </div>
   );
@@ -101,20 +102,20 @@ export default function ReportPage() {
             <Button variant="ghost" size="sm" onClick={() => router.push(`/scans/${scanId}`)}>
               <ArrowLeft className="h-4 w-4" />
             </Button>
-            <h1 className="text-2xl font-bold">Security Report</h1>
+            <h1 className="text-2xl font-bold">Beveiligingsrapport</h1>
           </div>
           <p className="text-sm text-muted-foreground pl-10">
-            {report.target} · {report.scan_type} ·{" "}
-            {target ? `Verified target` : ""}
+            {report.target} · {scanTypeLabel(report.scan_type)} ·{" "}
+            {target ? `Geverifieerd systeem` : ""}
           </p>
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={handleShare}>
             <Share2 className="mr-1 h-3 w-3" />
-            {shareCopied ? "Link copied!" : "Share report"}
+            {shareCopied ? "Link gekopieerd!" : "Rapport delen"}
           </Button>
           <Button size="sm" onClick={handleDownloadPdf}>
-            <Download className="mr-1 h-3 w-3" /> Download PDF
+            <Download className="mr-1 h-3 w-3" /> PDF downloaden
           </Button>
         </div>
       </div>
@@ -125,23 +126,23 @@ export default function ReportPage() {
           <CardContent className="flex flex-col items-center space-y-4 pt-0">
             <RiskGauge score={report.overall_score} size={160} />
             <p className="text-center text-sm text-muted-foreground">
-              Overall Security Score
+              Algehele beveiligingsscore
             </p>
           </CardContent>
         </Card>
 
         <Card className="lg:col-span-2">
           <CardHeader>
-            <CardTitle className="text-base">Finding Summary</CardTitle>
+            <CardTitle className="text-base">Overzicht bevindingen</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="grid grid-cols-5 gap-2">
               {[
-                { label: "Critical", count: report.critical_count, color: "bg-red-600" },
-                { label: "High", count: report.high_count, color: "bg-orange-500" },
-                { label: "Medium", count: report.medium_count, color: "bg-yellow-500" },
-                { label: "Low", count: report.low_count, color: "bg-blue-500" },
-                { label: "Info", count: report.info_count, color: "bg-gray-400" },
+                { label: severityLabel("critical"), count: report.critical_count, color: "bg-red-600" },
+                { label: severityLabel("high"), count: report.high_count, color: "bg-orange-500" },
+                { label: severityLabel("medium"), count: report.medium_count, color: "bg-yellow-500" },
+                { label: severityLabel("low"), count: report.low_count, color: "bg-blue-500" },
+                { label: severityLabel("info"), count: report.info_count, color: "bg-gray-400" },
               ].map(({ label, count, color }) => (
                 <div key={label} className="text-center">
                   <div className={`${color} rounded py-2 px-1`}>
@@ -179,7 +180,7 @@ export default function ReportPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Shield className="h-5 w-5" />
-              Executive Summary
+              Samenvatting voor management
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -193,7 +194,7 @@ export default function ReportPage() {
       {/* Technical Summary */}
       {report.technical_summary && (
         <Card>
-          <CardHeader><CardTitle className="text-base">Technical Summary</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="text-base">Technische samenvatting</CardTitle></CardHeader>
           <CardContent>
             <p className="text-sm leading-relaxed font-mono text-muted-foreground whitespace-pre-line">
               {report.technical_summary}
@@ -208,7 +209,7 @@ export default function ReportPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <CheckCircle2 className="h-5 w-5 text-green-500" />
-              Remediation Roadmap
+              Stappenplan voor herstel
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -240,9 +241,9 @@ export default function ReportPage() {
           <CardHeader>
             <div className="flex items-center justify-between flex-wrap gap-3">
               <CardTitle>
-                Findings
+                Bevindingen
                 <span className="text-muted-foreground font-normal text-sm ml-2">
-                  ({filteredFindings.length}{activeCategory ? ` of ${report.findings.length}` : ""})
+                  ({filteredFindings.length}{activeCategory ? ` van ${report.findings.length}` : ""})
                 </span>
               </CardTitle>
               <div className="flex flex-wrap gap-1">
@@ -252,7 +253,7 @@ export default function ReportPage() {
                   className="h-6 text-xs px-2"
                   onClick={() => setActiveCategory(null)}
                 >
-                  All
+                  Alle
                 </Button>
                 {categories.map(cat => (
                   <Button
@@ -276,23 +277,23 @@ export default function ReportPage() {
 
       {/* Scan Metadata */}
       <Card>
-        <CardHeader><CardTitle className="text-base">Scan Metadata</CardTitle></CardHeader>
+        <CardHeader><CardTitle className="text-base">Scangegevens</CardTitle></CardHeader>
         <CardContent>
           <dl className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
             <div>
-              <dt className="text-muted-foreground">Scan ID</dt>
+              <dt className="text-muted-foreground">Scan-ID</dt>
               <dd className="font-mono text-xs mt-0.5 truncate">{report.scan_id}</dd>
             </div>
             <div>
-              <dt className="text-muted-foreground">Target</dt>
+              <dt className="text-muted-foreground">Systeem</dt>
               <dd className="mt-0.5">{report.target}</dd>
             </div>
             <div>
-              <dt className="text-muted-foreground">Scan Type</dt>
-              <dd className="mt-0.5 capitalize">{report.scan_type}</dd>
+              <dt className="text-muted-foreground">Soort test</dt>
+              <dd className="mt-0.5">{scanTypeLabel(report.scan_type)}</dd>
             </div>
             <div>
-              <dt className="text-muted-foreground">Phases</dt>
+              <dt className="text-muted-foreground">Onderdelen</dt>
               <dd className="mt-0.5">{report.phases_completed?.join(", ")}</dd>
             </div>
           </dl>

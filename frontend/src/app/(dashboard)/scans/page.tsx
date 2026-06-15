@@ -5,6 +5,7 @@ import { dashboardApi } from "@/lib/api";
 import Link from "next/link";
 import { useState } from "react";
 import { Shield, Plus, Search, ArrowRight, Download } from "lucide-react";
+import { scanTypeLabel, statusLabel } from "@/lib/labels";
 
 type StatusFilter = "all" | "running" | "completed" | "failed" | "pending";
 
@@ -166,32 +167,34 @@ export default function ScansPage() {
 
 function ModeBadge({ mode }: { mode?: string }) {
   if (!mode) return <span className="text-[13px] text-muted-foreground">—</span>;
-  const map: Record<string, { label: string; bg: string; color: string }> = {
-    blackbox: { label: "Blackbox", bg: "rgba(255,59,48,0.08)",   color: "#ff3b30" },
-    graybox:  { label: "Graybox",  bg: "rgba(255,149,0,0.08)",   color: "#ff9500" },
-    whitebox: { label: "Whitebox", bg: "rgba(52,199,89,0.08)",   color: "#34c759" },
+  const map: Record<string, { bg: string; color: string }> = {
+    blackbox: { bg: "rgba(255,59,48,0.08)",   color: "#ff3b30" },
+    graybox:  { bg: "rgba(255,149,0,0.08)",   color: "#ff9500" },
+    whitebox: { bg: "rgba(52,199,89,0.08)",   color: "#34c759" },
   };
-  const s = map[mode] ?? { label: mode, bg: "#f5f5f7", color: "#6e6e73" };
+  const s = map[mode] ?? { bg: "#f5f5f7", color: "#6e6e73" };
+  const label = scanTypeLabel(mode);
   return (
     <span
       className="inline-flex rounded-full px-2.5 py-1 text-[12px] font-semibold"
       style={{ background: s.bg, color: s.color }}
     >
-      {s.label}
+      {label}
     </span>
   );
 }
 
 function StatusIndicator({ status, progress }: { status: string; progress?: number }) {
-  const map: Record<string, { label: string; color: string; pulse?: boolean }> = {
-    completed:  { label: "Voltooid",    color: "#34c759" },
-    running:    { label: "Actief",      color: "#0071e3", pulse: true },
-    pending:    { label: "Wachtend",    color: "#ff9500" },
-    analyzing:  { label: "Analyseren", color: "#bf5af2", pulse: true },
-    failed:     { label: "Mislukt",     color: "#ff3b30" },
-    cancelled:  { label: "Geannuleerd", color: "#8e8e93" },
+  const map: Record<string, { color: string; pulse?: boolean }> = {
+    completed:  { color: "#34c759" },
+    running:    { color: "#0071e3", pulse: true },
+    pending:    { color: "#ff9500" },
+    analyzing:  { color: "#bf5af2", pulse: true },
+    failed:     { color: "#ff3b30" },
+    cancelled:  { color: "#8e8e93" },
   };
-  const s = map[status] ?? { label: status, color: "#8e8e93" };
+  const s = map[status] ?? { color: "#8e8e93" };
+  const label = statusLabel(status);
   return (
     <div className="flex items-center gap-1.5">
       <span
@@ -199,7 +202,7 @@ function StatusIndicator({ status, progress }: { status: string; progress?: numb
         style={{ background: s.color }}
       />
       <span className="text-[13px] font-medium" style={{ color: s.color }}>
-        {s.label}
+        {label}
       </span>
       {status === "running" && progress != null && progress > 0 && (
         <span className="text-[12px] text-muted-foreground">({progress}%)</span>
@@ -235,7 +238,7 @@ function EmptyState({ hasFilter }: { hasFilter: boolean }) {
     <div className="rounded-2xl border border-border bg-card p-16 text-center shadow-apple">
       <Shield className="h-12 w-12 text-muted-foreground/20 mx-auto mb-4" />
       <p className="text-[17px] font-semibold mb-2">
-        {hasFilter ? "Geen overeenkomende scans" : "Nog geen scans"}
+        {hasFilter ? "Geen resultaten" : "Nog geen scans uitgevoerd"}
       </p>
       <p className="text-[14px] text-muted-foreground mb-6">
         {hasFilter

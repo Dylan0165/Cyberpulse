@@ -11,6 +11,7 @@ import {
   ScanLine, Target, AlertTriangle, BarChart3,
 } from "lucide-react";
 
+import { statusLabel } from "@/lib/labels";
 import { StatCard } from "@/components/cyber/stat-card";
 import { GlowCard } from "@/components/cyber/glow-card";
 import { RiskBadge } from "@/components/cyber/risk-badge";
@@ -46,13 +47,13 @@ function timeAgo(date: string): string {
   return `${days} dag${days > 1 ? "en" : ""} geleden`;
 }
 
-const STATUS_MAP: Record<string, { label: string; color: string; pulse?: boolean }> = {
-  completed: { label: "Voltooid", color: "#00FF88" },
-  running: { label: "Actief", color: "#00D4FF", pulse: true },
-  pending: { label: "Wachtend", color: "#FF8C00" },
-  analyzing: { label: "Analyseren", color: "#0A84FF", pulse: true },
-  failed: { label: "Mislukt", color: "#FF2D55" },
-  cancelled: { label: "Geannuleerd", color: "#4A6880" },
+const STATUS_MAP: Record<string, { color: string; pulse?: boolean }> = {
+  completed: { color: "#00FF88" },
+  running: { color: "#00D4FF", pulse: true },
+  pending: { color: "#FF8C00" },
+  analyzing: { color: "#0A84FF", pulse: true },
+  failed: { color: "#FF2D55" },
+  cancelled: { color: "#4A6880" },
 };
 
 export default function DashboardPage() {
@@ -147,7 +148,7 @@ export default function DashboardPage() {
         transition={{ duration: 0.4 }}
       >
         <h1 className="font-display text-2xl font-bold text-ink">
-          Mission Control
+          Overzicht
         </h1>
         <p className="font-mono text-[12px] text-ink-muted">
           Realtime overzicht van scans, doelen en risico&apos;s
@@ -225,17 +226,15 @@ export default function DashboardPage() {
           ) : recentScans.length === 0 ? (
             <div className="rounded-lg border border-grid bg-card2 p-8">
               <div className="terminal-cursor font-mono text-[13px] text-ink-muted">
-                No scans yet. Start your first scan.
+                Nog geen scans uitgevoerd. Start uw eerste scan.
               </div>
             </div>
           ) : (
             <div className="space-y-2.5">
               {recentScans.slice(0, 6).map((scan: any) => {
                 const score = riskScore(scan);
-                const st = STATUS_MAP[scan.status] ?? {
-                  label: scan.status,
-                  color: "#4A6880",
-                };
+                const st = STATUS_MAP[scan.status] ?? { color: "#4A6880" };
+                const stLabel = statusLabel(scan.status);
                 const crit = scan.findings_critical ?? scan.critical_count ?? 0;
                 const high = scan.findings_high ?? scan.high_count ?? 0;
                 const med = scan.findings_medium ?? scan.medium_count ?? 0;
@@ -270,7 +269,7 @@ export default function DashboardPage() {
                               className="h-1.5 w-1.5 rounded-full"
                               style={{ background: st.color }}
                             />
-                            {st.label}
+                            {stLabel}
                           </span>
                         </div>
                       </div>
@@ -308,7 +307,7 @@ export default function DashboardPage() {
             ) : trendData.length === 0 ? (
               <div className="flex h-[220px] items-center justify-center">
                 <span className="font-mono text-[12px] text-ink-muted">
-                  Geen data
+                  Geen gegevens beschikbaar
                 </span>
               </div>
             ) : (

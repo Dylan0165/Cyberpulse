@@ -68,7 +68,7 @@ export function RiskGauge({ score, size = 140 }: { score: number; size?: number 
           {Math.round(animated)}
         </span>
         <span className="mt-1 font-mono text-[10px] uppercase tracking-widest text-ink-muted">
-          risk score
+          risicoscore
         </span>
       </div>
     </div>

@@ -4,67 +4,16 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import Link from "next/link";
-import {
-  User,
-  Bell,
-  Key,
-  Server,
-  Save,
-  Eye,
-  EyeOff,
-  RefreshCw,
-  Plug,
-  CheckCircle2,
-  XCircle,
-  Copy,
-  LogIn,
-  Cpu,
-  type LucideIcon,
-} from "lucide-react";
+import { User, Bell, Save, LogIn, type LucideIcon } from "lucide-react";
 import { GlowCard } from "@/components/cyber/glow-card";
 import { useAuth } from "@/contexts/auth-context";
 import { usersApi } from "@/lib/api";
 
-type TabId = "account" | "notifications" | "apikey" | "kali" | "aimodel";
+type TabId = "account" | "notifications";
 
 const TABS: { id: TabId; label: string; icon: LucideIcon }[] = [
   { id: "account", label: "Account", icon: User },
   { id: "notifications", label: "Notificaties", icon: Bell },
-  { id: "apikey", label: "API Sleutel", icon: Key },
-  { id: "kali", label: "Kali VM", icon: Server },
-  { id: "aimodel", label: "AI-model", icon: Cpu },
-];
-
-type AiProvider = "deepseek" | "anthropic" | "runpod";
-
-const AI_PROVIDERS: {
-  value: AiProvider;
-  title: string;
-  badge: string;
-  badgeColor: string;
-  desc: string;
-}[] = [
-  {
-    value: "deepseek",
-    title: "DeepSeek",
-    badge: "Inbegrepen",
-    badgeColor: "#00FF88",
-    desc: "Standaard AI-analyse, inbegrepen in elk abonnement. Snel en kostenefficiënt.",
-  },
-  {
-    value: "runpod",
-    title: "CyberPulse AI",
-    badge: "EU-only · +€9/mnd",
-    badgeColor: "#00B4D8",
-    desc: "Zelf-gehost model volledig binnen de EU. Maximale dataprivacy — uw scandata verlaat de EU nooit.",
-  },
-  {
-    value: "anthropic",
-    title: "Claude (Anthropic)",
-    badge: "+€19/mnd",
-    badgeColor: "#FF8C00",
-    desc: "Hoogste analysekwaliteit met Claude. Diepgaande, contextrijke rapporten voor kritieke systemen.",
-  },
 ];
 
 const inputCls =
@@ -125,77 +74,14 @@ export default function SettingsPage() {
   const [notifyEmail, setNotifyEmail] = useState("");
   const [savingNotify, setSavingNotify] = useState(false);
 
-  // API key
-  const [keyRevealed, setKeyRevealed] = useState(false);
-  const [newKey, setNewKey] = useState<string | null>(null);
-  const [regenerating, setRegenerating] = useState(false);
-
-  // Kali VM
-  const [kaliIp, setKaliIp] = useState("192.168.121.28");
-  const [kaliPort, setKaliPort] = useState("5001");
-  const [conn, setConn] = useState<"idle" | "testing" | "ok" | "fail">("idle");
-  const [responseMs, setResponseMs] = useState<number | null>(null);
-
-  // AI-model
-  const [aiProvider, setAiProvider] = useState<AiProvider>("deepseek");
-  const [savingAi, setSavingAi] = useState(false);
-
   // Prefill form fields from the authenticated user.
   useEffect(() => {
     if (!user) return;
-    const u = user as any;
     setName(user.name ?? "");
     setCompany(user.company_name ?? "");
     setNotifyOn(!!user.notify_on_complete);
     setNotifyEmail(user.notification_email ?? "");
-    const active = !!u.ai_provider_active;
-    const provider = u.ai_provider;
-    setAiProvider(
-      active && (provider === "anthropic" || provider === "runpod")
-        ? provider
-        : "deepseek"
-    );
   }, [user]);
-
-  // Optional prefill of host/port from backend (graceful — ignore failures).
-  useEffect(() => {
-    if (tab !== "kali") return;
-    let cancelled = false;
-    (async () => {
-      try {
-        const res = await fetch("/api/settings/kali");
-        if (!res.ok) return;
-        const data: any = await res.json();
-        if (cancelled || !data) return;
-        const host = data.host ?? data.ip ?? data.kali_ip;
-        const port = data.port ?? data.kali_port;
-        if (host) setKaliIp(String(host));
-        if (port != null) setKaliPort(String(port));
-      } catch {
-        /* graceful — keep defaults */
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [tab]);
-
-  async function testConnection() {
-    setConn("testing");
-    setResponseMs(null);
-    try {
-      const res = await fetch("/api/settings/kali/test", { method: "POST" });
-      if (!res.ok) throw new Error("bad response");
-      const data: any = await res.json();
-      if (!data?.connected) throw new Error("not connected");
-      setResponseMs(
-        typeof data.response_time_ms === "number" ? data.response_time_ms : null
-      );
-      setConn("ok");
-    } catch {
-      setConn("fail");
-    }
-  }
 
   async function saveAccount() {
     setSavingAccount(true);
@@ -226,60 +112,6 @@ export default function SettingsPage() {
     }
   }
 
-  async function saveAiModel() {
-    setSavingAi(true);
-    try {
-      await usersApi.updateMe({
-        ai_provider: aiProvider,
-        // DeepSeek is the included default; the other two are paid upgrades.
-        ai_provider_active: aiProvider !== "deepseek",
-      });
-      toast.success("AI-model opgeslagen");
-      await refresh();
-    } catch {
-      toast.error("Opslaan mislukt");
-    } finally {
-      setSavingAi(false);
-    }
-  }
-
-  async function regenerateKey() {
-    if (
-      !confirm(
-        "Weet u zeker dat u een nieuwe sleutel wilt genereren? De oude sleutel wordt ongeldig."
-      )
-    ) {
-      return;
-    }
-    setRegenerating(true);
-    try {
-      const res: any = await usersApi.regenerateApiKey();
-      const key = res?.data?.api_key ?? res?.data?.key ?? null;
-      setNewKey(key);
-      toast.success(
-        "Nieuwe sleutel gegenereerd — sla deze op, hij wordt niet opnieuw getoond"
-      );
-      await refresh();
-    } catch {
-      toast.error("Kon geen nieuwe sleutel genereren");
-    } finally {
-      setRegenerating(false);
-    }
-  }
-
-  async function copyKey(value: string) {
-    try {
-      await navigator.clipboard.writeText(value);
-      toast.success("Gekopieerd naar klembord");
-    } catch {
-      toast.error("Kopiëren mislukt");
-    }
-  }
-
-  const apiKeyMasked = user?.api_key
-    ? `sk-••••${user.api_key.slice(-4)}`
-    : "";
-
   return (
     <div className="space-y-8">
       {/* Header */}
@@ -288,7 +120,7 @@ export default function SettingsPage() {
           Instellingen
         </h1>
         <p className="mt-1 text-[13px] text-ink-muted">
-          Beheer uw account en systeeminstellingen
+          Beheer uw account en meldingen
         </p>
       </div>
 
@@ -407,9 +239,7 @@ export default function SettingsPage() {
                     aria-checked={notifyOn}
                     onClick={() => setNotifyOn((v) => !v)}
                     className={`relative h-6 w-11 rounded-full border transition-colors ${
-                      notifyOn
-                        ? "border-cyan bg-cyan/30"
-                        : "border-grid bg-card2"
+                      notifyOn ? "border-cyan bg-cyan/30" : "border-grid bg-card2"
                     }`}
                   >
                     <motion.span
@@ -447,255 +277,6 @@ export default function SettingsPage() {
                   <PrimaryButton onClick={saveNotifications} disabled={savingNotify}>
                     <Save className="h-4 w-4" />
                     {savingNotify ? "Opslaan..." : "Opslaan"}
-                  </PrimaryButton>
-                </div>
-              </>
-            )}
-          </GlowCard>
-        </motion.div>
-      )}
-
-      {/* ── API Sleutel ── */}
-      {tab === "apikey" && (
-        <motion.div
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.25 }}
-        >
-          <GlowCard className="p-6">
-            <div className="mb-5 flex items-center gap-2">
-              <Key className="h-4 w-4 text-cyan" />
-              <h2 className="text-[13px] font-semibold uppercase tracking-[0.1em] text-ink">
-                API Sleutel
-              </h2>
-            </div>
-
-            {!user ? (
-              <LoginPrompt message="Log in om uw API-sleutel te beheren" />
-            ) : (
-              <>
-                <label className={labelCls}>Uw sleutel</label>
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-                  <code className="flex-1 select-all rounded-lg border border-grid bg-app px-3 py-2 font-mono text-[13px] text-neon-green">
-                    {user.api_key
-                      ? keyRevealed
-                        ? user.api_key
-                        : apiKeyMasked
-                      : "Geen sleutel ingesteld"}
-                  </code>
-                  {user.api_key && (
-                    <button
-                      onClick={() => setKeyRevealed((v) => !v)}
-                      className="inline-flex items-center justify-center gap-2 rounded-lg border border-grid bg-card2 px-4 py-2 text-[12px] text-ink-muted transition-colors hover:border-cyan/40 hover:text-ink"
-                    >
-                      {keyRevealed ? (
-                        <>
-                          <EyeOff className="h-4 w-4" /> Verberg
-                        </>
-                      ) : (
-                        <>
-                          <Eye className="h-4 w-4" /> Toon sleutel
-                        </>
-                      )}
-                    </button>
-                  )}
-                </div>
-
-                {newKey && (
-                  <div className="mt-4 rounded-lg border border-cyan/40 bg-cyan/5 p-4">
-                    <p className="mb-2 text-[12px] text-cyan">
-                      Nieuwe sleutel — sla deze nu op, hij wordt niet opnieuw
-                      getoond:
-                    </p>
-                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-                      <code className="flex-1 select-all break-all rounded-lg border border-grid bg-app px-3 py-2 font-mono text-[13px] text-neon-green">
-                        {newKey}
-                      </code>
-                      <button
-                        onClick={() => copyKey(newKey)}
-                        className="inline-flex items-center justify-center gap-2 rounded-lg border border-grid bg-card2 px-4 py-2 text-[12px] text-ink-muted transition-colors hover:border-cyan/40 hover:text-ink"
-                      >
-                        <Copy className="h-4 w-4" /> Kopieer
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                <p className="mt-3 text-[12px] text-ink-muted">
-                  Gebruik deze sleutel voor programmatische toegang tot
-                  CyberPulse.
-                </p>
-
-                <div className="mt-6">
-                  <PrimaryButton onClick={regenerateKey} disabled={regenerating}>
-                    <RefreshCw className="h-4 w-4" />
-                    {regenerating ? "Genereren..." : "Genereer nieuwe sleutel"}
-                  </PrimaryButton>
-                </div>
-              </>
-            )}
-          </GlowCard>
-        </motion.div>
-      )}
-
-      {/* ── Kali VM ── */}
-      {tab === "kali" && (
-        <motion.div
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.25 }}
-        >
-          <GlowCard className="p-6">
-            <div className="mb-5 flex items-center gap-2">
-              <Server className="h-4 w-4 text-cyan" />
-              <h2 className="text-[13px] font-semibold uppercase tracking-[0.1em] text-ink">
-                Kali VM
-              </h2>
-            </div>
-
-            <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-              <div>
-                <label className={labelCls}>IP-adres</label>
-                <input
-                  className={inputCls}
-                  value={kaliIp}
-                  onChange={(e) => setKaliIp(e.target.value)}
-                />
-              </div>
-              <div>
-                <label className={labelCls}>Poort</label>
-                <input
-                  className={inputCls}
-                  value={kaliPort}
-                  onChange={(e) => setKaliPort(e.target.value)}
-                />
-              </div>
-            </div>
-
-            <div className="mt-6 flex flex-wrap items-center gap-4">
-              <PrimaryButton
-                onClick={testConnection}
-                disabled={conn === "testing"}
-              >
-                <Plug className="h-4 w-4" />
-                {conn === "testing" ? "Testen..." : "Verbinding testen"}
-              </PrimaryButton>
-
-              {conn === "ok" && (
-                <span className="inline-flex items-center gap-1.5 text-[13px] font-medium text-neon-green">
-                  <CheckCircle2 className="h-4 w-4" />
-                  {responseMs !== null
-                    ? `Verbonden — ${responseMs}ms reactietijd`
-                    : "Verbonden"}
-                </span>
-              )}
-              {conn === "fail" && (
-                <span className="inline-flex items-center gap-1.5 text-[13px] font-medium text-neon-red">
-                  <XCircle className="h-4 w-4" />
-                  Geen verbinding — controleer IP en poort
-                </span>
-              )}
-            </div>
-
-            <div className="mt-6">
-              <PrimaryButton
-                onClick={() => toast.success("Instellingen opgeslagen")}
-              >
-                <Save className="h-4 w-4" />
-                Opslaan
-              </PrimaryButton>
-            </div>
-
-            <p className="mt-5 text-[12px] text-ink-muted">
-              Wijzigingen vereisen een herstart van de server.
-            </p>
-          </GlowCard>
-        </motion.div>
-      )}
-
-      {/* ── AI-model ── */}
-      {tab === "aimodel" && (
-        <motion.div
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.25 }}
-        >
-          <GlowCard className="p-6">
-            <div className="mb-1 flex items-center gap-2">
-              <Cpu className="h-4 w-4 text-cyan" />
-              <h2 className="text-[13px] font-semibold uppercase tracking-[0.1em] text-ink">
-                AI-model voor analyse
-              </h2>
-            </div>
-            <p className="mb-5 text-[13px] text-ink-muted">
-              Kies welk AI-model uw scanresultaten analyseert.
-            </p>
-
-            {!user ? (
-              <LoginPrompt message="Log in om uw AI-model te kiezen" />
-            ) : (
-              <>
-                <div
-                  role="radiogroup"
-                  aria-label="AI-model"
-                  className="grid grid-cols-1 gap-4 md:grid-cols-3"
-                >
-                  {AI_PROVIDERS.map((p) => {
-                    const selected = aiProvider === p.value;
-                    return (
-                      <button
-                        key={p.value}
-                        type="button"
-                        role="radio"
-                        aria-checked={selected}
-                        onClick={() => setAiProvider(p.value)}
-                        className={`flex flex-col rounded-lg border-2 bg-app p-4 text-left transition-colors ${
-                          selected
-                            ? "border-cyan"
-                            : "border-grid hover:border-cyan/30"
-                        }`}
-                      >
-                        <div className="mb-2 flex items-center justify-between gap-2">
-                          <span className="font-display text-[14px] font-semibold text-ink">
-                            {p.title}
-                          </span>
-                          <span
-                            className="rounded-full border px-2 py-0.5 text-[10px] font-medium uppercase tracking-[0.08em]"
-                            style={{
-                              color: p.badgeColor,
-                              borderColor: `${p.badgeColor}66`,
-                              backgroundColor: `${p.badgeColor}1a`,
-                            }}
-                          >
-                            {p.badge}
-                          </span>
-                        </div>
-                        <p className="text-[12px] leading-relaxed text-ink-muted">
-                          {p.desc}
-                        </p>
-                      </button>
-                    );
-                  })}
-                </div>
-
-                {aiProvider !== "deepseek" && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    className="mt-6 overflow-hidden"
-                  >
-                    <div className="rounded-lg border border-cyan/30 bg-cyan/5 px-4 py-3 text-[12px] leading-relaxed text-ink-muted">
-                      {aiProvider === "runpod"
-                        ? "CyberPulse AI is een betaalde upgrade (+€9/maand per systeem). Uw scandata wordt uitsluitend binnen de EU verwerkt. De API-sleutel wordt door CyberPulse beheerd — u hoeft niets in te stellen."
-                        : "Claude (Anthropic) is een betaalde upgrade (+€19/maand per systeem). De API-sleutel wordt door CyberPulse beheerd — u hoeft niets in te stellen."}
-                    </div>
-                  </motion.div>
-                )}
-
-                <div className="mt-6">
-                  <PrimaryButton onClick={saveAiModel} disabled={savingAi}>
-                    <Save className="h-4 w-4" />
-                    {savingAi ? "Opslaan..." : "Opslaan"}
                   </PrimaryButton>
                 </div>
               </>

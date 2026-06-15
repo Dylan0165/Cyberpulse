@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Shield, Check, ArrowRight, Loader2, Clock } from "lucide-react";
 import { toast } from "sonner";
-import { useAuth } from "@/contexts/auth-context";
 import { authApi, targetsApi, scansApi } from "@/lib/api";
 
 const IP_REGEX =
@@ -20,7 +19,6 @@ function isValidTarget(value: string): boolean {
 
 export default function OnboardingPage() {
   const router = useRouter();
-  const { user } = useAuth();
 
   const [step, setStep] = useState<1 | 2>(1);
   const [name, setName] = useState("");
@@ -30,8 +28,6 @@ export default function OnboardingPage() {
   const ipValid = useMemo(() => isValidTarget(ip), [ip]);
   const nameValid = name.trim().length > 0;
   const step1Valid = nameValid && ipValid;
-
-  const greetingName = user?.name ?? "daar";
 
   async function startScan() {
     if (busy) return;
@@ -101,21 +97,22 @@ export default function OnboardingPage() {
             className="rounded-xl border border-grid bg-panel p-6 shadow-glow-cyan"
           >
             <h1 className="font-display text-2xl font-bold text-ink">
-              Welkom bij CyberPulse, {greetingName}
+              Welkom bij CyberPulse!
             </h1>
             <p className="mt-1 text-sm text-ink-muted">
-              Laten we uw eerste systeem instellen
+              Wij gaan uw systeem controleren op beveiligingsproblemen. Dit is
+              eenvoudig en duurt maar 5 minuten.
             </p>
 
             <label className="mt-6 mb-4 block">
               <span className="mb-1.5 block text-sm font-medium text-ink-muted">
-                Naam
+                Hoe heet uw website of server?
               </span>
               <input
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="bijv. Onze website"
+                placeholder="bijv. mijnbedrijf.nl"
                 className="w-full rounded-lg border border-grid bg-card2 px-3 py-2.5 text-ink outline-none transition-colors focus:border-cyan"
               />
             </label>
@@ -161,8 +158,12 @@ export default function OnboardingPage() {
             className="rounded-xl border border-grid bg-panel p-6 shadow-glow-cyan"
           >
             <h1 className="font-display text-2xl font-bold text-ink">
-              Wilt u nu uw eerste scan starten?
+              Bijna klaar!
             </h1>
+            <p className="mt-1 text-sm text-ink-muted">
+              Wilt u nu meteen uw eerste veiligheidscheck starten? U ontvangt
+              daarna een duidelijk rapport met uitleg.
+            </p>
 
             <div className="mt-6 rounded-lg border border-grid bg-card2 p-4">
               <div className="flex items-center justify-between">
@@ -186,7 +187,7 @@ export default function OnboardingPage() {
               className="mt-6 flex w-full items-center justify-center gap-2 rounded-lg bg-cyan px-4 py-2.5 font-semibold text-app shadow-glow-cyan transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {busy && <Loader2 className="h-4 w-4 animate-spin" />}
-              Scan starten <ArrowRight className="h-4 w-4" />
+              Ja, start de check <ArrowRight className="h-4 w-4" />
             </button>
 
             <button
@@ -195,7 +196,7 @@ export default function OnboardingPage() {
               onClick={skip}
               className="mt-3 w-full rounded-lg px-4 py-2.5 text-sm text-ink-muted transition-colors hover:text-ink disabled:cursor-not-allowed disabled:opacity-60"
             >
-              Dit overslaan
+              Ik doe dit later
             </button>
 
             <button

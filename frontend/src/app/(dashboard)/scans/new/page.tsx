@@ -14,14 +14,13 @@ import {
 import Link from "next/link";
 import { GlowCard } from "@/components/cyber/glow-card";
 import { VerificationModal } from "@/components/cyber/verification-modal";
+import { scanTypeLabel, scanTypeSubtitle, phaseLabel, phaseDesc } from "@/lib/labels";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 const SCAN_MODES = [
   {
     value: "blackbox",
-    label: "Blackbox",
-    description: "Extern perspectief — geen kennis of toegang. Simuleert een externe aanvaller.",
     icon: <Lock className="h-5 w-5" />,
     color: "border-red-500/40 bg-red-500/5",
     activeColor: "border-red-500 bg-red-500/10 ring-1 ring-red-500",
@@ -30,8 +29,6 @@ const SCAN_MODES = [
   },
   {
     value: "graybox",
-    label: "Graybox",
-    description: "Gedeeltelijke kennis — beperkte inloggegevens beschikbaar.",
     icon: <Eye className="h-5 w-5" />,
     color: "border-yellow-500/40 bg-yellow-500/5",
     activeColor: "border-yellow-500 bg-yellow-500/10 ring-1 ring-yellow-500",
@@ -40,8 +37,6 @@ const SCAN_MODES = [
   },
   {
     value: "whitebox",
-    label: "Whitebox",
-    description: "Volledige toegang — broncode, SSH, alle configuratie beschikbaar.",
     icon: <Unlock className="h-5 w-5" />,
     color: "border-green-500/40 bg-green-500/5",
     activeColor: "border-green-500 bg-green-500/10 ring-1 ring-green-500",
@@ -51,49 +46,49 @@ const SCAN_MODES = [
 ];
 
 const TARGET_TYPES = [
-  { value: "web",       label: "Web Application",      description: "HTTP/HTTPS website of webapp" },
-  { value: "api",       label: "API",                   description: "REST / GraphQL / SOAP API" },
-  { value: "network",   label: "Netwerk / Infrastructuur", description: "IP-reeks of interne servers" },
-  { value: "windows",   label: "Windows Server",        description: "Windows Active Directory / RDP" },
-  { value: "linux",     label: "Linux Server",          description: "SSH / diensten op Linux" },
+  { value: "web",       label: "Website",                  description: "Een gewone website of webwinkel" },
+  { value: "api",       label: "App-koppeling (API)",      description: "Een koppeling waarmee apps gegevens uitwisselen" },
+  { value: "network",   label: "Netwerk",                  description: "Uw bedrijfsnetwerk of interne servers" },
+  { value: "windows",   label: "Windows-server",           description: "Een server die op Windows draait" },
+  { value: "linux",     label: "Linux-server",             description: "Een server die op Linux draait" },
 ];
 
 const PHASE_OPTIONS = [
-  { value: "recon",        label: "Reconnaissance",          tools: "nmap, httpx-pd, whatweb",        alwaysEnabled: true,  icon: <Crosshair className="h-4 w-4" /> },
-  { value: "vulnerability",label: "Vulnerability Detection", tools: "nuclei, nikto",                  alwaysEnabled: false, icon: <Bug className="h-4 w-4" /> },
-  { value: "webapp",       label: "Web Application Tests",   tools: "sqlmap, ffuf, nikto",            alwaysEnabled: false, icon: <Code2 className="h-4 w-4" /> },
-  { value: "network",      label: "Network Services",        tools: "nmap NSE",                       alwaysEnabled: false, icon: <Network className="h-4 w-4" /> },
-  { value: "auth",         label: "Authentication Tests",    tools: "hydra",                          alwaysEnabled: false, icon: <KeyRound className="h-4 w-4" /> },
-  { value: "ssl",          label: "SSL/TLS Analysis",        tools: "testssl.sh",                     alwaysEnabled: false, icon: <ShieldCheck className="h-4 w-4" /> },
-  { value: "osint",        label: "OSINT & Secrets",         tools: "theharvester, gitleaks",         alwaysEnabled: false, icon: <Search className="h-4 w-4" /> },
+  { value: "recon",        alwaysEnabled: true,  icon: <Crosshair className="h-4 w-4" /> },
+  { value: "vulnerability",alwaysEnabled: false, icon: <Bug className="h-4 w-4" /> },
+  { value: "webapp",       alwaysEnabled: false, icon: <Code2 className="h-4 w-4" /> },
+  { value: "network",      alwaysEnabled: false, icon: <Network className="h-4 w-4" /> },
+  { value: "auth",         alwaysEnabled: false, icon: <KeyRound className="h-4 w-4" /> },
+  { value: "ssl",          alwaysEnabled: false, icon: <ShieldCheck className="h-4 w-4" /> },
+  { value: "osint",        alwaysEnabled: false, icon: <Search className="h-4 w-4" /> },
 ];
 
 const CUSTOM_MODULE_OPTIONS = [
-  { value: "m09", label: "M09 — Business Logic Tester",    description: "IDOR, rate limiting, admin endpoints",         defaultChecked: false },
-  { value: "m10", label: "M10 — CVE Correlator",           description: "Koppelt services aan CVEs via NVD API",        defaultChecked: true  },
-  { value: "m11", label: "M11 — Visual Recon",             description: "Playwright screenshots van webdiensten",       defaultChecked: false },
-  { value: "m12", label: "M12 — Smart Credential Attack",  description: "Doelspecifieke wordlist + Hydra",              defaultChecked: false },
-  { value: "m13", label: "M13 — AI Adaptive Scanner",      description: "DeepSeek bepaalt follow-up scans",             defaultChecked: false },
-  { value: "m14", label: "M14 — Scan Comparator",          description: "Diff met vorige scan op hetzelfde target",     defaultChecked: false },
-  { value: "m15", label: "M15 — Autonomous Attack Agent",  description: "AI koppelt kwetsbaarheden samen in een aanvalsketen", defaultChecked: false },
-  { value: "m16", label: "M16 — Exploit Verificatie",      description: "Bewijst welke kwetsbaarheden echt exploiteerbaar zijn via Metasploit check-modus", defaultChecked: false },
-  { value: "m17", label: "M17 — Cloud Scanner",            description: "Controleert AWS, Azure en GCP op misconfiguraties en exposed storage", defaultChecked: false },
+  { value: "m09", defaultChecked: false },
+  { value: "m10", defaultChecked: true  },
+  { value: "m11", defaultChecked: false },
+  { value: "m12", defaultChecked: false },
+  { value: "m13", defaultChecked: false },
+  { value: "m14", defaultChecked: false },
+  { value: "m15", defaultChecked: false },
+  { value: "m16", defaultChecked: false },
+  { value: "m17", defaultChecked: false },
 ];
 
 const SCAN_TYPES = [
-  { value: "quick",     label: "Quick Scan",         description: "Recon + vulnerability scan",             phases: ["recon","vulnerability","ssl"] },
-  { value: "full",      label: "Volledige Pentest",   description: "Alle 7 fases — uitgebreide assessment",  phases: PHASE_OPTIONS.map(p => p.value) },
-  { value: "web_only",  label: "Web Application",    description: "Recon, vuln scan, webapp testing",       phases: ["recon","vulnerability","webapp"] },
-  { value: "network_only", label: "Netwerk Test",    description: "Recon, network services, auth",          phases: ["recon","network","auth"] },
-  { value: "compliance",label: "Compliance Check",   description: "SSL/TLS + vulnerability scan",           phases: ["recon","vulnerability","ssl"] },
-  { value: "custom",    label: "Aangepast",           description: "Kies zelf welke fases je wilt uitvoeren", phases: [] },
+  { value: "quick",     label: "Snelle controle",        description: "Een korte test van de belangrijkste punten",     phases: ["recon","vulnerability","ssl"] },
+  { value: "full",      label: "Volledig onderzoek",     description: "Alle onderdelen — het meest grondige onderzoek",  phases: PHASE_OPTIONS.map(p => p.value) },
+  { value: "web_only",  label: "Alleen website",         description: "Verkenning en uitgebreide test van uw website",  phases: ["recon","vulnerability","webapp"] },
+  { value: "network_only", label: "Alleen netwerk",      description: "Verkenning en controle van uw netwerk",          phases: ["recon","network","auth"] },
+  { value: "compliance",label: "Beveiligingscheck",      description: "Controle van de verbinding en zwakke plekken",   phases: ["recon","vulnerability","ssl"] },
+  { value: "custom",    label: "Zelf samenstellen",      description: "Kies zelf welke onderdelen u wilt laten testen", phases: [] },
 ];
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function NewScanPage() {
   return (
-    <Suspense fallback={<div className="py-12 text-center font-mono text-sm text-ink-muted">Loading...</div>}>
+    <Suspense fallback={<div className="py-12 text-center font-mono text-sm text-ink-muted">Laden...</div>}>
       <NewScanContent />
     </Suspense>
   );
@@ -140,10 +135,10 @@ function NewScanContent() {
   });
 
   const STEPS = [
-    { n: 1, label: "Target" },
-    { n: 2, label: "Modus" },
-    { n: 3, label: "Fases" },
-    ...(scanMode !== "blackbox" ? [{ n: 4, label: "Credentials" }] : []),
+    { n: 1, label: "Systeem" },
+    { n: 2, label: "Soort test" },
+    { n: 3, label: "Onderdelen" },
+    ...(scanMode !== "blackbox" ? [{ n: 4, label: "Inloggegevens" }] : []),
     { n: scanMode !== "blackbox" ? 5 : 4, label: "Bevestigen" },
   ];
   const lastStep = STEPS[STEPS.length - 1].n;
@@ -166,13 +161,13 @@ function NewScanContent() {
   const createScanMutation = useMutation({
     mutationFn: (data: any) => scansApi.create(data),
     onSuccess: (res) => {
-      toast.success("Scan aangemaakt!");
+      toast.success("Uw test is gestart!");
       router.push(`/scans/${res.data.id}`);
     },
     onError: (err: any) => {
       const detail = err?.response?.data?.detail;
       if (err?.response?.status === 429) {
-        toast.error(detail?.message ?? "Te veel actieve scans. Probeer het later opnieuw.");
+        toast.error(detail?.message ?? "Er lopen al te veel tests tegelijk. Probeer het later opnieuw.");
         return;
       }
       if (err?.response?.status === 403 && detail && typeof detail === "object") {
@@ -194,11 +189,11 @@ function NewScanContent() {
           toast.error(detail.message ?? "Accepteer eerst de gebruiksvoorwaarden");
           return;
         }
-        toast.error(detail.message ?? "Scan aanmaken mislukt");
+        toast.error(detail.message ?? "Het starten van de test is mislukt");
         return;
       }
       toast.error(
-        (typeof detail === "string" ? detail : null) ?? "Scan aanmaken mislukt"
+        (typeof detail === "string" ? detail : null) ?? "Het starten van de test is mislukt"
       );
     },
   });
@@ -307,10 +302,10 @@ function NewScanContent() {
         </Link>
         <div>
           <h1 className="font-display text-2xl font-bold uppercase tracking-[0.06em] text-ink">
-            Nieuwe <span className="text-cyan">Scan</span>
+            Uw systeem laten <span className="text-cyan">testen</span>
           </h1>
           <p className="font-mono text-[12px] text-ink-muted">
-            Configureer en start een security assessment
+            Vul hieronder in welk systeem u wilt laten controleren op beveiligingsproblemen. U hoeft geen technische kennis te hebben — wij doen het volledige onderzoek voor u.
           </p>
         </div>
       </div>
@@ -378,16 +373,16 @@ function NewScanContent() {
           >
             {/* Target select */}
             <div className="space-y-3">
-              <SectionLabel icon={<Target className="h-3.5 w-3.5" />} text="Target selecteren" />
+              <SectionLabel icon={<Target className="h-3.5 w-3.5" />} text="Welk systeem wilt u laten testen?" />
               {allTargets.length === 0 ? (
                 <GlowCard glowColor="#FF8C00" className="p-8 text-center">
                   <Target className="mx-auto mb-4 h-12 w-12 text-ink-muted opacity-40" />
-                  <p className="font-mono text-[13px] text-ink-muted">Geen targets gevonden.</p>
+                  <p className="font-mono text-[13px] text-ink-muted">Er zijn nog geen systemen toegevoegd.</p>
                   <Link
                     href="/targets"
                     className="mt-4 inline-flex items-center gap-2 rounded-lg bg-cyan px-4 py-2 font-display text-[12px] font-bold uppercase tracking-[0.08em] text-app transition-transform duration-150 hover:scale-[1.02] active:scale-[0.98]"
                   >
-                    Targets beheren
+                    Systeem toevoegen
                   </Link>
                 </GlowCard>
               ) : (
@@ -398,7 +393,7 @@ function NewScanContent() {
                     className="w-full appearance-none rounded-lg border border-grid bg-card2 px-4 py-3 pr-10 font-mono text-[13px] text-ink outline-none transition-colors duration-150 focus:border-cyan focus:ring-1 focus:ring-cyan"
                   >
                     <option value="" disabled>
-                      — Kies een target —
+                      — Kies een systeem —
                     </option>
                     {allTargets.map((target: any) => (
                       <option key={target.id} value={target.id} className="bg-card2 text-ink">
@@ -415,7 +410,7 @@ function NewScanContent() {
 
             {/* Scan mode */}
             <div className="space-y-3">
-              <SectionLabel icon={<Shield className="h-3.5 w-3.5" />} text="Scan modus" />
+              <SectionLabel icon={<Shield className="h-3.5 w-3.5" />} text="Hoeveel weten wij vooraf over uw systeem?" />
               <motion.div
                 variants={listContainer}
                 initial="initial"
@@ -437,10 +432,10 @@ function NewScanContent() {
                           style={{ color: active ? mode.accent : undefined }}
                         >
                           <span style={{ color: mode.accent }}>{mode.icon}</span>
-                          {mode.label}
+                          {scanTypeLabel(mode.value)}
                         </div>
                         <p className="font-mono text-[11px] leading-snug text-ink-muted">
-                          {mode.description}
+                          {scanTypeSubtitle(mode.value)}
                         </p>
                       </GlowCard>
                     </motion.div>
@@ -451,7 +446,7 @@ function NewScanContent() {
 
             {/* Target type */}
             <div className="space-y-3">
-              <SectionLabel icon={<Layers className="h-3.5 w-3.5" />} text="Doelwit type" />
+              <SectionLabel icon={<Layers className="h-3.5 w-3.5" />} text="Wat voor systeem is het?" />
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
                 {TARGET_TYPES.map((tt) => {
                   const active = targetType === tt.value;
@@ -494,7 +489,7 @@ function NewScanContent() {
             transition={{ duration: 0.25 }}
             className="space-y-6"
           >
-            <SectionLabel icon={<Sparkles className="h-3.5 w-3.5" />} text="Scan type" />
+            <SectionLabel icon={<Sparkles className="h-3.5 w-3.5" />} text="Welke soort test wilt u?" />
             <motion.div
               variants={listContainer}
               initial="initial"
@@ -520,7 +515,7 @@ function NewScanContent() {
                         </div>
                         {type.value !== "custom" && (
                           <span className="shrink-0 rounded border border-grid bg-app px-2 py-0.5 font-mono text-[10px] text-ink-muted">
-                            {type.phases.length} fases
+                            {type.phases.length} onderdelen
                           </span>
                         )}
                       </div>
@@ -545,7 +540,10 @@ function NewScanContent() {
             transition={{ duration: 0.25 }}
             className="space-y-6"
           >
-            <SectionLabel icon={<Layers className="h-3.5 w-3.5" />} text="Selecteer scan fases" />
+            <SectionLabel icon={<Layers className="h-3.5 w-3.5" />} text="Wat wilt u laten controleren?" />
+            <p className="font-mono text-[11px] leading-snug text-ink-muted">
+              Alles staat standaard aan. U kunt onderdelen uitzetten als u dat wilt, maar wij raden aan alles geselecteerd te laten.
+            </p>
             <motion.div
               variants={listContainer}
               initial="initial"
@@ -567,20 +565,13 @@ function NewScanContent() {
                         <div className="flex-1">
                           <div className="flex items-center justify-between gap-2">
                             <span className={`font-display text-[13px] font-semibold ${checked ? "text-cyan" : "text-ink"}`}>
-                              {phase.label}
+                              {phaseLabel(phase.value)}
                             </span>
                             <CheckBox checked={checked} color="#00D4FF" />
                           </div>
-                          <div className="mt-2 flex flex-wrap gap-1">
-                            {phase.tools.split(",").map((tool) => (
-                              <span
-                                key={tool}
-                                className="rounded border border-grid bg-app px-1.5 py-0.5 font-mono text-[9px] text-ink-muted"
-                              >
-                                {tool.trim()}
-                              </span>
-                            ))}
-                          </div>
+                          <p className="mt-1 font-mono text-[10px] leading-snug text-ink-muted">
+                            {phaseDesc(phase.value)}
+                          </p>
                         </div>
                       </div>
                     </GlowCard>
@@ -591,7 +582,7 @@ function NewScanContent() {
 
             {/* Custom modules */}
             <div className="space-y-3 border-t border-grid pt-5">
-              <SectionLabel icon={<Sparkles className="h-3.5 w-3.5" />} text="Custom Modules" accent="#A855F7" />
+              <SectionLabel icon={<Sparkles className="h-3.5 w-3.5" />} text="Extra controles" accent="#A855F7" />
               <motion.div
                 variants={listContainer}
                 initial="initial"
@@ -616,16 +607,16 @@ function NewScanContent() {
                                 className="font-display text-[13px] font-semibold"
                                 style={{ color: checked ? "#C084FC" : "#E8F4F8" }}
                               >
-                                {mod.label}
+                                {phaseLabel(mod.value)}
                               </span>
                               {mod.defaultChecked && (
                                 <span className="shrink-0 rounded bg-cyan/15 px-1.5 py-0.5 font-mono text-[8px] font-bold uppercase tracking-[0.1em] text-cyan">
-                                  Recommended
+                                  Aanbevolen
                                 </span>
                               )}
                             </div>
                             <p className="mt-0.5 font-mono text-[10px] leading-snug text-ink-muted">
-                              {mod.description}
+                              {phaseDesc(mod.value)}
                             </p>
                           </div>
                         </div>
@@ -647,7 +638,7 @@ function NewScanContent() {
                   <span className="flex items-center gap-2">
                     <Lock className="h-4 w-4 text-cyan" />
                     <span className="font-mono text-[11px] uppercase tracking-[0.14em] text-ink-muted">
-                      Cloud credentials (optioneel)
+                      Cloud-inloggegevens (optioneel)
                     </span>
                   </span>
                   <ArrowRight
@@ -701,7 +692,7 @@ function NewScanContent() {
                         </Field>
 
                         <p className="font-mono text-[10px] leading-snug text-ink-muted">
-                          Credentials worden niet opgeslagen na de scan.
+                          Deze gegevens worden niet bewaard na de test.
                         </p>
                       </div>
                     </motion.div>
@@ -727,11 +718,11 @@ function NewScanContent() {
           >
             <SectionLabel
               icon={<Key className="h-3.5 w-3.5" />}
-              text={`Credentials (${scanMode === "whitebox" ? "Whitebox" : "Graybox"})`}
+              text="Inloggegevens van uw systeem"
             />
             <GlowCard glowColor="#00D4FF" className="space-y-4 p-5">
               <p className="font-mono text-[11px] leading-snug text-ink-muted">
-                Alle credentials worden versleuteld opgeslagen en alleen gebruikt tijdens de scan.
+                Al uw inloggegevens worden versleuteld bewaard en alleen tijdens de test gebruikt.
               </p>
 
               <Field label="Gebruikersnaam">
@@ -762,7 +753,7 @@ function NewScanContent() {
                 </div>
               </Field>
 
-              <Field label="Bearer Token / API Key">
+              <Field label="Toegangssleutel / API-sleutel (optioneel)">
                 <input
                   value={bearerToken}
                   onChange={(e) => setBearerToken(e.target.value)}
@@ -772,7 +763,7 @@ function NewScanContent() {
               </Field>
 
               {scanMode === "whitebox" && (
-                <Field label="SSH Private Key">
+                <Field label="SSH-sleutel (voor servertoegang)">
                   <textarea
                     value={sshKey}
                     onChange={(e) => setSshKey(e.target.value)}
@@ -783,7 +774,7 @@ function NewScanContent() {
                 </Field>
               )}
 
-              <Field label="Custom Headers (optioneel, één per regel: Header: Value)">
+              <Field label="Extra kopregels (optioneel, één per regel: Naam: Waarde)">
                 <textarea
                   value={customHeaders}
                   onChange={(e) => setCustomHeaders(e.target.value)}
@@ -809,19 +800,22 @@ function NewScanContent() {
             transition={{ duration: 0.25 }}
             className="space-y-6"
           >
-            <SectionLabel icon={<Rocket className="h-3.5 w-3.5" />} text="Bevestigen & starten" />
+            <SectionLabel icon={<Rocket className="h-3.5 w-3.5" />} text="Klaar om te starten" />
+            <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-ink-muted">
+              Overzicht van uw test
+            </p>
             <GlowCard glowColor="#00FF88" accentBorder="#00D4FF" className="space-y-4 p-5">
               <SummaryRow
-                label="Target"
+                label="Systeem"
                 value={selectedTarget_obj?.hostname ?? selectedTarget_obj?.value ?? selectedTarget}
               />
               <SummaryRow
-                label="Doelwit type"
+                label="Soort systeem"
                 value={TARGET_TYPES.find((t) => t.value === targetType)?.label ?? targetType}
               />
               <SummaryRow
-                label="Scan modus"
-                value={SCAN_MODES.find((m) => m.value === scanMode)?.label ?? scanMode}
+                label="Vooraf bekend"
+                value={scanTypeLabel(scanMode)}
                 valueClass={
                   scanMode === "blackbox"
                     ? "text-red-500"
@@ -830,9 +824,9 @@ function NewScanContent() {
                     : "text-green-500"
                 }
               />
-              <SummaryRow label="Scan type" value={currentScanType?.label ?? scanType} />
-              <SummaryRow label="Fases" value={`${selectedPhases.size} geselecteerd`} />
-              <SummaryRow label="Modules" value={`${selectedModules.size} geselecteerd`} />
+              <SummaryRow label="Soort test" value={currentScanType?.label ?? scanType} />
+              <SummaryRow label="Onderdelen" value={`${selectedPhases.size} geselecteerd`} />
+              <SummaryRow label="Extra controles" value={`${selectedModules.size} geselecteerd`} />
 
               <div className="flex flex-wrap gap-1 border-t border-grid pt-3">
                 {Array.from(selectedPhases).map((p) => (
@@ -840,17 +834,17 @@ function NewScanContent() {
                     key={p}
                     className="rounded border border-grid bg-app px-2 py-0.5 font-mono text-[10px] text-ink"
                   >
-                    {PHASE_OPTIONS.find((o) => o.value === p)?.label ?? p}
+                    {phaseLabel(p)}
                   </span>
                 ))}
               </div>
 
               {scanMode !== "blackbox" && (username || password || bearerToken || sshKey) && (
                 <SummaryRow
-                  label="Credentials"
+                  label="Inloggegevens"
                   value={
                     <span className="flex items-center justify-end gap-1 text-green-500">
-                      <Key className="h-3 w-3" />Ingesteld
+                      <Key className="h-3 w-3" />Ingevuld
                     </span>
                   }
                 />
@@ -882,11 +876,11 @@ function NewScanContent() {
                     >
                       <Rocket className="h-4 w-4" />
                     </motion.span>
-                    Scan starten...
+                    Test wordt gestart...
                   </>
                 ) : (
                   <>
-                    <Rocket className="h-4 w-4" />Launch Scan
+                    <Rocket className="h-4 w-4" />Test nu starten →
                   </>
                 )}
               </motion.button>

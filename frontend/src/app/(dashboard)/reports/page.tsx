@@ -9,6 +9,7 @@ import { motion } from "framer-motion";
 import { Download, ArrowRight, Plus, Search, FileSearch } from "lucide-react";
 import { GlowCard } from "@/components/cyber/glow-card";
 import { SkeletonRow } from "@/components/cyber/skeleton";
+import { scanTypeLabel } from "@/lib/labels";
 
 type SeverityFilter = "all" | "critical" | "medium" | "low";
 type SortMode = "newest" | "oldest" | "risk";
@@ -116,7 +117,7 @@ export default function ReportsPage() {
             className="font-display text-[30px] font-bold text-ink"
             style={{ letterSpacing: "-0.03em" }}
           >
-            Reports
+            Rapporten
           </h1>
           <p className="mt-1 text-[14px] text-ink-muted">
             Download en bekijk voltooide pentest rapporten
@@ -137,10 +138,10 @@ export default function ReportsPage() {
           {/* Severity filter pills */}
           <div className="flex items-center gap-1.5">
             {([
-              ["all", "All"],
-              ["critical", "Critical"],
-              ["medium", "Medium"],
-              ["low", "Low"],
+              ["all", "Alles"],
+              ["critical", "Zeer ernstig"],
+              ["medium", "Gemiddeld"],
+              ["low", "Laag risico"],
             ] as [SeverityFilter, string][]).map(([key, label]) => (
               <Pill
                 key={key}
@@ -156,9 +157,9 @@ export default function ReportsPage() {
           <span className="mx-1 hidden h-4 w-px bg-grid sm:block" />
           <div className="flex items-center gap-1.5">
             {([
-              ["newest", "Newest"],
-              ["oldest", "Oldest"],
-              ["risk", "Risk Score"],
+              ["newest", "Nieuwste"],
+              ["oldest", "Oudste"],
+              ["risk", "Risicoscore"],
             ] as [SortMode, string][]).map(([key, label]) => (
               <Pill
                 key={key}
@@ -236,7 +237,7 @@ export default function ReportsPage() {
                           {risk}
                         </span>
                         <span className="mt-1 text-[9px] font-semibold uppercase tracking-widest text-ink-muted">
-                          Risk
+                          Risico
                         </span>
                       </div>
                     </div>
@@ -247,7 +248,7 @@ export default function ReportsPage() {
                         {targetDisplay}
                       </p>
                       <p className="mt-0.5 font-mono text-[12px] text-ink-muted">
-                        {scan.scan_type?.replace(/_/g, " ") ?? "pentest"}
+                        {scanTypeLabel(scan.scan_mode ?? scan.scan_type)}
                         {" · "}
                         {new Date(
                           scan.completed_at ?? scan.created_at,
@@ -366,12 +367,12 @@ function EmptyState({ hasReports }: { hasReports: boolean }) {
         <FileSearch className="h-12 w-12 text-cyan" />
       </motion.div>
       <p className="mt-5 font-display text-[17px] font-semibold text-ink">
-        {hasReports ? "Geen resultaten" : "No reports yet"}
+        {hasReports ? "Geen resultaten" : "Nog geen rapporten"}
       </p>
       <p className="mt-2 max-w-sm text-[13px] text-ink-muted">
         {hasReports
           ? "Geen rapporten gevonden voor deze filters."
-          : "Run your first scan to generate a report."}
+          : "Voer uw eerste scan uit om een rapport te genereren."}
       </p>
       {!hasReports && (
         <Link

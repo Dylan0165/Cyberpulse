@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
+import { scanTypeLabel, statusLabel, riskBand, severityLabel } from "@/lib/labels";
 import { GlowCard } from "@/components/cyber/glow-card";
 import { RiskBadge, severityColor } from "@/components/cyber/risk-badge";
 import { RiskGauge } from "@/components/cyber/risk-gauge";
@@ -56,25 +57,25 @@ interface PhaseState {
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 const PHASE_META: Record<string, { display: string; tools: string[] }> = {
-  recon:       { display: "Phase 1 — Reconnaissance",        tools: ["nmap","httpx-pd","whatweb"] },
-  vuln_scan:   { display: "Phase 2 — Vulnerability Scan",    tools: ["nuclei"] },
-  webapp:      { display: "Phase 3 — Web Application Tests", tools: ["nikto","sqlmap","ffuf"] },
-  network:     { display: "Phase 4 — Network Services",      tools: ["nmap"] },
-  auth:        { display: "Phase 5 — Authentication Tests",  tools: ["hydra"] },
-  ssl:         { display: "Phase 6 — SSL/TLS Analysis",      tools: ["testssl.sh"] },
-  osint:       { display: "Phase 7 — OSINT & Secrets",       tools: ["theharvester","gitleaks"] },
+  recon:       { display: "Fase 1 — Verkenning",                    tools: ["nmap","httpx-pd","whatweb"] },
+  vuln_scan:   { display: "Fase 2 — Zwakke plekken zoeken",         tools: ["nuclei"] },
+  webapp:      { display: "Fase 3 — Website testen",                tools: ["nikto","sqlmap","ffuf"] },
+  network:     { display: "Fase 4 — Netwerk controleren",           tools: ["nmap"] },
+  auth:        { display: "Fase 5 — Wachtwoorden testen",           tools: ["hydra"] },
+  ssl:         { display: "Fase 6 — Beveiligde verbinding checken", tools: ["testssl.sh"] },
+  osint:       { display: "Fase 7 — Openbare informatie check",     tools: ["theharvester","gitleaks"] },
   // Custom modules run after the Kali phases…
-  m09: { display: "M09 — Business Logic Tester",    tools: ["custom"] },
-  m10: { display: "M10 — CVE Correlator",           tools: ["NVD API"] },
-  m11: { display: "M11 — Visual Recon",             tools: ["Playwright"] },
-  m12: { display: "M12 — Smart Credential Attack",  tools: ["hydra"] },
-  m13: { display: "M13 — AI Adaptive Scanner",      tools: ["DeepSeek"] },
-  m14: { display: "M14 — Scan Comparator",          tools: ["diff"] },
-  m15: { display: "M15 — Autonomous Attack Agent",  tools: ["DeepSeek"] },
-  m16: { display: "M16 — Exploit Verificatie",      tools: ["Metasploit"] },
-  m17: { display: "M17 — Cloud Scanner",            tools: ["AWS","Azure","GCP"] },
+  m09: { display: "M09 — Toegangspunten testen",           tools: ["custom"] },
+  m10: { display: "M10 — Bekende lekken opzoeken",         tools: ["NVD API"] },
+  m11: { display: "M11 — Gevoelige bestanden checken",     tools: ["Playwright"] },
+  m12: { display: "M12 — Wachtwoordcheck",                 tools: ["hydra"] },
+  m13: { display: "M13 — Slimme vervolgtest",              tools: ["DeepSeek"] },
+  m14: { display: "M14 — Vergelijking met vorige meting",  tools: ["diff"] },
+  m15: { display: "M15 — Aanvalssimulatie",                tools: ["DeepSeek"] },
+  m16: { display: "M16 — Bewijs van risico",               tools: ["Metasploit"] },
+  m17: { display: "M17 — Cloud beveiliging check",         tools: ["AWS","Azure","GCP"] },
   // …and AI Analysis is ALWAYS the final step.
-  ai_analysis: { display: "Phase 8 — AI Analysis",           tools: ["DeepSeek"] },
+  ai_analysis: { display: "Fase 8 — AI-analyse",                    tools: ["DeepSeek"] },
 };
 
 const CUSTOM_MODULE_KEYS = new Set(["m09", "m10", "m11", "m12", "m13", "m14", "m15", "m16", "m17"]);
@@ -384,7 +385,7 @@ export default function ScanDetailPage() {
         <div className="flex-1">
           <h1 className="flex items-center gap-2 font-display text-2xl font-bold text-ink">
             <Shield className="h-6 w-6 text-cyan" style={{ filter: "drop-shadow(0 0 6px #00D4FF88)" }} />
-            Scan Details
+            Scandetails
           </h1>
           <p className="mt-0.5 font-mono text-[12px] text-ink-muted">
             {scan.scan_type?.replace("_", " ")} · {new Date(scan.created_at).toLocaleString("nl-NL")}
@@ -433,11 +434,11 @@ export default function ScanDetailPage() {
       <div className="grid gap-4 lg:grid-cols-3">
         {/* Left: target info */}
         <GlowCard className="flex flex-col justify-center p-6">
-          <p className="font-mono text-[11px] uppercase tracking-widest text-ink-muted">target</p>
+          <p className="font-mono text-[11px] uppercase tracking-widest text-ink-muted">doelwit</p>
           <p className="mt-1 break-all font-mono text-xl font-semibold text-ink">{scan.target_value ?? scan.target_id ?? "—"}</p>
           <div className="mt-3 flex flex-wrap items-center gap-2">
             <span className="rounded border border-grid bg-panel px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider text-cyan">
-              {scan.scan_mode ?? "blackbox"}
+              {scanTypeLabel(scan.scan_mode ?? "blackbox")}
             </span>
             <StatusChip status={scan.status} />
           </div>
@@ -459,6 +460,15 @@ export default function ScanDetailPage() {
         {/* Center: risk gauge */}
         <GlowCard className="flex flex-col items-center justify-center p-6">
           <RiskGauge score={riskScore} />
+          {(() => {
+            const band = riskBand(riskScore);
+            return (
+              <>
+                <p className="mt-2 font-display text-[15px] font-semibold text-ink">{band.label}</p>
+                <p className="font-mono text-[11px] text-ink-muted">{band.subtext}</p>
+              </>
+            );
+          })()}
           {providerLabel && (
             <p className="mt-3 font-mono text-[11px] text-ink-muted">
               {providerLabel}
@@ -468,13 +478,13 @@ export default function ScanDetailPage() {
 
         {/* Right: finding counts */}
         <GlowCard className="p-6">
-          <p className="font-mono text-[11px] uppercase tracking-widest text-ink-muted">findings</p>
+          <p className="font-mono text-[11px] uppercase tracking-widest text-ink-muted">bevindingen</p>
           <div className="mt-3 grid grid-cols-2 gap-3">
             {[
-              { label: "Critical", count: scan.critical_count, color: "#FF2D55" },
-              { label: "High",     count: scan.high_count,     color: "#FF8C00" },
-              { label: "Medium",   count: scan.medium_count,   color: "#FFD60A" },
-              { label: "Low",      count: scan.low_count,      color: "#0A84FF" },
+              { label: "Zeer ernstig", count: scan.critical_count, color: "#FF2D55" },
+              { label: "Ernstig",      count: scan.high_count,     color: "#FF8C00" },
+              { label: "Gemiddeld",    count: scan.medium_count,   color: "#FFD60A" },
+              { label: "Laag risico",  count: scan.low_count,      color: "#0A84FF" },
             ].map((b) => (
               <div
                 key={b.label}
@@ -494,8 +504,8 @@ export default function ScanDetailPage() {
       {/* ── Tabs ── */}
       <div className="flex gap-1 border-b border-grid">
         {[
-          { key: "live",     label: "Live Output" },
-          { key: "findings", label: `Findings (${findings.length})` },
+          { key: "live",     label: "Live weergave" },
+          { key: "findings", label: `Bevindingen (${findings.length})` },
           { key: "report",   label: "AI Rapport" },
         ].map((t) => (
           <button
@@ -602,7 +612,7 @@ export default function ScanDetailPage() {
                       background: sevFilter === s ? `${s === "all" ? "#00D4FF" : severityColor(s)}11` : "transparent",
                     }}
                   >
-                    {s}
+                    {s === "all" ? "Alles" : severityLabel(s)}
                   </button>
                 ))}
                 <span className="mx-1 hidden h-4 w-px bg-grid sm:block" />
@@ -616,7 +626,7 @@ export default function ScanDetailPage() {
                       color: findingSort === s ? "#00D4FF" : "#4A6880",
                     }}
                   >
-                    sort: {s}
+                    sorteer: {s === "severity" ? "ernst" : "cvss"}
                   </button>
                 ))}
               </div>
@@ -674,7 +684,7 @@ export default function ScanDetailPage() {
                                 {f.cve && <span className="text-cyan">{f.cve}</span>}
                                 {f.owasp && <span>{f.owasp}</span>}
                                 {f.tool && <span>tool: {f.tool}</span>}
-                                {f.phase && <span>phase: {f.phase}</span>}
+                                {f.phase && <span>fase: {f.phase}</span>}
                               </div>
                               {f.description && <Field label="Beschrijving" value={f.description} />}
                               {f.impact && <Field label="Impact" value={f.impact} />}
@@ -827,14 +837,14 @@ export default function ScanDetailPage() {
         <div>
           <div className="mb-3 flex items-center gap-2">
             <Zap className="h-4 w-4 text-cyan" />
-            <h2 className="font-display text-[15px] font-semibold text-ink">Attack Surface</h2>
+            <h2 className="font-display text-[15px] font-semibold text-ink">Aanvalsoppervlak</h2>
           </div>
           <div className="grid gap-4 lg:grid-cols-3">
             <div className="lg:col-span-2">
               <AttackSurfacePanel nodes={surfaceNodes} onSelect={setSelectedNode} />
             </div>
             <GlowCard className="p-5">
-              <p className="font-mono text-[11px] uppercase tracking-widest text-ink-muted">node detail</p>
+              <p className="font-mono text-[11px] uppercase tracking-widest text-ink-muted">details onderdeel</p>
               {selectedNode ? (
                 <div className="mt-3 space-y-2">
                   <p className="font-mono text-2xl font-bold text-ink">:{selectedNode.port}</p>
@@ -889,20 +899,20 @@ function PhaseIcon({ status }: { status: PhaseState["status"] }) {
 }
 
 function StatusChip({ status }: { status: string }) {
-  const map: Record<string, { color: string; label: string; pulse?: boolean }> = {
-    completed: { color: "#00FF88", label: "voltooid" },
-    running:   { color: "#00D4FF", label: "actief", pulse: true },
-    analyzing: { color: "#0A84FF", label: "analyseren", pulse: true },
-    pending:   { color: "#FF8C00", label: "wachtend" },
-    failed:    { color: "#FF2D55", label: "mislukt" },
-    cancelled: { color: "#4A6880", label: "geannuleerd" },
+  const map: Record<string, { color: string; pulse?: boolean }> = {
+    completed: { color: "#00FF88" },
+    running:   { color: "#00D4FF", pulse: true },
+    analyzing: { color: "#0A84FF", pulse: true },
+    pending:   { color: "#FF8C00" },
+    failed:    { color: "#FF2D55" },
+    cancelled: { color: "#4A6880" },
   };
-  const c = map[status] ?? { color: "#4A6880", label: status };
+  const c = map[status] ?? { color: "#4A6880" };
   return (
     <span className="flex items-center gap-1.5 rounded border px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider"
       style={{ color: c.color, borderColor: `${c.color}44`, background: `${c.color}11` }}>
       <span className={`h-1.5 w-1.5 rounded-full ${c.pulse ? "animate-pulse-dot" : ""}`} style={{ background: c.color }} />
-      {c.label}
+      {statusLabel(status)}
     </span>
   );
 }

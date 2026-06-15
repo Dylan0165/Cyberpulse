@@ -12,7 +12,13 @@ import {
   Clock,
 } from "lucide-react";
 import { schedulesApi } from "@/lib/api";
+import { scanTypeLabel } from "@/lib/labels";
 import { GlowCard } from "@/components/cyber/glow-card";
+
+const SCAN_TYPE_LABEL: Record<string, string> = {
+  quick: "Snelle test",
+  full: "Volledige test",
+};
 
 interface Schedule {
   id: string;
@@ -127,7 +133,7 @@ export default function SchedulePage() {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1 className="font-display text-2xl font-bold tracking-[0.02em] text-ink">
-            Geplande Scans
+            Automatische tests
           </h1>
           <p className="mt-1 text-[13px] text-ink-muted">
             Automatische scans op vaste tijden
@@ -163,7 +169,7 @@ export default function SchedulePage() {
             <form onSubmit={submit}>
               <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
                 <div className="md:col-span-2">
-                  <label className={labelCls}>Target *</label>
+                  <label className={labelCls}>Systeem *</label>
                   <input
                     className={inputCls}
                     value={form.target}
@@ -189,7 +195,7 @@ export default function SchedulePage() {
                   </select>
                 </div>
                 <div>
-                  <label className={labelCls}>Scan type</label>
+                  <label className={labelCls}>Soort test</label>
                   <select
                     className={inputCls}
                     value={form.scan_type}
@@ -197,12 +203,12 @@ export default function SchedulePage() {
                       setForm({ ...form, scan_type: e.target.value })
                     }
                   >
-                    <option value="quick">Quick</option>
-                    <option value="full">Full</option>
+                    <option value="quick">Snelle test</option>
+                    <option value="full">Volledige test</option>
                   </select>
                 </div>
                 <div>
-                  <label className={labelCls}>Modus</label>
+                  <label className={labelCls}>Aanpak</label>
                   <select
                     className={inputCls}
                     value={form.scan_mode}
@@ -210,9 +216,9 @@ export default function SchedulePage() {
                       setForm({ ...form, scan_mode: e.target.value })
                     }
                   >
-                    <option value="blackbox">Blackbox</option>
-                    <option value="greybox">Greybox</option>
-                    <option value="whitebox">Whitebox</option>
+                    <option value="blackbox">Buitenstaander test</option>
+                    <option value="greybox">Gedeeltelijke test</option>
+                    <option value="whitebox">Volledige doorlichting</option>
                   </select>
                 </div>
               </div>
@@ -290,8 +296,8 @@ export default function SchedulePage() {
                       </span>
                     </div>
                     <div className="flex flex-wrap items-center gap-4 text-[12px] text-ink-muted">
-                      <span className="font-mono">
-                        {s.scan_type} / {s.scan_mode}
+                      <span>
+                        {SCAN_TYPE_LABEL[s.scan_type] ?? s.scan_type} · {scanTypeLabel(s.scan_mode)}
                       </span>
                       <span className="inline-flex items-center gap-1.5">
                         <Clock className="h-3.5 w-3.5" />
