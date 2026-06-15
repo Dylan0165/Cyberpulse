@@ -3,11 +3,16 @@
 import asyncio
 import json
 import logging
+import uuid
 
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Query
 import redis.asyncio as aioredis
+from sqlalchemy import select
 
 from app.core.config import get_settings
+from app.core.auth import _decode_token
+from app.core.database import async_session
+from app.models.scan import Scan
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
@@ -15,6 +20,57 @@ settings = get_settings()
 router = APIRouter()
 
 HEARTBEAT_INTERVAL = 25  # seconds
+
+# Demo/student bucket — scans here are public (keeps the live demo working).
+_STUDENT_USER_ID = uuid.UUID("00000000-0000-0000-0000-000000000001")
+
+
+async def _authorize_scan_ws(websocket: WebSocket, scan_id: str, token: str) -> bool:
+    """Reject the WS unless the caller may watch this scan.
+
+    Auth source: the `?token=` query param, else the httpOnly `cp_token`
+    cookie sent automatically with the same-origin WS handshake.
+
+    Policy:
+      - scan not found            → close 4004
+      - demo/student scan (NULL or _STUDENT_USER_ID) → always allowed
+      - private scan, owner match → allowed
+      - private scan, no/wrong owner → close 4003
+
+    Fails OPEN on unexpected errors (transient DB issues must not lock out a
+    legitimate viewer; the REST layer already gates the sensitive report data).
+    """
+    try:
+        try:
+            sid = uuid.UUID(scan_id)
+        except (ValueError, TypeError):
+            await websocket.close(code=4004)
+            return False
+
+        async with async_session() as db:
+            result = await db.execute(select(Scan).where(Scan.id == sid))
+            scan = result.scalar_one_or_none()
+
+        if scan is None:
+            await websocket.close(code=4004)
+            return False
+
+        # Demo/student scans are public — anyone may watch.
+        if scan.user_id is None or scan.user_id == _STUDENT_USER_ID:
+            return True
+
+        # Private scan: require a token whose subject matches the owner.
+        jwt_token = token or websocket.cookies.get("cp_token", "")
+        payload = _decode_token(jwt_token) if jwt_token else None
+        sub = payload.get("sub") if payload else None
+        if sub and str(sub) == str(scan.user_id):
+            return True
+
+        await websocket.close(code=4003)
+        return False
+    except Exception as exc:  # noqa: BLE001 — fail open, never lock out on errors
+        logger.warning("WS auth check errored for scan %s (allowing): %s", scan_id, exc)
+        return True
 
 
 async def _relay(websocket: WebSocket, channel: str, redis_client: aioredis.Redis):
@@ -66,6 +122,8 @@ async def scan_websocket(
       scan_start, phase_start, phase_skip, tool_start, tool_done,
       phase_complete, scan_complete, error, heartbeat
     """
+    if not await _authorize_scan_ws(websocket, scan_id, token):
+        return
     await websocket.accept()
     logger.info("WS /scan/%s connected", scan_id)
 
@@ -114,6 +172,8 @@ async def analysis_websocket(
     Stream AI analysis tokens to the frontend.
     Publishes from `scan:{scan_id}:analysis` — {"type":"token","token":"..."}.
     """
+    if not await _authorize_scan_ws(websocket, scan_id, token):
+        return
     await websocket.accept()
     logger.info("WS /analysis/%s connected", scan_id)
 

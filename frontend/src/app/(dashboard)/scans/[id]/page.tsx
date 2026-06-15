@@ -2,6 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { scansApi, reportsApi } from "@/lib/api";
+import { getToken } from "@/lib/auth";
 import { useParams } from "next/navigation";
 import { useState, useEffect, useRef, useMemo } from "react";
 import { toast } from "sonner";
@@ -160,7 +161,12 @@ export default function ScanDetailPage() {
   useEffect(() => {
     if (!scanId) return;
     const proto = window.location.protocol === "https:" ? "wss" : "ws";
-    const wsUrl = `${proto}://${window.location.host}/ws/scan/${scanId}`;
+    // Pass the JWT so the backend can verify scan ownership. The httpOnly
+    // cookie is also sent automatically, but the token param works even if
+    // cookies are blocked. Demo/student scans are accepted without a token.
+    const token = getToken();
+    const base = `${proto}://${window.location.host}/ws/scan/${scanId}`;
+    const wsUrl = token ? `${base}?token=${encodeURIComponent(token)}` : base;
     const ws = new WebSocket(wsUrl);
     wsRef.current = ws;
 

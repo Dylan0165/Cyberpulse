@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import type { ScanLiveEvent } from "@/types";
+import { getToken } from "@/lib/auth";
 
 export function useScanWebSocket(scanId: string | null) {
   const [events, setEvents] = useState<ScanLiveEvent[]>([]);
@@ -11,7 +12,9 @@ export function useScanWebSocket(scanId: string | null) {
   const connect = useCallback(() => {
     if (!scanId) return;
 
-    const wsUrl = `${process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:8000"}/ws/scan/${scanId}`;
+    const token = getToken();
+    const base = `${process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:8000"}/ws/scan/${scanId}`;
+    const wsUrl = token ? `${base}?token=${encodeURIComponent(token)}` : base;
     const ws = new WebSocket(wsUrl);
 
     ws.onopen = () => setConnected(true);
