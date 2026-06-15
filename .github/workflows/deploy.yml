@@ -34,15 +34,16 @@ jobs:
           echo "$CHANGED"
 
           SERVICES=""
-          echo "$CHANGED" | grep -q '^frontend/'    && SERVICES="$SERVICES frontend"
-          echo "$CHANGED" | grep -q '^backend/'      && SERVICES="$SERVICES backend worker beat"
-          echo "$CHANGED" | grep -q '^cyberpulse/'   && SERVICES="$SERVICES cyberpulse-web"
+          echo "$CHANGED" | grep -q '^frontend/'        && SERVICES="$SERVICES frontend"
+          echo "$CHANGED" | grep -q '^backend/'          && SERVICES="$SERVICES backend worker beat"
+          echo "$CHANGED" | grep -q '^cyberpulse/'       && SERVICES="$SERVICES cyberpulse-web"
+          echo "$CHANGED" | grep -q '^scanix-website/'   && SERVICES="$SERVICES scanix-website"
           # compose/nginx/infra change, or first run with no diff → rebuild everything
           if echo "$CHANGED" | grep -qE '^(docker-compose|nginx/|\.github/)'; then
-            SERVICES="frontend backend worker beat cyberpulse-web"
+            SERVICES="frontend backend worker beat cyberpulse-web scanix-website"
           fi
           if [ -z "$SERVICES" ]; then
-            SERVICES="frontend backend worker beat cyberpulse-web"
+            SERVICES="frontend backend worker beat cyberpulse-web scanix-website"
           fi
           # de-duplicate
           SERVICES=$(echo $SERVICES | tr ' ' '\n' | grep -v '^$' | sort -u | tr '\n' ' ')

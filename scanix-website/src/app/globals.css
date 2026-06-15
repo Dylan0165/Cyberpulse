@@ -1,0 +1,99 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg-primary: #020408;
+  --bg-secondary: #050d14;
+  --bg-card: #080f18;
+  --accent-cyan: #00b4d8;
+  --accent-green: #00ff88;
+  --accent-red: #ff2d55;
+  --text-primary: #e8f4f8;
+  --text-muted: #4a6880;
+  --border: #0d1f35;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: var(--font-body), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Subtle animated grid background — fixed, never repaints on scroll */
+.grid-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(to right, rgba(13, 31, 53, 0.55) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(13, 31, 53, 0.55) 1px, transparent 1px);
+  background-size: 56px 56px;
+  mask-image: radial-gradient(ellipse 90% 60% at 50% 0%, #000 35%, transparent 75%);
+  -webkit-mask-image: radial-gradient(ellipse 90% 60% at 50% 0%, #000 35%, transparent 75%);
+  animation: grid-drift 24s linear infinite;
+}
+
+@keyframes grid-drift {
+  from { background-position: 0 0; }
+  to { background-position: 56px 56px; }
+}
+
+/* Soft radial glow accents behind hero/sections */
+.glow-accent {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(120px);
+  opacity: 0.16;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.font-display {
+  font-family: var(--font-display), system-ui, sans-serif;
+}
+
+::selection {
+  background: rgba(0, 180, 216, 0.28);
+  color: #fff;
+}
+
+/* Range slider — themed for the pricing calculator */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 6px;
+  border-radius: 9999px;
+  background: #0d1f35;
+  outline: none;
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 9999px;
+  background: #00b4d8;
+  cursor: pointer;
+  box-shadow: 0 0 14px rgba(0, 180, 216, 0.5);
+}
+input[type="range"]::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border: none;
+  border-radius: 9999px;
+  background: #00b4d8;
+  cursor: pointer;
+  box-shadow: 0 0 14px rgba(0, 180, 216, 0.5);
+}

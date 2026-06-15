@@ -132,6 +132,20 @@ services:
     environment:
       BACKEND_URL: "http://backend:8000"
 
+  # ── Scanix Marketing Website (scanix.nl) ─────────────────
+  scanix-website:
+    build:
+      context: ./scanix-website
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      # Direct access at http://<server>:3100 (handy before DNS is set up).
+      - "3100:3000"
+    environment:
+      NODE_ENV: "production"
+      # Optional: set to an email API / webhook to forward contact-form leads.
+      CONTACT_WEBHOOK_URL: "${CONTACT_WEBHOOK_URL:-}"
+
   # ── Nginx Reverse Proxy ──────────────────────────────────
   nginx:
     image: nginx:alpine
@@ -144,6 +158,7 @@ services:
     depends_on:
       - backend
       - frontend
+      - scanix-website
 
 volumes:
   pgdata:
