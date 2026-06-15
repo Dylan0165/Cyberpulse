@@ -51,19 +51,21 @@ def _pub(r: sync_redis.Redis, scan_id: str, event: dict):
 PHASES: list[tuple[str, list[tuple[str, str, int]]]] = [
     ("recon", [
         ("nmap",     "-sV -sC --open -p- {target}",                                    480),
+        # {web_url} resolves to the discovered web service (e.g. http://host:3000)
+        # once the recon nmap above has run; falls back to http://{target}.
         # Installed as httpx-pd on Kali VM to avoid clash with Python httpx client
-        ("httpx-pd", "-u http://{target} -title -tech-detect -status-code -silent",    120),
-        ("whatweb",  "-a 3 {target}",                                                   60),
+        ("httpx-pd", "-u {web_url} -title -tech-detect -status-code -silent",          120),
+        ("whatweb",  "-a 3 {web_url}",                                                  60),
     ]),
     ("vuln_scan", [
         # -json deprecated in nuclei v3+; use -jsonl
-        ("nuclei",   "-u {target} -severity critical,high,medium -jsonl -silent",      600),
+        ("nuclei",   "-u {web_url} -severity critical,high,medium -jsonl -silent",     600),
     ]),
     ("webapp", [
         # nikto -Format json requires -output; omit Format flag to use plain text
-        ("nikto",    "-h {target} -ask no",                                            300),
-        ("sqlmap",   "-u {target} --batch --level=2 --risk=1 --forms",                600),
-        ("ffuf",     "-u http://{target}/FUZZ -w /usr/share/wordlists/dirb/common.txt -mc 200,301,302,403 -ac -t 40", 180),
+        ("nikto",    "-h {web_url} -ask no",                                           300),
+        ("sqlmap",   "-u {web_url} --batch --level=2 --risk=1 --forms",               600),
+        ("ffuf",     "-u {web_url}/FUZZ -w /usr/share/wordlists/dirb/common.txt -mc 200,301,302,403 -ac -t 40", 180),
     ]),
     ("network", [
         ("nmap",     "--script=default,vuln -sV -p 21,22,23,25,53,80,110,139,143,443,445,3306,3389,5432,6379,8080,8443 {target}", 300),
@@ -107,6 +109,45 @@ _MODULE_DISPLAY = {
     "m16": "M16 — Exploit Verificatie",
     "m17": "M17 — Cloud Scanner",
 }
+
+
+def _parse_web_ports(nmap_output: str) -> tuple[list[int], list[int]]:
+    """Return (http_ports, https_ports) found as 'open' in nmap -sV output.
+
+    Lets web tools target the port the app actually runs on (e.g. 3000) instead
+    of blindly hitting 80/443. Lines look like:  3000/tcp open  http  Node.js …
+    """
+    import re as _re
+    http_ports: list[int] = []
+    https_ports: list[int] = []
+    for m in _re.finditer(r"(\d{1,5})/tcp\s+open\s+(\S+)", nmap_output or ""):
+        port = int(m.group(1))
+        svc = m.group(2).lower()
+        if "https" in svc or "ssl" in svc or port in (443, 8443):
+            https_ports.append(port)
+        elif "http" in svc or port in (80, 8080, 8000, 8888, 3000, 5000):
+            http_ports.append(port)
+    return list(dict.fromkeys(http_ports)), list(dict.fromkeys(https_ports))
+
+
+def _primary_web(target: str, http_ports: list[int], https_ports: list[int]) -> tuple[str, str]:
+    """Pick the primary web service and return (web_url, web_host) for tool args.
+
+    Prefers plain HTTP (80, else the first discovered HTTP port), then HTTPS
+    (443, else the first HTTPS port), and finally falls back to bare
+    http://<target> so behaviour is unchanged when nothing was discovered.
+    """
+    host = (target or "").strip()
+    if "://" in host:
+        host = host.split("://", 1)[1]
+    host = host.split("/")[0]
+    if http_ports:
+        port = 80 if 80 in http_ports else http_ports[0]
+        return f"http://{host}:{port}", f"{host}:{port}"
+    if https_ports:
+        port = 443 if 443 in https_ports else https_ports[0]
+        return f"https://{host}:{port}", f"{host}:{port}"
+    return f"http://{host}", host
 
 
 def _parse_hydra_findings(output: str) -> list[dict]:
@@ -221,7 +262,7 @@ def _run_cve_correlator(scan_id: str, target: str, all_outputs: dict, r) -> str:
     return "\n".join(lines)
 
 
-def _run_visual_recon(target: str) -> str:
+def _run_visual_recon(target: str, web_url: str | None = None) -> str:
     """M11 — Visual Recon: probe for exposed sensitive files over HTTP."""
     import requests as _req
 
@@ -230,7 +271,8 @@ def _run_visual_recon(target: str) -> str:
         "/info.php", "/.htaccess", "/robots.txt", "/sitemap.xml",
     ]
 
-    base = target if target.startswith("http") else f"http://{target}"
+    # Use the discovered web service (e.g. http://host:3000) instead of port 80.
+    base = web_url or (target if target.startswith("http") else f"http://{target}")
     base = base.rstrip("/")
 
     lines: list[str] = ["[M11] Visual Recon — gevoelige bestanden controle"]
@@ -243,7 +285,7 @@ def _run_visual_recon(target: str) -> str:
         _req.get(base + "/", timeout=5, verify=False,
                  headers={"User-Agent": "CyberPulse/1.0"})
     except Exception:
-        lines.append("[M11] Poort 80 niet open — webserver niet bereikbaar op dit doel")
+        lines.append(f"[M11] Webserver niet bereikbaar op {base} — controle overgeslagen")
         return "\n".join(lines)
 
     for path in paths:
@@ -473,12 +515,14 @@ def _run_scan_comparator(scan_id: str, target: str, db, scan) -> str:
         return f"[M14] Vergelijking niet mogelijk door fout: {exc}"
 
 
-def _run_business_logic(target: str) -> str:
+def _run_business_logic(target: str, web_url: str | None = None) -> str:
     """M09 — Business Logic Tester: probe admin/sensitive endpoints + rate limiting."""
     lines: list[str] = ["[M09] Business Logic Tester — endpoint & rate-limit controle"]
     try:
         import requests as _req
-        base = target if target.startswith("http") else f"http://{target}"
+        # Use the discovered web service (e.g. http://host:3000) so the probes
+        # hit the running app instead of a closed port 80.
+        base = web_url or (target if target.startswith("http") else f"http://{target}")
         base = base.rstrip("/")
         paths = [
             "/admin", "/administrator", "/dashboard", "/api/admin", "/api/users",
@@ -774,8 +818,21 @@ def _run_attack_agent(scan_id: str, target: str, all_outputs: dict, runner) -> s
                 lines.append("  Status: OVERGESLAGEN (onveilig/niet-toegestaan commando) ✗")
                 continue
             res = runner.run_safe(cmd_tool, args, 30)
-            out = (res.stdout or res.stderr or "").strip()
-            ok = bool(indicator) and indicator.lower()[:40] in out.lower()
+            out = (res.stdout or res.stderr or getattr(res, "error", "") or "").strip()
+            out_l = out.lower()
+            # A step succeeded if the tool actually ran and returned a usable
+            # result — not an error, timeout or empty output. The AI-provided
+            # success_indicator, when it matches, is a stronger confirmation but
+            # is NOT required (it rarely matches tool output verbatim, which used
+            # to flag genuinely-successful steps as MISLUKT).
+            _err_markers = (
+                "timeout", "tool exceeded", "connection refused", "no such file",
+                "could not resolve", "cannot connect", "name or service not known",
+                "no route to host", "unable to connect", "fatal error", "ftl",
+            )
+            errored = any(e in out_l for e in _err_markers)
+            matched = bool(indicator) and indicator.lower()[:40] in out_l
+            ok = matched or (bool(out) and not errored)
             lines.append(f"  Resultaat: {out[:300]}")
             lines.append(f"  Status: {'GELUKT ✓' if ok else 'MISLUKT ✗'}")
             if ok:
@@ -1039,6 +1096,11 @@ def run_scan(self, scan_id: str):
 
         all_outputs: dict[str, dict[str, str]] = {}
 
+        # Web service location, refined once the recon nmap reveals which port
+        # actually serves HTTP (e.g. 3000). Defaults keep behaviour unchanged.
+        web_url = f"http://{target}"
+        web_host = target
+
         for phase_num, (phase_name, phase_tools) in enumerate(PHASES, start=1):
             if not _should_run_phase(phase_name, scan_mode, phases_enabled):
                 _pub(r, scan_id, {
@@ -1063,6 +1125,8 @@ def run_scan(self, scan_id: str):
             for tool_name, args_template, timeout in phase_tools:
                 args = (
                     args_template
+                    .replace("{web_url}", web_url)
+                    .replace("{web_host}", web_host)
                     .replace("{target}", target)
                     .replace("{scan_id}", str(scan_id))
                     .replace("{username}", credentials.get("username", "admin"))
@@ -1106,6 +1170,16 @@ def run_scan(self, scan_id: str):
                                    scan_id, phase_name, tool_name)
 
                 phase_outputs[tool_name] = output
+
+                # After the recon nmap, learn which port serves the web app so
+                # the remaining web tools (httpx/whatweb/nikto/sqlmap/ffuf/nuclei)
+                # and M09/M11 target it instead of a closed port 80.
+                if phase_name == "recon" and tool_name == "nmap" and output:
+                    _hp, _sp = _parse_web_ports(output)
+                    if _hp or _sp:
+                        web_url, web_host = _primary_web(target, _hp, _sp)
+                        logger.info("[%s] web service detected: %s (http=%s https=%s)",
+                                    scan_id, web_url, _hp, _sp)
 
                 # Parse structured credential findings from hydra output
                 # so the AI receives them as explicit CRITICAL findings.
@@ -1194,11 +1268,11 @@ def run_scan(self, scan_id: str):
             logger.info("[%s] %s starting", scan_id, mod_id.upper())
             try:
                 if mod_id == "m09":
-                    mod_output = _run_business_logic(target)
+                    mod_output = _run_business_logic(target, web_url)
                 elif mod_id == "m10":
                     mod_output = _run_cve_correlator(scan_id, target, all_outputs, r)
                 elif mod_id == "m11":
-                    mod_output = _run_visual_recon(target)
+                    mod_output = _run_visual_recon(target, web_url)
                 elif mod_id == "m12":
                     mod_output = _run_smart_credential(scan_id, target, all_outputs, runner)
                 elif mod_id == "m13":
