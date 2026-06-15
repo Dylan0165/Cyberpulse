@@ -190,7 +190,7 @@ export default function SettingsPage() {
                       className={inputCls}
                       value={company}
                       onChange={(e) => setCompany(e.target.value)}
-                      placeholder="CyberPulse B.V."
+                      placeholder="Scanix B.V."
                     />
                   </div>
                 </div>

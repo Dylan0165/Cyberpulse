@@ -51,7 +51,7 @@ export default function LoginPage() {
           <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-xl border border-grid bg-card2 shadow-glow-cyan">
             <Shield className="h-7 w-7 text-cyan" />
           </div>
-          <h1 className="font-display text-2xl font-bold text-ink">CyberPulse</h1>
+          <h1 className="font-display text-2xl font-bold text-ink">Scanix</h1>
           <p className="mt-1 text-sm text-ink-muted">Inloggen</p>
         </div>
 

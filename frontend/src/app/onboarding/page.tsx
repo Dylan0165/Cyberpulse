@@ -97,7 +97,7 @@ export default function OnboardingPage() {
             className="rounded-xl border border-grid bg-panel p-6 shadow-glow-cyan"
           >
             <h1 className="font-display text-2xl font-bold text-ink">
-              Welkom bij CyberPulse!
+              Welkom bij Scanix!
             </h1>
             <p className="mt-1 text-sm text-ink-muted">
               Wij gaan uw systeem controleren op beveiligingsproblemen. Dit is

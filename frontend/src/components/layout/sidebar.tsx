@@ -64,7 +64,7 @@ export function Sidebar() {
             animate={{ opacity: 1 }}
             className="font-display text-[16px] font-bold tracking-tight text-ink"
           >
-            Cyber<span className="text-cyan">Pulse</span>
+            Scan<span className="text-cyan">ix</span>
           </motion.span>
         )}
       </div>

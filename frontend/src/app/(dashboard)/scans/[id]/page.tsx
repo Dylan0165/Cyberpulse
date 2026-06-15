@@ -354,7 +354,7 @@ export default function ScanDetailPage() {
   const providerLabel = (() => {
     switch ((scan as any)?.ai_provider_used) {
       case "anthropic": return "Geanalyseerd door Claude (Anthropic)";
-      case "runpod":    return "Geanalyseerd door CyberPulse AI";
+      case "runpod":    return "Geanalyseerd door Scanix AI";
       case "deepseek":  return "Geanalyseerd door DeepSeek";
       default:          return null;
     }

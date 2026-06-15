@@ -55,8 +55,8 @@ def _build_pdf(report_data: dict, target: str, scan_type: str,
         buf, pagesize=A4,
         leftMargin=2*cm, rightMargin=2*cm,
         topMargin=2*cm, bottomMargin=2*cm,
-        title="CyberPulse Security Report",
-        author=company_name or "CyberPulse",
+        title="Scanix Security Report",
+        author=company_name or "Scanix",
     )
 
     base = getSampleStyleSheet()
@@ -72,7 +72,7 @@ def _build_pdf(report_data: dict, target: str, scan_type: str,
 
     story = []
     now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
-    brand = company_name if (white_label and company_name) else "CyberPulse"
+    brand = company_name if (white_label and company_name) else "Scanix"
 
     # ── Cover page ──────────────────────────────────────────────────────────────
     story.append(Spacer(1, 5*cm))
@@ -283,10 +283,10 @@ def _build_html_fallback(report_data: dict, target: str, scan_type: str) -> str:
         for f in findings
     )
     return f"""<!DOCTYPE html><html><head><meta charset='utf-8'>
-<title>CyberPulse Report — {target}</title>
+<title>Scanix Report — {target}</title>
 <style>body{{font-family:sans-serif;padding:2em}}table{{border-collapse:collapse;width:100%}}
 th,td{{border:1px solid #ccc;padding:.5em}}</style></head><body>
-<h1>CyberPulse Security Report</h1>
+<h1>Scanix Security Report</h1>
 <p><b>Target:</b> {target} &nbsp; <b>Type:</b> {scan_type}</p>
 <p><b>Risk Score:</b> {report_data.get('risk_score',0)}/100 — {report_data.get('risk_level','')}</p>
 <p>{report_data.get('management_summary','')}</p>

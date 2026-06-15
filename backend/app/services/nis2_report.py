@@ -219,8 +219,8 @@ def _build_nis2_pdf(report_data: dict, target: str, scan_date: str) -> bytes:
         buf, pagesize=A4,
         leftMargin=2 * cm, rightMargin=2 * cm,
         topMargin=2 * cm, bottomMargin=2 * cm,
-        title="CyberPulse NIS2 Compliancerapport",
-        author="CyberPulse",
+        title="Scanix NIS2 Compliancerapport",
+        author="Scanix",
     )
 
     styles = {
@@ -252,7 +252,7 @@ def _build_nis2_pdf(report_data: dict, target: str, scan_date: str) -> bytes:
 
     # ── Cover page ──────────────────────────────────────────────────────────────
     story.append(Spacer(1, 4 * cm))
-    story.append(Paragraph("CyberPulse", styles["title"]))
+    story.append(Paragraph("Scanix", styles["title"]))
     story.append(Paragraph("NIS2 Compliancerapport", styles["subtitle"]))
     story.append(HRFlowable(width="80%", thickness=1, color=colors.HexColor("#1e3a5f"), hAlign="CENTER"))
     story.append(Spacer(1, 1 * cm))
@@ -340,7 +340,7 @@ def _build_nis2_pdf(report_data: dict, target: str, scan_date: str) -> bytes:
     story.append(Spacer(1, 1 * cm))
 
     story.append(Paragraph(
-        "Dit rapport is gegenereerd door CyberPulse en dient als indicatief overzicht. "
+        "Dit rapport is gegenereerd door Scanix en dient als indicatief overzicht. "
         "Voor officiële NIS2-certificering is een gecertificeerde audit vereist.",
         styles["small"],
     ))
@@ -360,7 +360,7 @@ def _build_fallback_pdf(target: str, scan_date: str) -> bytes:
     doc = SimpleDocTemplate(buf, pagesize=A4)
     styles = getSampleStyleSheet()
     story = [
-        Paragraph("CyberPulse — NIS2 Compliancerapport", styles["Title"]),
+        Paragraph("Scanix — NIS2 Compliancerapport", styles["Title"]),
         Spacer(1, 1 * cm),
         Paragraph(f"Organisatie: {target or '—'}", styles["Normal"]),
         Paragraph(f"Datum: {scan_date or '—'}", styles["Normal"]),

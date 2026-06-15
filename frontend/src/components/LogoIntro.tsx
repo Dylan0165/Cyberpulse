@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 
-// Logo intro overlay — plays the animated CyberPulse logo once per browser session.
+// Logo intro overlay — plays the animated Scanix logo once per browser session.
 // Video served from /public/logo-intro.mp4, static poster /public/logoCyber.png.
 // TODO: optionally swap to the Higgsfield CDN URL when available.
 // Job ID: da608e8b-235b-4ac2-a1dc-05cea5ea2fa2
@@ -54,7 +54,7 @@ export default function LogoIntro() {
         <motion.div
           role="dialog"
           aria-modal="true"
-          aria-label="CyberPulse intro animatie"
+          aria-label="Scanix intro animatie"
           initial={{ opacity: 1 }}
           exit={{ opacity: 0, scale: 1.05 }}
           transition={{ duration: 0.5, ease: "easeInOut" }}

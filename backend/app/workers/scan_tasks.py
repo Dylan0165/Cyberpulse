@@ -235,7 +235,7 @@ def _run_cve_correlator(scan_id: str, target: str, all_outputs: dict, r) -> str:
                 "https://services.nvd.nist.gov/rest/json/cves/2.0",
                 params={"keywordSearch": keyword, "resultsPerPage": 3},
                 timeout=10,
-                headers={"User-Agent": "CyberPulse/1.0"},
+                headers={"User-Agent": "Scanix/1.0"},
             )
             if resp.status_code == 200:
                 vulns = resp.json().get("vulnerabilities", [])
@@ -283,7 +283,7 @@ def _run_visual_recon(target: str, web_url: str | None = None) -> str:
     # and show one clean line instead of a raw exception per path.
     try:
         _req.get(base + "/", timeout=5, verify=False,
-                 headers={"User-Agent": "CyberPulse/1.0"})
+                 headers={"User-Agent": "Scanix/1.0"})
     except Exception:
         lines.append(f"[M11] Webserver niet bereikbaar op {base} — controle overgeslagen")
         return "\n".join(lines)
@@ -293,7 +293,7 @@ def _run_visual_recon(target: str, web_url: str | None = None) -> str:
         try:
             resp = _req.get(
                 url, timeout=5, verify=False, allow_redirects=False,
-                headers={"User-Agent": "CyberPulse/1.0"},
+                headers={"User-Agent": "Scanix/1.0"},
             )
             status = resp.status_code
             body = resp.text or ""
@@ -533,7 +533,7 @@ def _run_business_logic(target: str, web_url: str | None = None) -> str:
         for p in paths:
             try:
                 r = _req.get(base + p, timeout=5, verify=False, allow_redirects=False,
-                             headers={"User-Agent": "CyberPulse/1.0"})
+                             headers={"User-Agent": "Scanix/1.0"})
                 if r.status_code == 200:
                     exposed += 1
                     lines.append(f"  {p} → 200 ⚠️ TOEGANKELIJK")
@@ -558,10 +558,10 @@ def _run_business_logic(target: str, web_url: str | None = None) -> str:
                 try:
                     if method == "POST":
                         rr = _req.post(url, json=payload, timeout=3, verify=False,
-                                       headers={"User-Agent": "CyberPulse/1.0"})
+                                       headers={"User-Agent": "Scanix/1.0"})
                     else:
                         rr = _req.get(url, timeout=3, verify=False,
-                                      headers={"User-Agent": "CyberPulse/1.0"})
+                                      headers={"User-Agent": "Scanix/1.0"})
                     seen = True
                 except Exception:
                     continue

@@ -38,7 +38,7 @@ def send_scan_complete_email(
         smtp_pass = os.getenv("SMTP_PASS")
         smtp_from = os.getenv("SMTP_FROM") or smtp_user
 
-        subject = f"CyberPulse scan voltooid — {target} — {risk_score}/100"
+        subject = f"Scanix scan voltooid — {target} — {risk_score}/100"
         link = f"http://192.168.121.40/scans/{scan_id}"
 
         body = (
@@ -53,7 +53,7 @@ def send_scan_complete_email(
             f"  Laag:       {low}\n\n"
             f"Bekijk het volledige rapport: {link}\n\n"
             "Met vriendelijke groet,\n"
-            "CyberPulse\n"
+            "Scanix\n"
         )
 
         msg = MIMEText(body, "plain", "utf-8")

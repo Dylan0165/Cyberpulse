@@ -42,7 +42,7 @@ const PHASE_LABELS: Record<number, string> = {
   0: "Overig",
 };
 
-// Only the tools CyberPulse actively uses in its scan phases.
+// Only the tools Scanix actively uses in its scan phases.
 // Filtering the API response to this set prevents showing the thousands
 // of system binaries that the Kali VM tool discovery picks up.
 const TOOL_DESCRIPTIONS: Record<string, string> = {
@@ -106,7 +106,7 @@ export default function ToolsPage() {
         return r.json();
       })
       .then((d: ToolsResponse) => {
-        // Filter to only the tools CyberPulse actively uses.
+        // Filter to only the tools Scanix actively uses.
         // The Kali VM tool discovery returns thousands of system binaries;
         // we only care about the ~15 in CYBERPULSE_TOOLS.
         const relevantTools = d.tools.filter((t) => CYBERPULSE_TOOLS.has(t.name));
@@ -358,7 +358,7 @@ export default function ToolsPage() {
         <div className="flex items-center gap-3">
           <h2 className="font-display text-[18px] font-semibold text-ink">Eigen modules</h2>
           <span className="font-mono text-[12px] text-ink-muted">
-            CyberPulse analysemodules na de scan
+            Scanix analysemodules na de scan
           </span>
         </div>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">

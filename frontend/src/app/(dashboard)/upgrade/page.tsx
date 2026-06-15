@@ -5,9 +5,9 @@ import { Check, ArrowRight, Cpu, Server, Sparkles } from "lucide-react";
 import { GlowCard } from "@/components/cyber/glow-card";
 
 const MAIL_CYBERPULSE =
-  "mailto:info@cyberpulse.nl?subject=Upgrade%20CyberPulse%20AI";
+  "mailto:info@scanix.nl?subject=Upgrade%20Scanix%20AI";
 const MAIL_CLAUDE =
-  "mailto:info@cyberpulse.nl?subject=Upgrade%20Claude%20Anthropic";
+  "mailto:info@scanix.nl?subject=Upgrade%20Claude%20Anthropic";
 
 export default function UpgradePage() {
   return (
@@ -63,7 +63,7 @@ export default function UpgradePage() {
           </GlowCard>
         </motion.div>
 
-        {/* Card 2 — CyberPulse AI */}
+        {/* Card 2 — Scanix AI */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
@@ -74,7 +74,7 @@ export default function UpgradePage() {
               <div className="flex items-center gap-2">
                 <Server className="h-5 w-5 text-cyan" />
                 <h2 className="font-display text-[16px] font-semibold text-ink">
-                  CyberPulse AI
+                  Scanix AI
                 </h2>
               </div>
               <span
@@ -158,10 +158,10 @@ export default function UpgradePage() {
         Na uw aanvraag activeren wij de upgrade binnen 1 werkdag op uw account.
         Vragen? Mail ons op{" "}
         <a
-          href="mailto:info@cyberpulse.nl"
+          href="mailto:info@scanix.nl"
           className="text-cyan hover:underline"
         >
-          info@cyberpulse.nl
+          info@scanix.nl
         </a>
       </p>
     </div>

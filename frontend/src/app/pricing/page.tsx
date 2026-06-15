@@ -17,7 +17,7 @@ type AddOn = "none" | "cyberpulse" | "claude";
 const COMPARISON: { label: string; deepseek: boolean | string; cyberpulse: boolean | string; claude: boolean | string }[] = [
   { label: "8-fasen geautomatiseerde pentest", deepseek: true, cyberpulse: true, claude: true },
   { label: "15+ professionele Kali-tools", deepseek: true, cyberpulse: true, claude: true },
-  { label: "AI-analyse & herstelplan", deepseek: "DeepSeek", cyberpulse: "CyberPulse AI", claude: "Claude" },
+  { label: "AI-analyse & herstelplan", deepseek: "DeepSeek", cyberpulse: "Scanix AI", claude: "Claude" },
   { label: "PDF- & JSON-rapporten", deepseek: true, cyberpulse: true, claude: true },
   { label: "Geplande scans & meldingen", deepseek: true, cyberpulse: true, claude: true },
   { label: "Dataverwerking uitsluitend in de EU", deepseek: false, cyberpulse: true, claude: false },
@@ -34,7 +34,7 @@ function HeaderBar() {
           <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-neon-green animate-pulse-dot" />
         </div>
         <span className="font-display text-[17px] font-bold text-ink">
-          Cyber<span className="text-cyan">Pulse</span>
+          Scan<span className="text-cyan">ix</span>
         </span>
       </Link>
       <div className="flex items-center gap-3">
@@ -104,10 +104,10 @@ export default function PricingPage() {
             featured: false,
           },
           {
-            key: "cyberpulse", icon: Server, title: "CyberPulse AI", badge: "EU-only", badgeColor: "#00B4D8",
+            key: "cyberpulse", icon: Server, title: "Scanix AI", badge: "EU-only", badgeColor: "#00B4D8",
             price: BASE_PER_TARGET + ADDON_CYBERPULSE, per: "/systeem/maand",
             desc: "Zelf-gehost model volledig binnen de EU. Maximale dataprivacy.",
-            feats: ["Alles uit Standaard", "Dataverwerking in de EU", "Eigen CyberPulse-model", "+€9 per systeem"],
+            feats: ["Alles uit Standaard", "Dataverwerking in de EU", "Eigen Scanix-model", "+€9 per systeem"],
             featured: true,
           },
           {
@@ -217,7 +217,7 @@ export default function PricingPage() {
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
               {([
                 { value: "none", label: "DeepSeek", note: "inbegrepen" },
-                { value: "cyberpulse", label: "CyberPulse AI", note: "+€9" },
+                { value: "cyberpulse", label: "Scanix AI", note: "+€9" },
                 { value: "claude", label: "Claude", note: "+€19" },
               ] as { value: AddOn; label: string; note: string }[]).map((o) => {
                 const active = addon === o.value;
@@ -296,7 +296,7 @@ export default function PricingPage() {
               <tr className="border-b border-grid">
                 <th className="px-4 py-3 text-[12px] uppercase tracking-[0.08em] text-ink-muted">Functie</th>
                 <th className="px-4 py-3 text-center text-[12px] uppercase tracking-[0.08em] text-ink-muted">Standaard</th>
-                <th className="px-4 py-3 text-center text-[12px] uppercase tracking-[0.08em] text-cyan">CyberPulse AI</th>
+                <th className="px-4 py-3 text-center text-[12px] uppercase tracking-[0.08em] text-cyan">Scanix AI</th>
                 <th className="px-4 py-3 text-center text-[12px] uppercase tracking-[0.08em] text-ink-muted">Claude</th>
               </tr>
             </thead>
@@ -317,7 +317,7 @@ export default function PricingPage() {
       {/* Footer */}
       <footer className="relative z-10 mx-auto max-w-6xl border-t border-grid px-6 py-8 text-center">
         <p className="font-mono text-[11px] text-ink-muted">
-          CyberPulse — Geautomatiseerd pentesten voor het MKB ·{" "}
+          Scanix — Geautomatiseerd pentesten voor het MKB ·{" "}
           <Link href="/terms" className="text-cyan hover:underline">Gebruiksvoorwaarden</Link>
         </p>
       </footer>

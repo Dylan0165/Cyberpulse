@@ -25,7 +25,7 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "CyberPulse — Automated Penetration Testing",
+  title: "Scanix — Automated Security Testing",
   description:
     "AI-powered penetration testing platform with automated scanning, vulnerability analysis, and actionable remediation reports.",
 };

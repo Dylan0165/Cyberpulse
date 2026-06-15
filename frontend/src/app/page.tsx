@@ -37,7 +37,7 @@ export default function LandingPage() {
             <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-neon-green animate-pulse-dot" />
           </div>
           <span className="font-display text-[17px] font-bold text-ink">
-            Cyber<span className="text-cyan">Pulse</span>
+            Scan<span className="text-cyan">ix</span>
           </span>
         </div>
         <div className="flex items-center gap-3">
@@ -64,7 +64,7 @@ export default function LandingPage() {
           transition={{ duration: 0.6, ease: "easeOut" }}
           className="mx-auto mb-8 w-[140px] sm:w-[180px]"
         >
-          <Image src="/logoCyber.png" alt="CyberPulse" width={180} height={180} priority className="mx-auto" />
+          <Image src="/logoCyber.png" alt="Scanix" width={180} height={180} priority className="mx-auto" />
         </motion.div>
 
         <motion.h1
@@ -79,7 +79,7 @@ export default function LandingPage() {
           initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.2 }}
           className="mx-auto mt-5 max-w-2xl text-[15px] leading-relaxed text-ink-muted"
         >
-          CyberPulse scant uw systemen zoals een echte aanvaller en levert een helder
+          Scanix scant uw systemen zoals een echte aanvaller en levert een helder
           rapport met risicoscore en concrete acties — gemaakt voor het Nederlandse MKB,
           zonder dat u beveiligingsexpert hoeft te zijn.
         </motion.p>
@@ -154,7 +154,7 @@ export default function LandingPage() {
       {/* Footer */}
       <footer className="relative z-10 mx-auto max-w-6xl border-t border-grid px-6 py-8 text-center">
         <p className="font-mono text-[11px] text-ink-muted">
-          CyberPulse — Geautomatiseerd pentesten voor het MKB ·{" "}
+          Scanix — Geautomatiseerd pentesten voor het MKB ·{" "}
           <Link href="/terms" className="text-cyan hover:underline">Gebruiksvoorwaarden</Link>
         </p>
       </footer>

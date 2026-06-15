@@ -2,18 +2,18 @@ import Link from "next/link";
 import { ShieldCheck, ArrowLeft } from "lucide-react";
 
 export const metadata = {
-  title: "Gebruiksvoorwaarden — CyberPulse",
+  title: "Gebruiksvoorwaarden — Scanix",
 };
 
 const SECTIONS: { title: string; body?: string; intro?: string; bullets?: string[] }[] = [
   {
     title: "1. TOEGESTAAN GEBRUIK",
     body:
-      "CyberPulse mag uitsluitend worden gebruikt voor het testen van systemen waarvan u aantoonbaar eigenaar bent of waarvoor u schriftelijke toestemming heeft ontvangen van de eigenaar.",
+      "Scanix mag uitsluitend worden gebruikt voor het testen van systemen waarvan u aantoonbaar eigenaar bent of waarvoor u schriftelijke toestemming heeft ontvangen van de eigenaar.",
   },
   {
     title: "2. VERBODEN GEBRUIK",
-    intro: "Het is strikt verboden om CyberPulse te gebruiken voor:",
+    intro: "Het is strikt verboden om Scanix te gebruiken voor:",
     bullets: [
       "Het testen van systemen zonder toestemming van de eigenaar",
       "Het verstoren of beschadigen van systemen",
@@ -24,12 +24,12 @@ const SECTIONS: { title: string; body?: string; intro?: string; bullets?: string
   {
     title: "3. AANSPRAKELIJKHEID",
     body:
-      "CyberPulse en haar ontwikkelaars zijn niet aansprakelijk voor schade die voortvloeit uit het gebruik van het platform. De gebruiker is volledig verantwoordelijk voor alle acties die worden uitgevoerd via het platform.",
+      "Scanix en haar ontwikkelaars zijn niet aansprakelijk voor schade die voortvloeit uit het gebruik van het platform. De gebruiker is volledig verantwoordelijk voor alle acties die worden uitgevoerd via het platform.",
   },
   {
     title: "4. EIGENDOMSVERIFICATIE",
     body:
-      "Voor het uitvoeren van scans dient u eigendom of toestemming te kunnen aantonen. CyberPulse behoudt zich het recht voor om accounts te blokkeren bij vermoedens van misbruik.",
+      "Voor het uitvoeren van scans dient u eigendom of toestemming te kunnen aantonen. Scanix behoudt zich het recht voor om accounts te blokkeren bij vermoedens van misbruik.",
   },
   {
     title: "5. GEGEVENSVERWERKING",
@@ -54,7 +54,7 @@ export default function TermsPage() {
               <ShieldCheck className="h-5 w-5 text-cyan" />
             </div>
             <span className="font-display text-xl font-bold tracking-[0.04em] text-cyan">
-              CyberPulse
+              Scanix
             </span>
           </div>
           <Link
@@ -69,7 +69,7 @@ export default function TermsPage() {
         {/* Title */}
         <div className="mb-10">
           <h1 className="font-display text-3xl font-bold tracking-[0.01em] text-ink">
-            Gebruiksvoorwaarden CyberPulse
+            Gebruiksvoorwaarden Scanix
           </h1>
           <p className="mt-2 font-mono text-[12px] uppercase tracking-[0.12em] text-ink-muted">
             Versie 1.0 — Juni 2026
@@ -113,7 +113,7 @@ export default function TermsPage() {
 
           <div className="mt-10 border-t border-grid pt-6">
             <p className="text-[13px] italic leading-relaxed text-ink">
-              Door gebruik te maken van CyberPulse gaat u akkoord met deze voorwaarden.
+              Door gebruik te maken van Scanix gaat u akkoord met deze voorwaarden.
             </p>
           </div>
         </div>

@@ -95,7 +95,7 @@ export default function RegisterPage() {
           </div>
           <h1 className="font-display text-2xl font-bold text-ink">Account aanmaken</h1>
           <p className="mt-1 text-sm text-ink-muted">
-            Start vandaag met CyberPulse
+            Start vandaag met Scanix
           </p>
         </div>
 

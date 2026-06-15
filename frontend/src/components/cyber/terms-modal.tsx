@@ -56,7 +56,7 @@ export function TermsModal({
               <div className="flex items-center gap-2">
                 <ShieldCheck className="h-5 w-5 text-cyan" />
                 <h2 className="font-display text-xl font-bold uppercase tracking-[0.04em] text-ink">
-                  Gebruiksvoorwaarden <span className="text-cyan">CyberPulse</span>
+                  Gebruiksvoorwaarden <span className="text-cyan">Scanix</span>
                 </h2>
               </div>
               <p className="mt-1 font-mono text-[12px] text-ink-muted">
@@ -69,7 +69,7 @@ export function TermsModal({
               <p className="mb-3 text-ink">Samenvatting van de voorwaarden:</p>
               <ol className="space-y-3">
                 <li>
-                  <span className="text-cyan">1. Toegestaan gebruik.</span> U mag CyberPulse uitsluitend
+                  <span className="text-cyan">1. Toegestaan gebruik.</span> U mag Scanix uitsluitend
                   gebruiken voor security-assessments van systemen die u bezit of waarvoor u
                   uitdrukkelijke schriftelijke toestemming heeft.
                 </li>
@@ -79,7 +79,7 @@ export function TermsModal({
                   strikt verboden en kan strafbaar zijn.
                 </li>
                 <li>
-                  <span className="text-cyan">3. Aansprakelijkheid.</span> CyberPulse wordt geleverd "as
+                  <span className="text-cyan">3. Aansprakelijkheid.</span> Scanix wordt geleverd "as
                   is". U bent zelf volledig verantwoordelijk voor het gebruik en de gevolgen van de
                   uitgevoerde scans.
                 </li>

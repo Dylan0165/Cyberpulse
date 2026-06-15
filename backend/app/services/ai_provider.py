@@ -3,7 +3,7 @@
 Three providers behind one OpenAI-compatible interface:
   - deepseek  (default, included)
   - anthropic (Claude, paid upgrade) — via Anthropic's OpenAI-compatible endpoint
-  - runpod    ("CyberPulse AI", EU-only self-hosted, paid upgrade)
+  - runpod    ("Scanix AI", EU-only self-hosted, paid upgrade)
 
 A user only routes to a non-default provider when ai_provider_active is True.
 On any failure the provider falls back to DeepSeek automatically.
