@@ -344,6 +344,15 @@ export default function ScanDetailPage() {
 
   const riskScore = aiReport?.risk_score ?? (scan ? Math.round((100 - (scan.security_score ?? 100))) : 0);
 
+  const providerLabel = (() => {
+    switch ((scan as any)?.ai_provider_used) {
+      case "anthropic": return "Geanalyseerd door Claude (Anthropic)";
+      case "runpod":    return "Geanalyseerd door CyberPulse AI";
+      case "deepseek":  return "Geanalyseerd door DeepSeek";
+      default:          return null;
+    }
+  })();
+
   if (isLoading) {
     return <div className="py-16 text-center font-mono text-sm text-ink-muted">Laden…</div>;
   }
@@ -442,8 +451,13 @@ export default function ScanDetailPage() {
         </GlowCard>
 
         {/* Center: risk gauge */}
-        <GlowCard className="flex items-center justify-center p-6">
+        <GlowCard className="flex flex-col items-center justify-center p-6">
           <RiskGauge score={riskScore} />
+          {providerLabel && (
+            <p className="mt-3 font-mono text-[11px] text-ink-muted">
+              {providerLabel}
+            </p>
+          )}
         </GlowCard>
 
         {/* Right: finding counts */}

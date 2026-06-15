@@ -196,13 +196,18 @@ def analyze_scan_sync_streaming(
     all_outputs: dict[str, dict[str, str]],
     redis_client=None,
     ai_config: dict | None = None,
+    client=None,
+    model: str | None = None,
 ) -> dict:
     """
     Like analyze_scan_sync but streams tokens to Redis channel
     `scan:{scan_id}:analysis` for live WebSocket updates.
+
+    A caller may pass a ready-made `client` + `model` (e.g. from AIProvider);
+    otherwise it resolves them from `ai_config`/settings (DeepSeek default).
     """
-    client = _get_client(ai_config)
-    _model = _model_for(ai_config)
+    client = client or _get_client(ai_config)
+    _model = model or _model_for(ai_config)
 
     sections = []
     for phase, tools in all_outputs.items():

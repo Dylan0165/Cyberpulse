@@ -34,6 +34,7 @@ def _user_dict(u: User) -> dict:
         "notify_on_complete": u.notify_on_complete,
         "notification_email": u.notification_email,
         "ai_provider": getattr(u, "ai_provider", "deepseek") or "deepseek",
+        "ai_provider_active": bool(getattr(u, "ai_provider_active", False)),
         "ai_base_url": getattr(u, "ai_base_url", None),
         "ai_api_key_set": bool(getattr(u, "ai_api_key", None)),
         "plan": u.plan,
@@ -46,9 +47,10 @@ class UpdateMeBody(BaseModel):
     company_name: str | None = None
     notify_on_complete: bool | None = None
     notification_email: str | None = None
-    ai_provider: str | None = None      # deepseek | anthropic | local
-    ai_api_key: str | None = None       # user's own key
-    ai_base_url: str | None = None      # for local models
+    ai_provider: str | None = None          # deepseek | anthropic | runpod
+    ai_provider_active: bool | None = None  # paid upgrade active
+    ai_api_key: str | None = None           # legacy local key
+    ai_base_url: str | None = None          # legacy local base url
 
 
 @router.patch("/me")
@@ -66,8 +68,10 @@ async def update_me(
         user.notify_on_complete = data["notify_on_complete"]
     if "notification_email" in data:
         user.notification_email = data["notification_email"]
-    if "ai_provider" in data and data["ai_provider"] in ("deepseek", "anthropic", "local"):
+    if "ai_provider" in data and data["ai_provider"] in ("deepseek", "anthropic", "runpod", "local"):
         user.ai_provider = data["ai_provider"]
+    if "ai_provider_active" in data and data["ai_provider_active"] is not None:
+        user.ai_provider_active = bool(data["ai_provider_active"])
     if "ai_api_key" in data:
         user.ai_api_key = data["ai_api_key"] or None
     if "ai_base_url" in data:

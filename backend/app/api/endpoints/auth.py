@@ -67,6 +67,7 @@ def _user_dict(u: User) -> dict:
         "notify_on_complete": u.notify_on_complete,
         "notification_email": u.notification_email,
         "ai_provider": getattr(u, "ai_provider", "deepseek") or "deepseek",
+        "ai_provider_active": bool(getattr(u, "ai_provider_active", False)),
         "ai_base_url": getattr(u, "ai_base_url", None),
         "ai_api_key_set": bool(getattr(u, "ai_api_key", None)),
         "plan": u.plan,

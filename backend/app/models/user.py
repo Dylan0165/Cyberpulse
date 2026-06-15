@@ -42,10 +42,11 @@ class User(Base):
     notify_on_complete: Mapped[bool] = mapped_column(Boolean, server_default="false", default=False)
     notification_email: Mapped[str | None] = mapped_column(String(320))
 
-    # AI analysis provider preference (migration 0004)
-    ai_provider: Mapped[str] = mapped_column(String(20), server_default="deepseek", default="deepseek")  # deepseek | anthropic | local
-    ai_api_key: Mapped[str | None] = mapped_column(String(255))   # user's own key (for anthropic/local)
-    ai_base_url: Mapped[str | None] = mapped_column(String(255))  # for local/self-hosted models
+    # AI analysis provider preference (migration 0004 + 0005)
+    ai_provider: Mapped[str] = mapped_column(String(20), server_default="deepseek", default="deepseek")  # deepseek | anthropic | runpod
+    ai_provider_active: Mapped[bool] = mapped_column(Boolean, server_default="false", default=False)  # paid upgrade active
+    ai_api_key: Mapped[str | None] = mapped_column(String(255))   # legacy: user's own key (local)
+    ai_base_url: Mapped[str | None] = mapped_column(String(255))  # legacy: self-hosted base URL
 
     # Relationships
     targets = relationship("Target", back_populates="user", cascade="all, delete-orphan")

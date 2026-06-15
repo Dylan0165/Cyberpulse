@@ -84,22 +84,21 @@ def analyze_scan(self, scan_id: str):
                 "compliance_mapping": {"owasp_top10":[],"iso27001":[],"nis2":[]},
             }
         else:
-            # Resolve the scan owner's AI provider preference (default DeepSeek)
-            ai_config = None
+            # Resolve the scan owner's AI provider via the abstraction layer.
+            provider_name = "deepseek"
+            client = None
+            model = None
             try:
-                if scan.user_id:
-                    from app.models.user import User
-                    owner = db.query(User).filter(User.id == scan.user_id).first()
-                    if owner and getattr(owner, "ai_provider", "deepseek") != "deepseek":
-                        ai_config = {
-                            "provider": owner.ai_provider,
-                            "api_key": owner.ai_api_key,
-                            "base_url": owner.ai_base_url,
-                        }
-                        logger.info("Scan %s using AI provider '%s'", scan_id, owner.ai_provider)
+                from app.models.user import User
+                from app.services.ai_provider import AIProvider
+                owner = db.query(User).filter(User.id == scan.user_id).first() if scan.user_id else None
+                prov = AIProvider(owner)
+                provider_name = prov.provider
+                client, model = prov.get_client_and_model()
+                logger.info("Scan %s using AI provider '%s'", scan_id, provider_name)
             except Exception as exc:
-                logger.warning("Could not load AI provider preference: %s", exc)
-                ai_config = None
+                logger.warning("AI provider resolution failed, using DeepSeek: %s", exc)
+                client, model, provider_name = None, None, "deepseek"
 
             # Stream analysis output to the WebSocket channel
             report = analyze_scan_sync_streaming(
@@ -109,8 +108,13 @@ def analyze_scan(self, scan_id: str):
                 phases_completed=list(all_outputs.keys()),
                 all_outputs=all_outputs,
                 redis_client=r,
-                ai_config=ai_config,
+                client=client,
+                model=model,
             )
+            try:
+                scan.ai_provider_used = provider_name
+            except Exception:
+                pass
 
         # Extract finding counts from report
         counts = report.get("finding_counts") or {}

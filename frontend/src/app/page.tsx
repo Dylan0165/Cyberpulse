@@ -41,6 +41,9 @@ export default function LandingPage() {
           </span>
         </div>
         <div className="flex items-center gap-3">
+          <Link href="/pricing" className="font-mono text-[13px] text-ink-muted transition-colors hover:text-cyan">
+            Prijzen
+          </Link>
           <Link href="/login" className="font-mono text-[13px] text-ink-muted transition-colors hover:text-cyan">
             Inloggen
           </Link>

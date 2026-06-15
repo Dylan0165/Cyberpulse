@@ -29,7 +29,9 @@ class Scan(Base):
     phases_completed: Mapped[list | None] = mapped_column(JSONB, default=list)
     findings: Mapped[list | None] = mapped_column(JSONB, default=list)
     ai_analysis: Mapped[dict | None] = mapped_column(JSONB)           # DeepSeek structured output
+    ai_provider_used: Mapped[str | None] = mapped_column(String(30))  # deepseek | anthropic | runpod
     tool_outputs: Mapped[dict | None] = mapped_column(JSONB, default=dict)  # {phase: {tool: stdout}}
+    custom_config: Mapped[dict | None] = mapped_column(JSONB)         # e.g. cloud_credentials (never logged)
 
     # Status tracking
     status: Mapped[str] = mapped_column(String(50), default="pending")
