@@ -129,9 +129,24 @@ export function Hero() {
   }, []);
 
   return (
-    <section className="relative min-h-[100dvh] pt-10">
+    <section className="relative min-h-[100dvh] overflow-hidden pt-10">
+      {/* Abstract generated background video */}
+      <video
+        autoPlay
+        muted
+        loop
+        playsInline
+        preload="auto"
+        aria-hidden
+        className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-40"
+      >
+        <source src="/videos/hero-bg.mp4" type="video/mp4" />
+      </video>
+      {/* Dark overlay so the hero text stays readable over the video */}
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-bg/70 via-bg/80 to-bg" />
+
       <div className="glow-accent left-[-10%] top-[-5%] h-[420px] w-[420px] bg-cyan" />
-      <div className="mx-auto grid max-w-content items-center gap-12 px-5 py-16 md:px-8 lg:grid-cols-2 lg:gap-8 lg:py-24">
+      <div className="relative z-10 mx-auto grid max-w-content items-center gap-12 px-5 py-16 md:px-8 lg:grid-cols-2 lg:gap-8 lg:py-24">
         {/* Left: content */}
         <div>
           <motion.span
