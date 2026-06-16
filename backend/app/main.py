@@ -1,6 +1,7 @@
 """AutoPentest AI — FastAPI application entry point."""
 
 import logging
+import os
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -51,11 +52,30 @@ app = FastAPI(
     redoc_url="/api/redoc",
 )
 
-# CORS — allow all origins (school project on closed netlab, no public exposure)
+# CORS — explicit allowlist so credentialed (cookie) cross-origin requests from
+# the marketing site (scanix.nl) reach the dashboard API (app.scanix.nl).
+# NOTE: a wildcard origin ("*") is invalid together with allow_credentials=True;
+# the browser requires the exact origin echoed back, which CORSMiddleware does.
+ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+    "http://localhost:3100",
+    "http://192.168.121.40",
+    "http://192.168.121.40:3000",
+    "http://192.168.121.40:3100",
+    "https://scanix.nl",
+    "https://www.scanix.nl",
+    "https://app.scanix.nl",
+]
+
+# Extra origins can be added at deploy time without a code change.
+_extra = os.getenv("EXTRA_CORS_ORIGINS", "")
+if _extra:
+    ALLOWED_ORIGINS.extend(o.strip() for o in _extra.split(",") if o.strip())
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=False,
+    allow_origins=ALLOWED_ORIGINS,
+    allow_credentials=True,  # required so the browser sends/accepts cookies
     allow_methods=["*"],
     allow_headers=["*"],
 )

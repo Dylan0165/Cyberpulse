@@ -6,6 +6,7 @@ English code/logs. Async SQLAlchemy throughout.
 """
 
 import logging
+import os
 import secrets
 import uuid
 from datetime import datetime, timezone
@@ -32,6 +33,15 @@ from app.models.user import User
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 _COOKIE_MAX_AGE = JWT_EXPIRY_DAYS * 24 * 3600
+
+# In production (HTTPS) the cookie must be SameSite=None; Secure and scoped to
+# the parent domain so it works across scanix.nl ↔ app.scanix.nl. On the
+# HTTP netlab/dev demo we keep SameSite=Lax (no Secure, no domain) so the
+# existing same-origin dashboard keeps working unchanged.
+_IS_PRODUCTION = os.getenv("ENVIRONMENT", "development") == "production"
+_COOKIE_SAMESITE = "none" if _IS_PRODUCTION else "lax"
+_COOKIE_SECURE = _IS_PRODUCTION
+_COOKIE_DOMAIN = ".scanix.nl" if _IS_PRODUCTION else None
 
 
 # ── Pydantic bodies ──────────────────────────────────────────────────────────
@@ -81,7 +91,9 @@ def _set_token_cookie(response: Response, token: str) -> None:
         value=token,
         httponly=True,
         max_age=_COOKIE_MAX_AGE,
-        samesite="lax",
+        samesite=_COOKIE_SAMESITE,
+        secure=_COOKIE_SECURE,
+        domain=_COOKIE_DOMAIN,
     )
 
 
@@ -157,7 +169,14 @@ async def login(
 
 @router.post("/logout")
 async def logout(response: Response):
-    response.delete_cookie("cp_token")
+    # Match the attributes the cookie was set with so it's actually cleared
+    # (a domain-scoped cookie isn't removed by a domain-less delete).
+    response.delete_cookie(
+        "cp_token",
+        samesite=_COOKIE_SAMESITE,
+        secure=_COOKIE_SECURE,
+        domain=_COOKIE_DOMAIN,
+    )
     return {"ok": True}
 
 

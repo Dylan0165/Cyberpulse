@@ -78,6 +78,12 @@ services:
       RUNPOD_API_KEY: "${RUNPOD_API_KEY:-}"
       RUNPOD_ENDPOINT_URL: "${RUNPOD_ENDPOINT_URL:-}"
       RUNPOD_MODEL_NAME: "${RUNPOD_MODEL_NAME:-mistral-7b-instruct}"
+      # netlab/demo runs over HTTP → keep cookies SameSite=Lax. Set to
+      # "production" only on the real HTTPS server (enables SameSite=None;Secure
+      # + .scanix.nl cookie domain for cross-subdomain login).
+      ENVIRONMENT: "${ENVIRONMENT:-development}"
+      # Extra CORS origins (comma-separated) without a code change.
+      EXTRA_CORS_ORIGINS: "${EXTRA_CORS_ORIGINS:-}"
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000
 
   # ── Celery Worker ────────────────────────────────────────
@@ -102,6 +108,8 @@ services:
       RUNPOD_API_KEY: "${RUNPOD_API_KEY:-}"
       RUNPOD_ENDPOINT_URL: "${RUNPOD_ENDPOINT_URL:-}"
       RUNPOD_MODEL_NAME: "${RUNPOD_MODEL_NAME:-mistral-7b-instruct}"
+      ENVIRONMENT: "${ENVIRONMENT:-development}"
+      EXTRA_CORS_ORIGINS: "${EXTRA_CORS_ORIGINS:-}"
     command: celery -A app.workers.celery_app worker -l info -c 2 -Q scans,analysis
 
   # ── Celery Beat (scheduler) ──────────────────────────────
