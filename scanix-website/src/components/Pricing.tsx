@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import { motion } from "framer-motion";
 import { Check, ArrowRight, Server, Sparkles, FileText, Minus } from "lucide-react";
+import { Link } from "@/lib/navigation";
 
 const PRICE = 19;
 
@@ -54,13 +55,13 @@ export function Pricing() {
             </li>
           ))}
         </ul>
-        <a
-          href="#contact"
+        <Link
+          href="/contact"
           className="mt-8 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-cyan px-6 py-3.5 text-[15px] font-semibold text-bg transition-all hover:shadow-glow-cyan active:scale-[0.98]"
         >
           {t("cta")}
           <ArrowRight className="h-4.5 w-4.5" strokeWidth={2} />
-        </a>
+        </Link>
       </motion.div>
 
       {/* Calculator */}
@@ -114,9 +115,9 @@ export function Pricing() {
               </div>
               <p className="text-[14px] font-semibold text-ink">{c.price}</p>
               <p className="mt-2 flex-1 text-[13px] leading-relaxed text-ink-muted">{c.desc}</p>
-              <a href="#contact" className="mt-4 inline-flex items-center gap-1.5 text-[13px] font-medium text-cyan hover:underline">
+              <Link href="/contact" className="mt-4 inline-flex items-center gap-1.5 text-[13px] font-medium text-cyan hover:underline">
                 {t("moreInfo")} <ArrowRight className="h-3.5 w-3.5" strokeWidth={2} />
-              </a>
+              </Link>
             </div>
           ))}
         </div>
@@ -132,9 +133,9 @@ export function Pricing() {
               <p className="mt-1 text-[13px] text-ink-muted">{t("nis2Desc")}</p>
             </div>
           </div>
-          <a href="#contact" className="inline-flex flex-shrink-0 items-center gap-1.5 rounded-lg border border-cyan/40 px-4 py-2 text-[13px] font-semibold text-cyan transition-colors hover:bg-cyan/10">
+          <Link href="/contact" className="inline-flex flex-shrink-0 items-center gap-1.5 rounded-lg border border-cyan/40 px-4 py-2 text-[13px] font-semibold text-cyan transition-colors hover:bg-cyan/10">
             {t("nis2Cta")} <ArrowRight className="h-3.5 w-3.5" strokeWidth={2} />
-          </a>
+          </Link>
         </div>
       </div>
 

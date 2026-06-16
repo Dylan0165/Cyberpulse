@@ -4,6 +4,9 @@ import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { motion, useInView } from "framer-motion";
 import { Lock, ArrowRight, ArrowDown, Check } from "lucide-react";
+import { Link } from "@/lib/navigation";
+
+const APP_URL = "https://app.scanix.nl";
 
 function useCountUp(target: number, run: boolean, duration = 1400) {
   const [value, setValue] = useState(0);
@@ -109,6 +112,22 @@ export function Hero() {
   const t = useTranslations("hero");
   const trust = [t("trust1"), t("trust2"), t("trust3")];
 
+  // If the visitor already has a valid dashboard session (cookie on app.scanix.nl),
+  // swap the primary CTA for a "go to dashboard" link. Cross-domain, so we ask the
+  // app via a credentialed ping rather than reading localStorage. Fails silently.
+  const [loggedIn, setLoggedIn] = useState(false);
+  useEffect(() => {
+    let active = true;
+    fetch(`${APP_URL}/api/auth/me`, { credentials: "include" })
+      .then((r) => {
+        if (active && r.ok) setLoggedIn(true);
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, []);
+
   return (
     <section className="relative min-h-[100dvh] pt-10">
       <div className="glow-accent left-[-10%] top-[-5%] h-[420px] w-[420px] bg-cyan" />
@@ -151,20 +170,30 @@ export function Hero() {
             transition={{ duration: 0.5, delay: 0.2 }}
             className="mt-8 flex flex-wrap gap-3"
           >
-            <a
-              href="#contact"
-              className="inline-flex items-center gap-2 rounded-xl bg-cyan px-6 py-3.5 text-[15px] font-semibold text-bg transition-all hover:shadow-glow-cyan active:scale-[0.98]"
-            >
-              {t("ctaPrimary")}
-              <ArrowRight className="h-4.5 w-4.5" strokeWidth={2} />
-            </a>
-            <a
-              href="#how-it-works"
+            {loggedIn ? (
+              <a
+                href={`${APP_URL}/dashboard`}
+                className="inline-flex items-center gap-2 rounded-xl bg-cyan px-6 py-3.5 text-[15px] font-semibold text-bg transition-all hover:shadow-glow-cyan active:scale-[0.98]"
+              >
+                {t("ctaDashboard")}
+                <ArrowRight className="h-4.5 w-4.5" strokeWidth={2} />
+              </a>
+            ) : (
+              <Link
+                href="/contact"
+                className="inline-flex items-center gap-2 rounded-xl bg-cyan px-6 py-3.5 text-[15px] font-semibold text-bg transition-all hover:shadow-glow-cyan active:scale-[0.98]"
+              >
+                {t("ctaPrimary")}
+                <ArrowRight className="h-4.5 w-4.5" strokeWidth={2} />
+              </Link>
+            )}
+            <Link
+              href="/hoe-het-werkt"
               className="inline-flex items-center gap-2 rounded-xl border border-grid bg-card px-6 py-3.5 text-[15px] font-semibold text-ink transition-colors hover:border-cyan/40 active:scale-[0.98]"
             >
               {t("ctaSecondary")}
               <ArrowDown className="h-4.5 w-4.5" strokeWidth={2} />
-            </a>
+            </Link>
           </motion.div>
 
           <motion.ul

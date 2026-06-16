@@ -3,6 +3,7 @@
 import { useTranslations } from "next-intl";
 import { motion } from "framer-motion";
 import { Search, Bug, Globe, KeyRound, Lock, Cpu, ArrowRight } from "lucide-react";
+import { Link } from "@/lib/navigation";
 
 export function WhatWeTest() {
   const t = useTranslations("what");
@@ -72,13 +73,13 @@ export function WhatWeTest() {
         className="mt-10 flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between"
       >
         <p className="text-[15px] text-ink-muted">{t("more")}</p>
-        <a
-          href="#contact"
+        <Link
+          href="/contact"
           className="inline-flex items-center gap-1.5 text-[15px] font-semibold text-cyan transition-colors hover:text-cyan/80"
         >
           {t("cta")}
           <ArrowRight className="h-4 w-4" strokeWidth={2} />
-        </a>
+        </Link>
       </motion.div>
     </section>
   );

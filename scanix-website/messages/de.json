@@ -27,7 +27,8 @@
     "mockCritical": "Kritisch",
     "mockHigh": "Hoch",
     "mockMedium": "Mittel",
-    "mockStatus": "Scan abgeschlossen"
+    "mockStatus": "Scan abgeschlossen",
+    "ctaDashboard": "Zum Dashboard →"
   },
   "problem": {
     "title": "Warum das wichtig ist",
@@ -194,5 +195,19 @@
     "s4Body": "Sie haben das Recht auf Auskunft, Berichtigung und Löschung Ihrer Daten. Kontaktieren Sie uns dazu unter privacy@scanix.nl.",
     "s5Title": "5. Kontakt",
     "s5Body": "Bei Fragen zum Datenschutz können Sie uns unter privacy@scanix.nl kontaktieren."
+  },
+  "login": {
+    "title": "Bei Scanix anmelden",
+    "subtitle": "Zugriff auf Ihr Sicherheits-Dashboard",
+    "email": "E-Mail-Adresse",
+    "password": "Passwort",
+    "submit": "Anmelden",
+    "sending": "Anmeldung...",
+    "noAccount": "Noch kein Konto? Zugang anfragen →",
+    "error": "Ungültige E-Mail-Adresse oder Passwort"
+  },
+  "pages": {
+    "home": "Start",
+    "discover": "Mehr entdecken"
   }
 }

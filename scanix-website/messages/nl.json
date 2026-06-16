@@ -27,7 +27,8 @@
     "mockCritical": "Zeer ernstig",
     "mockHigh": "Ernstig",
     "mockMedium": "Gemiddeld",
-    "mockStatus": "Scan voltooid"
+    "mockStatus": "Scan voltooid",
+    "ctaDashboard": "Naar dashboard →"
   },
   "problem": {
     "title": "Waarom dit belangrijk is",
@@ -194,5 +195,19 @@
     "s4Body": "U heeft het recht op inzage, correctie en verwijdering van uw gegevens. Neem hiervoor contact op via privacy@scanix.nl.",
     "s5Title": "5. Contact",
     "s5Body": "Voor vragen over privacy kunt u contact opnemen via privacy@scanix.nl."
+  },
+  "login": {
+    "title": "Inloggen bij Scanix",
+    "subtitle": "Toegang tot uw beveiligingsdashboard",
+    "email": "E-mailadres",
+    "password": "Wachtwoord",
+    "submit": "Inloggen",
+    "sending": "Bezig met inloggen...",
+    "noAccount": "Nog geen account? Vraag toegang aan →",
+    "error": "Ongeldig e-mailadres of wachtwoord"
+  },
+  "pages": {
+    "home": "Home",
+    "discover": "Ontdek meer"
   }
 }

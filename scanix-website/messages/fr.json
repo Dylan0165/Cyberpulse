@@ -27,7 +27,8 @@
     "mockCritical": "Critique",
     "mockHigh": "Élevé",
     "mockMedium": "Moyen",
-    "mockStatus": "Scan terminé"
+    "mockStatus": "Scan terminé",
+    "ctaDashboard": "Accéder au tableau de bord →"
   },
   "problem": {
     "title": "Pourquoi c'est important",
@@ -194,5 +195,19 @@
     "s4Body": "Vous avez le droit d'accéder à vos données, de les corriger et de les supprimer. Pour cela, contactez-nous à privacy@scanix.nl.",
     "s5Title": "5. Contact",
     "s5Body": "Pour toute question concernant la confidentialité, vous pouvez nous contacter à privacy@scanix.nl."
+  },
+  "login": {
+    "title": "Connexion à Scanix",
+    "subtitle": "Accédez à votre tableau de bord de sécurité",
+    "email": "Adresse e-mail",
+    "password": "Mot de passe",
+    "submit": "Se connecter",
+    "sending": "Connexion...",
+    "noAccount": "Pas encore de compte ? Demander l'accès →",
+    "error": "E-mail ou mot de passe invalide"
+  },
+  "pages": {
+    "home": "Accueil",
+    "discover": "En savoir plus"
   }
 }

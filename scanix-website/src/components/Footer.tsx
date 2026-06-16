@@ -9,11 +9,11 @@ const APP_URL = "https://app.scanix.nl";
 export function Footer() {
   const t = useTranslations("footer");
 
-  const anchorLinks = [
-    { href: "#how-it-works", label: t("how") },
-    { href: "#what-we-test", label: t("what") },
-    { href: "#pricing", label: t("pricing") },
-    { href: "#contact", label: t("contact") },
+  const pageLinks = [
+    { href: "/hoe-het-werkt", label: t("how") },
+    { href: "/wat-we-testen", label: t("what") },
+    { href: "/prijzen", label: t("pricing") },
+    { href: "/contact", label: t("contact") },
   ];
 
   return (
@@ -31,14 +31,14 @@ export function Footer() {
 
         {/* Center */}
         <nav className="flex flex-col gap-2.5">
-          {anchorLinks.map((l) => (
-            <a
+          {pageLinks.map((l) => (
+            <Link
               key={l.href}
               href={l.href}
               className="text-[14px] text-ink-muted transition-colors hover:text-ink"
             >
               {l.label}
-            </a>
+            </Link>
           ))}
           <Link
             href="/terms"

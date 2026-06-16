@@ -27,7 +27,8 @@
     "mockCritical": "Critical",
     "mockHigh": "High",
     "mockMedium": "Medium",
-    "mockStatus": "Scan completed"
+    "mockStatus": "Scan completed",
+    "ctaDashboard": "Go to dashboard →"
   },
   "problem": {
     "title": "Why this matters",
@@ -194,5 +195,19 @@
     "s4Body": "You have the right to access, correct and delete your data. To do so, contact us at privacy@scanix.nl.",
     "s5Title": "5. Contact",
     "s5Body": "For questions about privacy, you can contact us at privacy@scanix.nl."
+  },
+  "login": {
+    "title": "Sign in to Scanix",
+    "subtitle": "Access your security dashboard",
+    "email": "Email address",
+    "password": "Password",
+    "submit": "Sign in",
+    "sending": "Signing in...",
+    "noAccount": "No account yet? Request access →",
+    "error": "Invalid email or password"
+  },
+  "pages": {
+    "home": "Home",
+    "discover": "Discover more"
   }
 }
