@@ -120,6 +120,16 @@ jobs:
           docker logs cyberpulse-backend-1 --tail=30 2>&1 || true
           exit 1
 
+      - name: Refresh nginx upstreams (re-resolve container IPs + reload config)
+        if: always()
+        run: |
+          cd /home/student/cyberpulse
+          # nginx caches upstream service IPs at startup and is NOT recreated when
+          # only its mounted config changes. After recreating backend/frontend they
+          # get new IPs, so nginx must be restarted or it serves 502 (stale IPs).
+          # This also applies any nginx.conf changes.
+          docker compose -f docker-compose.netlab.yml restart nginx
+
       - name: Show container status
         if: always()
         run: |

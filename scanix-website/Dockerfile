@@ -20,6 +20,8 @@ RUN adduser --system --uid 1001 nextjs
 # next/font self-hosts the fonts into .next/static at build time.
 COPY --from=base --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=base --chown=nextjs:nodejs /app/.next/static ./.next/static
+# standalone output does NOT include public/ — copy it so /videos/*.mp4 etc. serve.
+COPY --from=base --chown=nextjs:nodejs /app/public ./public
 
 USER nextjs
 
