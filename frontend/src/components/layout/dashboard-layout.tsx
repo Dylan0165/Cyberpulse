@@ -2,6 +2,7 @@
 
 import { Sidebar, MobileNav } from "./sidebar";
 import { HeaderBell } from "./header-bell";
+import { LogoutButton } from "./logout-button";
 import { PageTransition } from "@/components/cyber/page-transition";
 import { TermsModal } from "@/components/cyber/terms-modal";
 import { useAuth } from "@/contexts/auth-context";
@@ -15,8 +16,9 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
       <Sidebar />
       <main className="flex-1 overflow-auto">
         {/* Slim top header bar */}
-        <header className="flex h-14 items-center justify-end border-b border-grid bg-panel px-6 lg:px-8">
+        <header className="flex h-14 items-center justify-end gap-3 border-b border-grid bg-panel px-6 lg:px-8">
           <HeaderBell />
+          <LogoutButton />
         </header>
         <div className="mx-auto max-w-[1500px] px-6 py-6 pb-20 lg:px-8 lg:py-8 md:pb-8">
           <PageTransition>{children}</PageTransition>
