@@ -44,6 +44,7 @@ export function Navigation() {
   const [open, setOpen] = useState(false);
 
   const links = [
+    { href: "/#demo", label: "Demo" },
     { href: "/hoe-het-werkt", label: t("how") },
     { href: "/wat-we-testen", label: t("what") },
     { href: "/prijzen", label: t("pricing") },

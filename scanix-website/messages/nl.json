@@ -206,6 +206,15 @@
     "noAccount": "Nog geen account? Vraag toegang aan →",
     "error": "Ongeldig e-mailadres of wachtwoord"
   },
+  "demo": {
+    "title": "Zie het in actie",
+    "subtitle": "Een echte scan op een echt systeem — volledig automatisch, binnen 10 minuten",
+    "tab1": "Scan overzicht",
+    "tab2": "Live scan",
+    "badge1": "Volledig automatisch",
+    "badge2": "15+ beveiligingstools",
+    "badge3": "AI-rapport in het Nederlands"
+  },
   "pages": {
     "home": "Home",
     "discover": "Ontdek meer"

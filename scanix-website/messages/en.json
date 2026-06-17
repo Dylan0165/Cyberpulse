@@ -206,6 +206,15 @@
     "noAccount": "No account yet? Request access →",
     "error": "Invalid email or password"
   },
+  "demo": {
+    "title": "See it in action",
+    "subtitle": "A real scan on a real system — fully automated, within 10 minutes",
+    "tab1": "Scan overview",
+    "tab2": "Live scan",
+    "badge1": "Fully automated",
+    "badge2": "15+ security tools",
+    "badge3": "AI report in your language"
+  },
   "pages": {
     "home": "Home",
     "discover": "Discover more"

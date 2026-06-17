@@ -206,6 +206,15 @@
     "noAccount": "Pas encore de compte ? Demander l'accès →",
     "error": "E-mail ou mot de passe invalide"
   },
+  "demo": {
+    "title": "Voyez-le en action",
+    "subtitle": "Un vrai scan sur un vrai système — entièrement automatique, en 10 minutes",
+    "tab1": "Aperçu du scan",
+    "tab2": "Scan en direct",
+    "badge1": "Entièrement automatique",
+    "badge2": "15+ outils de sécurité",
+    "badge3": "Rapport IA dans votre langue"
+  },
   "pages": {
     "home": "Accueil",
     "discover": "En savoir plus"

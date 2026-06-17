@@ -206,6 +206,15 @@
     "noAccount": "Noch kein Konto? Zugang anfragen →",
     "error": "Ungültige E-Mail-Adresse oder Passwort"
   },
+  "demo": {
+    "title": "Sehen Sie es in Aktion",
+    "subtitle": "Ein echter Scan auf einem echten System — vollautomatisch, innerhalb von 10 Minuten",
+    "tab1": "Scan-Übersicht",
+    "tab2": "Live-Scan",
+    "badge1": "Vollautomatisch",
+    "badge2": "15+ Sicherheitstools",
+    "badge3": "KI-Bericht in Ihrer Sprache"
+  },
   "pages": {
     "home": "Start",
     "discover": "Mehr entdecken"
