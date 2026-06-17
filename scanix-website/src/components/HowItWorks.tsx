@@ -49,8 +49,8 @@ export function HowItWorks() {
 
   const steps = [
     { number: "01", video: "/videos/animatie1.mp4", title: t("step1Title"), text: t("step1Text") },
-    { number: "02", video: "/videos/animatie2.mp4", title: t("step2Title"), text: t("step2Text") },
-    { number: "03", video: "/videos/animatie3.mp4", title: t("step3Title"), text: t("step3Text") },
+    { number: "02", video: "/videos/animatie3.mp4", title: t("step2Title"), text: t("step2Text") },
+    { number: "03", video: "/videos/animatie2.mp4", title: t("step3Title"), text: t("step3Text") },
   ];
 
   return (
