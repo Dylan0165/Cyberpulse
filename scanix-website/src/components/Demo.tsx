@@ -48,7 +48,7 @@ export function Demo() {
           controls
           preload="metadata"
           playsInline
-          className="block aspect-video w-full bg-bg"
+          className="block h-auto w-full bg-bg"
         />
       </motion.div>
 
