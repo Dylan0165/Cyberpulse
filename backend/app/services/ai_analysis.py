@@ -62,10 +62,16 @@ Top-level JSON structure:
     "iso27001": ["A.12.6.1 - ..."],
     "nis2": ["Article 21 - ..."]
   },
+  "snelle_fixes": ["⚡ [titel]: [bash commando of 'Zie Secure Solution Rapport']"],
   "scan_id": "<scan_id>",
   "target": "<target>",
   "scan_type": "<scan_type>"
 }
+
+After the remediation plan, fill "snelle_fixes": for EACH critical and high
+finding exactly one entry, in the format "⚡ [titel]: [commando]" with a single
+bash command that fixes the issue, or "⚡ [titel]: Zie Secure Solution Rapport"
+if it requires developer/source-code action. Keep each entry to one line.
 
 RULES:
 - Return ONLY valid JSON, no markdown fences, no extra text.
@@ -322,6 +328,7 @@ def _parse_json(raw: str, scan_id: str, target: str, scan_type: str) -> dict:
         data.setdefault("risk_score", 0)
         data.setdefault("risk_level", "LOW")
         data.setdefault("findings", [])
+        data.setdefault("snelle_fixes", [])
         return data
     except json.JSONDecodeError as exc:
         logger.error("Failed to parse DeepSeek JSON: %s | raw=%s", exc, cleaned[:200])

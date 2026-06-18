@@ -16,6 +16,7 @@ export function Pricing() {
   const features = [
     t("feature1"), t("feature2"), t("feature3"), t("feature4"),
     t("feature5"), t("feature6"), t("feature7"), t("feature8"),
+    t("feature9"),
   ];
 
   const rows = [

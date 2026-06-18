@@ -6,7 +6,7 @@ import { dashboardApi, reportsApi, targetsApi } from "@/lib/api";
 import { toast } from "sonner";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Download, ArrowRight, Plus, Search, FileSearch } from "lucide-react";
+import { Download, ArrowRight, Plus, Search, FileSearch, Wrench, Loader2 } from "lucide-react";
 import { GlowCard } from "@/components/cyber/glow-card";
 import { SkeletonRow } from "@/components/cyber/skeleton";
 import { scanTypeLabel } from "@/lib/labels";
@@ -56,6 +56,37 @@ export default function ReportsPage() {
       URL.revokeObjectURL(url);
     } catch {
       toast.error("Download mislukt. Probeer opnieuw.");
+    }
+  };
+
+  // ───── Secure Solution download (per-card busy state) ─────
+  const [secureBusyId, setSecureBusyId] = useState<string | null>(null);
+
+  const handleSecureSolution = async (e: React.MouseEvent, scanId: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (secureBusyId) return;
+    setSecureBusyId(scanId);
+    const id = toast.loading("Secure Solution Rapport wordt gegenereerd… (10-30s)");
+    try {
+      const res = await reportsApi.downloadSecureSolution(scanId);
+      const url = URL.createObjectURL(
+        new Blob([res.data], { type: "application/pdf" }),
+      );
+      Object.assign(document.createElement("a"), {
+        href: url,
+        download: `scanix-secure-solution-${scanId}.pdf`,
+      }).click();
+      URL.revokeObjectURL(url);
+      toast.success("Secure Solution Rapport gedownload", { id });
+    } catch (err: any) {
+      if (err?.response?.status === 404) {
+        toast.error("Geen bevindingen om op te lossen voor deze scan", { id });
+      } else {
+        toast.error("Secure Solution genereren mislukt. Probeer opnieuw.", { id });
+      }
+    } finally {
+      setSecureBusyId(null);
     }
   };
 
@@ -290,6 +321,18 @@ export default function ReportsPage() {
                           className="inline-flex h-8 items-center justify-center rounded-md border border-grid bg-panel px-2 font-mono text-[11px] font-semibold text-ink-muted transition-colors duration-150 hover:border-cyan hover:text-cyan"
                         >
                           JSON
+                        </button>
+                        <button
+                          title="Secure Solution"
+                          onClick={(e) => handleSecureSolution(e, scan.id)}
+                          disabled={secureBusyId === scan.id}
+                          className="inline-flex items-center justify-center rounded-lg border border-orange/50 bg-orange/10 px-2.5 py-1.5 text-orange transition-all hover:bg-orange/20 disabled:opacity-60"
+                        >
+                          {secureBusyId === scan.id ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Wrench className="h-4 w-4" />
+                          )}
                         </button>
                       </div>
                       <Link

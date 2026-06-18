@@ -55,6 +55,8 @@ export const reportsApi = {
     api.get(`/reports/${scanId}/xml`, { responseType: "blob" }),
   downloadNis2: (scanId: string) =>
     api.get(`/reports/${scanId}/nis2`, { responseType: "blob" }),
+  downloadSecureSolution: (scanId: string) =>
+    api.get(`/reports/${scanId}/secure-solution`, { responseType: "blob", timeout: 120000 }),
 };
 
 export const toolsApi = {

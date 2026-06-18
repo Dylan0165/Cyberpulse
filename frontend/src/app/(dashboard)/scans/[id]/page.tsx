@@ -10,7 +10,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Shield, ArrowLeft, Play, StopCircle, Download, FileText,
   CheckCircle, AlertTriangle, Activity, Clock, Circle,
-  ChevronDown, Cpu, Zap,
+  ChevronDown, Cpu, Zap, Wrench, Loader2,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -91,6 +91,7 @@ export default function ScanDetailPage() {
   const [phases, setPhases] = useState<PhaseState[]>([]);
   const [wsConnected, setWsConnected] = useState(false);
   const [terminalLines, setTerminalLines] = useState<string[]>([]);
+  const [secureBusy, setSecureBusy] = useState(false);
   const [sevFilter, setSevFilter] = useState<string>("all");
   const [findingSort, setFindingSort] = useState<"severity" | "cvss">("severity");
   const [expandedFinding, setExpandedFinding] = useState<number | null>(null);
@@ -317,6 +318,44 @@ export default function ScanDetailPage() {
 
   const findings = report?.report_data?.findings ?? report?.findings ?? [];
   const aiReport = report?.report_data ?? report ?? null;
+
+  // After the AI analysis, append a "Snelle fixes" block to the terminal with a
+  // one-liner fix hint per critical/high finding (comes from the AI report).
+  const snelleFixes: string[] = ((aiReport as any)?.snelle_fixes ?? []).filter(Boolean);
+  const renderLines: TermLine[] = snelleFixes.length
+    ? [
+        ...displayLines,
+        { text: "", kind: "out" as TermLine["kind"] },
+        { text: "═══ Snelle fixes ═══", kind: "phase" as TermLine["kind"] },
+        ...snelleFixes.map((f: string): TermLine => ({
+          text: f,
+          kind: /secure solution/i.test(f) ? "warn" : "success",
+        })),
+      ]
+    : displayLines;
+
+  // The Secure Solution report only makes sense if there is something to fix.
+  const hasFixable = (findings ?? []).some((f: any) =>
+    ["critical", "high", "medium"].includes(String(f.severity ?? f.ernst ?? "").toLowerCase())
+  );
+
+  async function downloadSecureSolution() {
+    setSecureBusy(true);
+    const t = toast.loading("Secure Solution Rapport wordt gegenereerd… (10-30s)");
+    try {
+      const res = await reportsApi.downloadSecureSolution(scanId);
+      const url = URL.createObjectURL(new Blob([res.data], { type: "application/pdf" }));
+      Object.assign(document.createElement("a"), {
+        href: url, download: `scanix-secure-solution-${scanId}.pdf`,
+      }).click();
+      URL.revokeObjectURL(url);
+      toast.success("Secure Solution Rapport gedownload", { id: t });
+    } catch {
+      toast.error("Rapport kon niet worden gegenereerd", { id: t });
+    } finally {
+      setSecureBusy(false);
+    }
+  }
 
   // Build 3D attack-surface nodes from findings that reference a port
   const surfaceNodes: SurfaceNode[] = useMemo(() => {
@@ -586,7 +625,7 @@ export default function ScanDetailPage() {
 
             {/* Terminal */}
             <div className="lg:col-span-3">
-              <TerminalOutput lines={displayLines} complete={scan.status === "completed"} />
+              <TerminalOutput lines={renderLines} complete={scan.status === "completed"} />
             </div>
           </motion.div>
         )}
@@ -753,6 +792,20 @@ export default function ScanDetailPage() {
                     }}>
                       <Shield className="h-3.5 w-3.5" />NIS2 Rapport
                     </ActionButton>
+                    {hasFixable && (
+                      <button
+                        onClick={downloadSecureSolution}
+                        disabled={secureBusy}
+                        title="Download fix-instructies per bevinding"
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-orange/50 bg-orange/10 px-3 py-1.5 text-[12px] font-medium text-orange transition-all hover:bg-orange/20 disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        {secureBusy ? (
+                          <><Loader2 className="h-3.5 w-3.5 animate-spin" />Rapport wordt gegenereerd…</>
+                        ) : (
+                          <><Wrench className="h-3.5 w-3.5" />Secure Solution Rapport</>
+                        )}
+                      </button>
+                    )}
                   </div>
                 </GlowCard>
 

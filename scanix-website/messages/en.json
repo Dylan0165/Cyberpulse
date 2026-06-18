@@ -85,6 +85,7 @@
     "feature6": "Scheduled automatic scans",
     "feature7": "Email notifications for new findings",
     "feature8": "Comparison with previous scan",
+    "feature9": "Secure Solution Report (fix instructions per finding)",
     "calcTitle": "Calculate your costs",
     "calcSystems": "systems",
     "calcPerMonth": "per month",
