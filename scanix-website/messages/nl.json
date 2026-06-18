@@ -74,7 +74,7 @@
     "title": "Transparante prijzen",
     "subtitle": "Per systeem. Geen verborgen kosten. Geen verplichtingen.",
     "base": "BASIS BEVEILIGING",
-    "price": "€19",
+    "price": "€29",
     "per": "per systeem per maand",
     "cta": "Gratis scan aanvragen",
     "feature1": "Onbeperkte scans",
@@ -107,7 +107,7 @@
     "tableScanix": "Scanix",
     "tableManual": "Handmatige pentest",
     "tablePrice": "Prijs",
-    "tablePriceScanix": "€19/systeem/mnd",
+    "tablePriceScanix": "€29/systeem/mnd",
     "tablePriceManual": "€2.500-7.000/test",
     "tableTime": "Doorlooptijd",
     "tableTimeScanix": "10 minuten",
@@ -124,6 +124,15 @@
     "tableLang": "Rapport in uw taal",
     "tableLangScanix": "NL/EN/FR/DE",
     "tableLangManual": "Wisselend"
+  },
+  "plans": {
+    "starterName": "Instapper", "starterPrice": "€449", "starterPer": "per jaar",
+    "starterF1": "1 systeem, 2 scans per jaar", "starterF2": "PDF rapport + NIS2 rapport", "starterF3": "Secure Solution Rapport inbegrepen",
+    "standardName": "Standaard", "standardPrice": "€899", "standardPer": "per jaar", "standardBadge": "Populair",
+    "standardF1": "3 systemen, onbeperkte scans", "standardF2": "Alle modules inbegrepen", "standardF3": "Secure Solution Rapport automatisch na elke scan", "standardF4": "Geplande scans",
+    "extendedName": "Uitgebreid", "extendedPrice": "€1.499", "extendedPer": "per jaar",
+    "extendedF1": "10 systemen, onbeperkte scans", "extendedF2": "Alles van Standaard", "extendedF3": "Secure Solution Rapport automatisch", "extendedF4": "Persoonlijk gesprek per kwartaal (1 uur)", "extendedF5": "Wij lopen de bevindingen met u door",
+    "perSystemTitle": "Of betaal per systeem"
   },
   "trust": {
     "title": "Gebouwd op bewezen technologie",

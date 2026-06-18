@@ -35,6 +35,37 @@ def _finding_field(f: dict, *keys: str, default: str = "") -> str:
     return default
 
 
+# Markers that identify M14 Scan Comparator output / non-actionable history.
+# The Secure Solution Report must only contain CURRENT active problems to fix.
+_COMPARATOR_MARKERS = (
+    "opgelost", "ongewijzigd", "nieuw", "vergelijking met scan van",
+    "scan comparator", "m14",
+)
+
+_SEV_RANK = {"critical": 0, "high": 1, "medium": 2}
+
+
+def _is_comparator_finding(f: dict) -> bool:
+    blob = (
+        _finding_field(f, "title", "titel") + " " + _finding_field(f, "description", "beschrijving")
+    ).lower()
+    return any(m in blob for m in _COMPARATOR_MARKERS)
+
+
+def fixable_findings(report_data: dict) -> list:
+    """Active findings that need fixing: severity critical/high/medium and NOT
+    from the M14 comparator (resolved/unchanged/new history). Sorted most-severe
+    first so the report reads in fix order."""
+    findings = report_data.get("findings") or report_data.get("bevindingen") or []
+    relevant = [
+        f for f in findings
+        if _finding_field(f, "severity", "ernst", default="info").lower() in _FIX_SEVERITIES
+        and not _is_comparator_finding(f)
+    ]
+    relevant.sort(key=lambda f: _SEV_RANK.get(_finding_field(f, "severity", "ernst", default="medium").lower(), 9))
+    return relevant
+
+
 def _services_summary(tool_outputs: dict | None) -> str:
     """Short summary of services from the recon nmap output (for AI context)."""
     if not tool_outputs:
@@ -128,11 +159,7 @@ def build_secure_solution(scan, target: str, report_data: dict, user) -> dict:
     """Run the AI per finding and return a structured report object (no PDF yet)."""
     from app.services.ai_provider import AIProvider
 
-    findings = report_data.get("findings") or report_data.get("bevindingen") or []
-    relevant = [
-        f for f in findings
-        if _finding_field(f, "severity", "ernst", default="info").lower() in _FIX_SEVERITIES
-    ]
+    relevant = fixable_findings(report_data)
     if len(relevant) > _MAX_FINDINGS:
         logger.info("Secure solution: capping %d findings to %d", len(relevant), _MAX_FINDINGS)
         relevant = relevant[:_MAX_FINDINGS]
@@ -237,7 +264,12 @@ def generate_secure_solution_pdf(report_obj: dict) -> bytes:
     story.append(Spacer(1, 4 * cm))
     story.append(Paragraph("Scanix", st["brand"]))
     story.append(Paragraph("Secure Solution Rapport", st["title"]))
-    story.append(Paragraph(f"Beveiligingsherstelplan voor {target}", st["sub"]))
+    story.append(Paragraph("Wat moet worden opgelost en hoe", st["sub"]))
+    story.append(Paragraph(
+        f"Actieve bevindingen die aandacht vereisen — {target}",
+        ParagraphStyle("covsub", parent=st["sub"], fontSize=10,
+                       textColor=colors.HexColor("#9ca3af"), spaceAfter=14),
+    ))
     story.append(HRFlowable(width="70%", thickness=1, color=colors.HexColor("#00809e"), hAlign="CENTER"))
     story.append(Spacer(1, 1 * cm))
     cover = Table([
@@ -258,6 +290,13 @@ def generate_secure_solution_pdf(report_obj: dict) -> bytes:
     story.append(Paragraph("Samenvatting", st["h1"]))
     story.append(HRFlowable(width="100%", thickness=1, color=colors.HexColor("#0e2a3f")))
     story.append(Spacer(1, 0.3 * cm))
+    story.append(Paragraph(
+        "Dit rapport bevat voor elke actieve bevinding exacte instructies om het "
+        "probleem op te lossen. Voer de fixes uit in de aangegeven volgorde, begin "
+        "met de meest ernstige bevindingen.",
+        st["body"],
+    ))
+    story.append(Spacer(1, 0.4 * cm))
 
     rows = [["Bevinding", "Ernst", "Oplostijd", "Status"]]
     for fx in fixes:

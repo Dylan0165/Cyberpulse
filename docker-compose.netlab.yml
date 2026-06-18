@@ -70,6 +70,7 @@ services:
         condition: service_started
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+      - secure_reports:/opt/scanix/reports
     environment:
       # Multi-AI provider keys (loaded from .env; listed here for clarity).
       DEEPSEEK_API_KEY: "${DEEPSEEK_API_KEY:-}"
@@ -100,6 +101,7 @@ services:
         condition: service_healthy
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+      - secure_reports:/opt/scanix/reports
     environment:
       # Multi-AI provider keys — the worker runs the actual AI analysis.
       DEEPSEEK_API_KEY: "${DEEPSEEK_API_KEY:-}"
@@ -172,3 +174,4 @@ volumes:
   pgdata:
   redisdata:
   scan_data:
+  secure_reports:

@@ -74,7 +74,7 @@
     "title": "Transparent pricing",
     "subtitle": "Per system. No hidden costs. No obligations.",
     "base": "BASIC SECURITY",
-    "price": "€19",
+    "price": "€29",
     "per": "per system per month",
     "cta": "Request a free scan",
     "feature1": "Unlimited scans",
@@ -107,7 +107,7 @@
     "tableScanix": "Scanix",
     "tableManual": "Manual pentest",
     "tablePrice": "Price",
-    "tablePriceScanix": "€19/system/month",
+    "tablePriceScanix": "€29/system/month",
     "tablePriceManual": "€2.500-7.000/test",
     "tableTime": "Turnaround time",
     "tableTimeScanix": "10 minutes",
@@ -124,6 +124,15 @@
     "tableLang": "Report in your language",
     "tableLangScanix": "NL/EN/FR/DE",
     "tableLangManual": "Varies"
+  },
+  "plans": {
+    "starterName": "Starter", "starterPrice": "€449", "starterPer": "per year",
+    "starterF1": "1 system, 2 scans per year", "starterF2": "PDF report + NIS2 report", "starterF3": "Secure Solution Report included",
+    "standardName": "Standard", "standardPrice": "€899", "standardPer": "per year", "standardBadge": "Popular",
+    "standardF1": "3 systems, unlimited scans", "standardF2": "All modules included", "standardF3": "Secure Solution Report automatically after every scan", "standardF4": "Scheduled scans",
+    "extendedName": "Extended", "extendedPrice": "€1,499", "extendedPer": "per year",
+    "extendedF1": "10 systems, unlimited scans", "extendedF2": "Everything in Standard", "extendedF3": "Secure Solution Report automatically", "extendedF4": "Quarterly personal call (1 hour)", "extendedF5": "We walk through the findings with you",
+    "perSystemTitle": "Or pay per system"
   },
   "trust": {
     "title": "Built on proven technology",

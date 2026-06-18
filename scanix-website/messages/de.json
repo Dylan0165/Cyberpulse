@@ -74,7 +74,7 @@
     "title": "Transparente Preise",
     "subtitle": "Pro System. Keine versteckten Kosten. Keine Verpflichtungen.",
     "base": "BASIS-SICHERHEIT",
-    "price": "€19",
+    "price": "29 €",
     "per": "pro System pro Monat",
     "cta": "Kostenlosen Scan anfordern",
     "feature1": "Unbegrenzte Scans",
@@ -107,7 +107,7 @@
     "tableScanix": "Scanix",
     "tableManual": "Manueller Pentest",
     "tablePrice": "Preis",
-    "tablePriceScanix": "€19/System/Monat",
+    "tablePriceScanix": "€29/System/Monat",
     "tablePriceManual": "€2.500-7.000/Test",
     "tableTime": "Durchlaufzeit",
     "tableTimeScanix": "10 Minuten",
@@ -124,6 +124,15 @@
     "tableLang": "Bericht in Ihrer Sprache",
     "tableLangScanix": "NL/EN/FR/DE",
     "tableLangManual": "Wechselnd"
+  },
+  "plans": {
+    "starterName": "Einsteiger", "starterPrice": "449 €", "starterPer": "pro Jahr",
+    "starterF1": "1 System, 2 Scans pro Jahr", "starterF2": "PDF-Bericht + NIS2-Bericht", "starterF3": "Secure Solution Report inklusive",
+    "standardName": "Standard", "standardPrice": "899 €", "standardPer": "pro Jahr", "standardBadge": "Beliebt",
+    "standardF1": "3 Systeme, unbegrenzte Scans", "standardF2": "Alle Module inklusive", "standardF3": "Secure Solution Report automatisch nach jedem Scan", "standardF4": "Geplante Scans",
+    "extendedName": "Erweitert", "extendedPrice": "1.499 €", "extendedPer": "pro Jahr",
+    "extendedF1": "10 Systeme, unbegrenzte Scans", "extendedF2": "Alles aus Standard", "extendedF3": "Secure Solution Report automatisch", "extendedF4": "Vierteljährliches persönliches Gespräch (1 Stunde)", "extendedF5": "Wir besprechen die Ergebnisse mit Ihnen",
+    "perSystemTitle": "Oder zahlen Sie pro System"
   },
   "trust": {
     "title": "Aufgebaut auf bewährter Technologie",

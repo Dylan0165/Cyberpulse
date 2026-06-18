@@ -3,13 +3,14 @@
 import csv
 import io
 import json
+import os
 import re
 import uuid
 import xml.etree.ElementTree as ET
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Query
-from fastapi.responses import StreamingResponse
+from fastapi.responses import StreamingResponse, FileResponse
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.concurrency import run_in_threadpool
@@ -212,9 +213,6 @@ async def export_xml(
     )
 
 
-_FIX_SEVERITIES = ("critical", "high", "medium")
-
-
 @router.get("/{scan_id}/secure-solution")
 async def export_secure_solution(
     scan_id: uuid.UUID,
@@ -222,44 +220,47 @@ async def export_secure_solution(
     db: AsyncSession = Depends(get_db),
     user: User = Depends(get_required_user),
 ):
-    """Generate the Secure Solution Report — per-finding fix instructions (PDF).
+    """Secure Solution Report — per-finding fix instructions (PDF).
 
-    Slow (the AI runs per finding, ~10-30s), so the blocking work is offloaded
-    to a threadpool to keep the event loop free.
+    Fast path: serve the PDF the worker pre-generated right after the scan
+    (instant, no AI call). Fallback: generate it now (slow, ~10-30s, AI per
+    finding) — the blocking work runs in a threadpool to keep the loop free.
     """
     scan = await _load_owned_scan(db, scan_id, user)
-    report_data = await _get_report_data(scan, scan_id)
-    if not report_data:
-        raise HTTPException(status_code=404, detail="Rapport niet beschikbaar")
-
-    findings = report_data.get("findings") or report_data.get("bevindingen") or []
-    relevant = [
-        f for f in findings
-        if (f.get("severity") or f.get("ernst") or "info").lower() in _FIX_SEVERITIES
-    ]
-    if not relevant:
-        raise HTTPException(
-            status_code=404,
-            detail="Geen bevindingen (kritiek/hoog/gemiddeld) om op te lossen",
-        )
 
     target_result = await db.execute(select(Target).where(Target.id == scan.target_id))
     target = target_result.scalar_one_or_none()
     target_value = target.value if target else "onbekend"
 
+    safe_target = re.sub(r"[^a-zA-Z0-9.-]", "_", target_value)[:40]
+    date = datetime.now(timezone.utc).strftime("%Y%m%d")
+    filename = f"scanix-secure-solution-{safe_target}-{date}.pdf"
+
+    # ── Fast path: pre-generated file on the shared volume ────────────────────
+    path = getattr(scan, "secure_solution_path", None)
+    if path and os.path.exists(path):
+        return FileResponse(path, media_type="application/pdf", filename=filename)
+
+    # ── Fallback: generate now ────────────────────────────────────────────────
     from app.services.secure_solution import (
+        fixable_findings,
         build_secure_solution,
         generate_secure_solution_pdf,
     )
+
+    report_data = await _get_report_data(scan, scan_id)
+    if not report_data:
+        raise HTTPException(status_code=404, detail="Rapport niet beschikbaar")
+    if not fixable_findings(report_data):
+        raise HTTPException(
+            status_code=404,
+            detail="Geen actieve bevindingen (kritiek/hoog/gemiddeld) om op te lossen",
+        )
 
     report_obj = await run_in_threadpool(
         build_secure_solution, scan, target_value, report_data, user
     )
     pdf = await run_in_threadpool(generate_secure_solution_pdf, report_obj)
-
-    safe_target = re.sub(r"[^a-zA-Z0-9.-]", "_", target_value)[:40]
-    date = datetime.now(timezone.utc).strftime("%Y%m%d")
-    filename = f"scanix-secure-solution-{safe_target}-{date}.pdf"
     return StreamingResponse(
         io.BytesIO(pdf),
         media_type="application/pdf",

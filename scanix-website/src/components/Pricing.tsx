@@ -6,12 +6,41 @@ import { motion } from "framer-motion";
 import { Check, ArrowRight, Server, Sparkles, FileText, Minus } from "lucide-react";
 import { Link } from "@/lib/navigation";
 
-const PRICE = 19;
+const PRICE = 29;
 
 export function Pricing() {
   const t = useTranslations("pricing");
+  const tp = useTranslations("plans");
   const [systems, setSystems] = useState(3);
   const total = useMemo(() => systems * PRICE, [systems]);
+
+  const plans = [
+    {
+      key: "starter",
+      name: tp("starterName"),
+      price: tp("starterPrice"),
+      per: tp("starterPer"),
+      featured: false,
+      feats: [tp("starterF1"), tp("starterF2"), tp("starterF3")],
+    },
+    {
+      key: "standard",
+      name: tp("standardName"),
+      price: tp("standardPrice"),
+      per: tp("standardPer"),
+      badge: tp("standardBadge"),
+      featured: true,
+      feats: [tp("standardF1"), tp("standardF2"), tp("standardF3"), tp("standardF4")],
+    },
+    {
+      key: "extended",
+      name: tp("extendedName"),
+      price: tp("extendedPrice"),
+      per: tp("extendedPer"),
+      featured: false,
+      feats: [tp("extendedF1"), tp("extendedF2"), tp("extendedF3"), tp("extendedF4"), tp("extendedF5")],
+    },
+  ];
 
   const features = [
     t("feature1"), t("feature2"), t("feature3"), t("feature4"),
@@ -35,13 +64,62 @@ export function Pricing() {
         <p className="mx-auto mt-3 max-w-xl text-[15px] text-ink-muted">{t("subtitle")}</p>
       </div>
 
+      {/* Yearly plans */}
+      <div className="mx-auto mt-12 grid max-w-5xl gap-5 md:grid-cols-3">
+        {plans.map((p, i) => (
+          <motion.div
+            key={p.key}
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.4, delay: i * 0.06 }}
+            className={`relative flex flex-col rounded-2xl border bg-card p-7 ${
+              p.featured ? "border-cyan/50 shadow-glow-cyan" : "border-grid"
+            }`}
+          >
+            {p.featured && "badge" in p && p.badge && (
+              <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-cyan px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-bg">
+                {p.badge}
+              </span>
+            )}
+            <h3 className="font-display text-[18px] font-semibold text-ink">{p.name}</h3>
+            <div className="mt-2 flex items-end gap-1.5">
+              <span className="font-display text-4xl font-bold text-ink">{p.price}</span>
+              <span className="mb-1.5 text-[13px] text-ink-muted">{p.per}</span>
+            </div>
+            <ul className="mt-5 flex-1 space-y-2.5">
+              {p.feats.map((f) => (
+                <li key={f} className="flex items-start gap-2 text-[13.5px] text-ink">
+                  <Check className="mt-0.5 h-4 w-4 flex-shrink-0 text-green" strokeWidth={2.5} />
+                  {f}
+                </li>
+              ))}
+            </ul>
+            <Link
+              href="/contact"
+              className={`mt-6 inline-flex w-full items-center justify-center gap-2 rounded-xl px-5 py-3 text-[14px] font-semibold transition-all active:scale-[0.98] ${
+                p.featured
+                  ? "bg-cyan text-bg hover:shadow-glow-cyan"
+                  : "border border-grid text-ink hover:border-cyan/40"
+              }`}
+            >
+              {t("cta")} <ArrowRight className="h-4 w-4" strokeWidth={2} />
+            </Link>
+          </motion.div>
+        ))}
+      </div>
+
+      <p className="mt-16 text-center font-display text-[15px] font-semibold uppercase tracking-wide text-ink-muted">
+        {tp("perSystemTitle")}
+      </p>
+
       {/* Main card */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
         transition={{ duration: 0.4 }}
-        className="mx-auto mt-12 max-w-lg rounded-2xl border border-cyan/30 bg-card p-8 shadow-glow-cyan"
+        className="mx-auto mt-6 max-w-lg rounded-2xl border border-cyan/30 bg-card p-8 shadow-glow-cyan"
       >
         <p className="font-mono text-[12px] uppercase tracking-[0.18em] text-cyan">{t("base")}</p>
         <div className="mt-3 flex items-end gap-2">

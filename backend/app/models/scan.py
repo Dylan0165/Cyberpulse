@@ -32,6 +32,7 @@ class Scan(Base):
     ai_provider_used: Mapped[str | None] = mapped_column(String(30))  # deepseek | anthropic | runpod
     tool_outputs: Mapped[dict | None] = mapped_column(JSONB, default=dict)  # {phase: {tool: stdout}}
     custom_config: Mapped[dict | None] = mapped_column(JSONB)         # e.g. cloud_credentials (never logged)
+    secure_solution_path: Mapped[str | None] = mapped_column(String)  # pre-generated Secure Solution PDF
 
     # Status tracking
     status: Mapped[str] = mapped_column(String(50), default="pending")

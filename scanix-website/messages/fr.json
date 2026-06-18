@@ -74,7 +74,7 @@
     "title": "Des tarifs transparents",
     "subtitle": "Par système. Aucun coût caché. Aucun engagement.",
     "base": "SÉCURITÉ DE BASE",
-    "price": "€19",
+    "price": "29 €",
     "per": "par système par mois",
     "cta": "Demander un scan gratuit",
     "feature1": "Scans illimités",
@@ -107,7 +107,7 @@
     "tableScanix": "Scanix",
     "tableManual": "Pentest manuel",
     "tablePrice": "Prix",
-    "tablePriceScanix": "€19/système/mois",
+    "tablePriceScanix": "€29/système/mois",
     "tablePriceManual": "€2.500-7.000/test",
     "tableTime": "Délai",
     "tableTimeScanix": "10 minutes",
@@ -124,6 +124,15 @@
     "tableLang": "Rapport dans votre langue",
     "tableLangScanix": "NL/EN/FR/DE",
     "tableLangManual": "Variable"
+  },
+  "plans": {
+    "starterName": "Essentiel", "starterPrice": "449 €", "starterPer": "par an",
+    "starterF1": "1 système, 2 scans par an", "starterF2": "Rapport PDF + rapport NIS2", "starterF3": "Rapport Secure Solution inclus",
+    "standardName": "Standard", "standardPrice": "899 €", "standardPer": "par an", "standardBadge": "Populaire",
+    "standardF1": "3 systèmes, scans illimités", "standardF2": "Tous les modules inclus", "standardF3": "Rapport Secure Solution automatique après chaque scan", "standardF4": "Scans planifiés",
+    "extendedName": "Étendu", "extendedPrice": "1 499 €", "extendedPer": "par an",
+    "extendedF1": "10 systèmes, scans illimités", "extendedF2": "Tout du forfait Standard", "extendedF3": "Rapport Secure Solution automatique", "extendedF4": "Entretien personnel trimestriel (1 heure)", "extendedF5": "Nous passons en revue les résultats avec vous",
+    "perSystemTitle": "Ou payez par système"
   },
   "trust": {
     "title": "Construit sur une technologie éprouvée",

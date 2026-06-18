@@ -198,3 +198,32 @@ def analyze_scan(self, scan_id: str):
                 )
         except Exception as exc:
             logger.warning("Scan-complete email skipped: %s", exc)
+
+        # Auto-generate the Secure Solution Report (best-effort — NEVER crash the
+        # scan). Runs AFTER scan_complete is already published, so it does not
+        # delay the completion event. Stored on a shared volume + path on the scan,
+        # so the user's first download is instant (no AI call needed).
+        try:
+            from app.services.secure_solution import (
+                fixable_findings, build_secure_solution, generate_secure_solution_pdf,
+            )
+            if fixable_findings(report):
+                from app.models.user import User
+                owner = (
+                    db.query(User).filter(User.id == scan.user_id).first()
+                    if scan.user_id else None
+                )
+                report_obj = build_secure_solution(scan, target_obj.value, report, owner)
+                if report_obj.get("fixes"):
+                    import os
+                    pdf_bytes = generate_secure_solution_pdf(report_obj)
+                    out_dir = os.getenv("SECURE_SOLUTION_DIR", "/opt/scanix/reports")
+                    os.makedirs(out_dir, exist_ok=True)
+                    pdf_path = os.path.join(out_dir, f"secure-solution-{scan.id}.pdf")
+                    with open(pdf_path, "wb") as fh:
+                        fh.write(pdf_bytes)
+                    scan.secure_solution_path = pdf_path
+                    db.commit()
+                    logger.info("[%s] Secure Solution Rapport auto-generated: %s", scan_id, pdf_path)
+        except Exception as exc:
+            logger.error("[%s] Secure Solution generation failed: %s", scan_id, exc)
