@@ -6,8 +6,9 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import {
   LayoutDashboard, Radar, Target, FileText, Calendar,
-  Wrench, Settings, Shield, Sparkles,
+  Wrench, Settings, Shield, Sparkles, ShieldCheck,
 } from "lucide-react";
+import { useAuth } from "@/contexts/auth-context";
 
 const NAV = [
   { name: "Overzicht",          href: "/dashboard", icon: LayoutDashboard },
@@ -17,6 +18,7 @@ const NAV = [
   { name: "Automatische tests", href: "/schedule",  icon: Calendar },
   { name: "Tools",              href: "/tools",     icon: Wrench },
   { name: "AI Upgraden",        href: "/upgrade",   icon: Sparkles },
+  { name: "Abonnement",         href: "/billing",   icon: Sparkles },
   { name: "Instellingen",       href: "/settings",  icon: Settings },
 ];
 
@@ -35,6 +37,20 @@ export function Sidebar() {
   const pathname = usePathname();
   const [expanded, setExpanded] = useState(false);
   const [kaliOnline, setKaliOnline] = useState<boolean | null>(null);
+  const { user, planInfo } = useAuth();
+
+  const isAdmin = planInfo?.role === "admin" || user?.role === "admin";
+
+  // Inject the Admin item just before "Instellingen" when the user is an admin.
+  const nav = (() => {
+    if (!isAdmin) return NAV;
+    const out = [...NAV];
+    const idx = out.findIndex((i) => i.href === "/settings");
+    const adminItem = { name: "Admin", href: "/admin", icon: ShieldCheck };
+    if (idx === -1) out.push(adminItem);
+    else out.splice(idx, 0, adminItem);
+    return out;
+  })();
 
   useEffect(() => {
     fetch("/api/tools/available", { cache: "no-store" })
@@ -71,7 +87,7 @@ export function Sidebar() {
 
       {/* Nav */}
       <nav className="flex-1 space-y-1 px-2 py-3">
-        {NAV.map((item) => {
+        {nav.map((item) => {
           const active = isActive(pathname, item.href);
           const Icon = item.icon;
           return (
@@ -112,6 +128,39 @@ export function Sidebar() {
         })}
       </nav>
 
+      {/* Plan widget */}
+      {planInfo && expanded && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="border-t border-grid px-3 py-3"
+        >
+          <div className="mb-2 flex items-center justify-between gap-2">
+            <span className="font-mono text-[10px] uppercase tracking-wider text-ink-muted">
+              Pakket
+            </span>
+            <span className="rounded bg-cyan/15 px-1.5 py-0.5 font-mono text-[9px] font-bold uppercase tracking-[0.1em] text-cyan">
+              {String(planInfo.plan ?? "").toUpperCase()}
+            </span>
+          </div>
+
+          {planInfo.unlimited_scans ? (
+            <p className="font-mono text-[10px] text-neon-green">Onbeperkte scans</p>
+          ) : (
+            <PlanUsage planInfo={planInfo} />
+          )}
+        </motion.div>
+      )}
+
+      {/* Plan widget — collapsed state: just the plan dot/badge */}
+      {planInfo && !expanded && (
+        <div className="flex justify-center border-t border-grid py-3">
+          <span className="rounded bg-cyan/15 px-1.5 py-0.5 font-mono text-[8px] font-bold uppercase tracking-[0.05em] text-cyan">
+            {String(planInfo.plan ?? "").slice(0, 3).toUpperCase()}
+          </span>
+        </div>
+      )}
+
       {/* Kali VM status */}
       <div className="border-t border-grid px-3 py-4">
         <div className="flex items-center gap-2.5">
@@ -130,6 +179,54 @@ export function Sidebar() {
         </div>
       </div>
     </motion.aside>
+  );
+}
+
+function PlanUsage({ planInfo }: { planInfo: any }) {
+  const used = Number(planInfo?.scans_this_month ?? 0);
+  const max = Number(planInfo?.max_scans_per_month ?? 0);
+  const remaining = Number(planInfo?.scans_remaining ?? -1);
+  const pct = max > 0 ? Math.min(100, Math.round((used / max) * 100)) : 0;
+
+  const atLimit = remaining === 0;
+  const nearLimit = remaining > 0 && remaining <= 1;
+
+  return (
+    <div>
+      <p className="mb-1.5 font-mono text-[10px] text-ink-muted">
+        {used} van {max} scans gebruikt
+      </p>
+      <div className="h-1 w-full overflow-hidden rounded-full bg-grid">
+        <div
+          className="h-full rounded-full transition-all duration-300"
+          style={{
+            width: `${pct}%`,
+            background: atLimit ? "#FF2D55" : nearLimit ? "#FF8C00" : "#00B4D8",
+          }}
+        />
+      </div>
+
+      {atLimit && (
+        <div className="mt-2 space-y-1">
+          <p className="font-mono text-[10px] font-bold" style={{ color: "#FF2D55" }}>
+            Limiet bereikt
+          </p>
+          <a
+            href="https://scanix.nl/prijzen"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-block rounded bg-cyan px-2 py-1 font-mono text-[9px] font-bold uppercase tracking-[0.08em] text-app transition-transform hover:scale-[1.03]"
+          >
+            Upgrade
+          </a>
+        </div>
+      )}
+      {nearLimit && (
+        <p className="mt-2 font-mono text-[10px] font-bold" style={{ color: "#FF8C00" }}>
+          Bijna op limiet
+        </p>
+      )}
+    </div>
   );
 }
 

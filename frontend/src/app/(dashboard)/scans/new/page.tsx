@@ -14,6 +14,8 @@ import {
 import Link from "next/link";
 import { GlowCard } from "@/components/cyber/glow-card";
 import { VerificationModal } from "@/components/cyber/verification-modal";
+import { PlanLimitModal } from "@/components/cyber/plan-limit-modal";
+import { useAuth } from "@/contexts/auth-context";
 import { scanTypeLabel, scanTypeSubtitle, phaseLabel, phaseDesc } from "@/lib/labels";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -97,6 +99,14 @@ export default function NewScanPage() {
 function NewScanContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { planInfo } = useAuth();
+
+  // Whether custom modules (m09–m17) are available for this plan.
+  // Default to true when the plan hasn't loaded yet so we never wrongly block.
+  const customModulesAllowed = planInfo?.custom_modules !== false;
+
+  // Plan-limit modal ("scan" | "target")
+  const [planLimit, setPlanLimit] = useState<null | "scan" | "target">(null);
 
   // Step state
   const [step, setStep] = useState(1);
@@ -171,6 +181,10 @@ function NewScanContent() {
         return;
       }
       if (err?.response?.status === 403 && detail && typeof detail === "object") {
+        if (detail.error === "scan_limit_reached") {
+          setPlanLimit("scan");
+          return;
+        }
         if (detail.error === "verification_required") {
           const target_obj = allTargets.find((t: any) => t.id === selectedTarget);
           const domain =
@@ -259,6 +273,11 @@ function NewScanContent() {
   };
 
   const toggleModule = (mod: string) => {
+    // Custom modules are a Business-pakket feature. Block selection on lower plans.
+    if (!customModulesAllowed) {
+      setPlanLimit("scan");
+      return;
+    }
     setSelectedModules(prev => {
       const next = new Set(prev);
       if (next.has(mod)) next.delete(mod);
@@ -590,17 +609,27 @@ function NewScanContent() {
                 className="grid grid-cols-1 gap-3 sm:grid-cols-2"
               >
                 {CUSTOM_MODULE_OPTIONS.map((mod) => {
-                  const checked = selectedModules.has(mod.value);
+                  const locked = !customModulesAllowed;
+                  const checked = !locked && selectedModules.has(mod.value);
                   return (
                     <motion.div key={mod.value} variants={listItem}>
                       <GlowCard
                         glowColor="#A855F7"
                         accentBorder={checked ? "#A855F7" : undefined}
                         onClick={() => toggleModule(mod.value)}
-                        className="h-full p-4"
+                        className={`h-full p-4 ${locked ? "opacity-50" : ""}`}
                       >
-                        <div className="flex items-start gap-3">
-                          <CheckBox checked={checked} color="#A855F7" />
+                        <div
+                          className="flex items-start gap-3"
+                          title={locked ? "Beschikbaar vanaf Business pakket" : undefined}
+                        >
+                          {locked ? (
+                            <span className="flex h-5 w-5 shrink-0 items-center justify-center">
+                              <Lock className="h-4 w-4 text-ink-muted" />
+                            </span>
+                          ) : (
+                            <CheckBox checked={checked} color="#A855F7" />
+                          )}
                           <div className="flex-1">
                             <div className="flex items-center justify-between gap-2">
                               <span
@@ -609,14 +638,20 @@ function NewScanContent() {
                               >
                                 {phaseLabel(mod.value)}
                               </span>
-                              {mod.defaultChecked && (
+                              {locked ? (
+                                <span className="shrink-0 rounded bg-app px-1.5 py-0.5 font-mono text-[8px] font-bold uppercase tracking-[0.1em] text-ink-muted">
+                                  Business
+                                </span>
+                              ) : mod.defaultChecked ? (
                                 <span className="shrink-0 rounded bg-cyan/15 px-1.5 py-0.5 font-mono text-[8px] font-bold uppercase tracking-[0.1em] text-cyan">
                                   Aanbevolen
                                 </span>
-                              )}
+                              ) : null}
                             </div>
                             <p className="mt-0.5 font-mono text-[10px] leading-snug text-ink-muted">
-                              {phaseDesc(mod.value)}
+                              {locked
+                                ? "Beschikbaar vanaf Business pakket"
+                                : phaseDesc(mod.value)}
                             </p>
                           </div>
                         </div>
@@ -899,6 +934,12 @@ function NewScanContent() {
           onClose={() => setVerification(null)}
         />
       )}
+
+      <PlanLimitModal
+        open={planLimit !== null}
+        kind={planLimit ?? "scan"}
+        onClose={() => setPlanLimit(null)}
+      />
     </div>
   );
 }

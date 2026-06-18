@@ -5,6 +5,7 @@ import { HeaderBell } from "./header-bell";
 import { LogoutButton } from "./logout-button";
 import { PageTransition } from "@/components/cyber/page-transition";
 import { TermsModal } from "@/components/cyber/terms-modal";
+import { TrialBanner } from "@/components/cyber/trial-banner";
 import { useAuth } from "@/contexts/auth-context";
 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -21,6 +22,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
           <LogoutButton />
         </header>
         <div className="mx-auto max-w-[1500px] px-6 py-6 pb-20 lg:px-8 lg:py-8 md:pb-8">
+          <TrialBanner />
           <PageTransition>{children}</PageTransition>
         </div>
       </main>

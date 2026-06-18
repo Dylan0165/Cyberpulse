@@ -85,6 +85,16 @@ services:
       ENVIRONMENT: "${ENVIRONMENT:-development}"
       # Extra CORS origins (comma-separated) without a code change.
       EXTRA_CORS_ORIGINS: "${EXTRA_CORS_ORIGINS:-}"
+      # Stripe billing (empty = checkout returns 503, never crashes).
+      STRIPE_SECRET_KEY: "${STRIPE_SECRET_KEY:-}"
+      STRIPE_WEBHOOK_SECRET: "${STRIPE_WEBHOOK_SECRET:-}"
+      STRIPE_STARTER_MONTHLY: "${STRIPE_STARTER_MONTHLY:-}"
+      STRIPE_STARTER_QUARTERLY: "${STRIPE_STARTER_QUARTERLY:-}"
+      STRIPE_STARTER_YEARLY: "${STRIPE_STARTER_YEARLY:-}"
+      STRIPE_BUSINESS_MONTHLY: "${STRIPE_BUSINESS_MONTHLY:-}"
+      STRIPE_BUSINESS_QUARTERLY: "${STRIPE_BUSINESS_QUARTERLY:-}"
+      STRIPE_BUSINESS_YEARLY: "${STRIPE_BUSINESS_YEARLY:-}"
+      ADMIN_INIT_SECRET: "${ADMIN_INIT_SECRET:-scanix-admin-init}"
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000
 
   # ── Celery Worker ────────────────────────────────────────

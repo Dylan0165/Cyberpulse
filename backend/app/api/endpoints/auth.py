@@ -29,6 +29,7 @@ from app.core.auth import (
     JWT_EXPIRY_DAYS,
 )
 from app.models.user import User
+from app.core.plans import apply_plan_limits
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -81,6 +82,7 @@ def _user_dict(u: User) -> dict:
         "ai_base_url": getattr(u, "ai_base_url", None),
         "ai_api_key_set": bool(getattr(u, "ai_api_key", None)),
         "plan": u.plan,
+        "role": getattr(u, "role", "user"),
         "created_at": u.created_at.isoformat() if u.created_at else None,
     }
 
@@ -122,11 +124,14 @@ async def register(
             api_key=secrets.token_hex(32),
             clerk_id=f"local-{uuid.uuid4()}",
             is_active=True,
-            plan="professional",
+            plan="trial",
             credits=9999,
             terms_accepted=False,
             onboarding_completed=False,
         )
+        # New accounts start on the free trial plan with trial limits.
+        apply_plan_limits(user, "trial")
+        user.plan_started_at = datetime.now(timezone.utc)
         db.add(user)
         await db.commit()
         await db.refresh(user)
@@ -161,6 +166,9 @@ async def login(
     user = result.scalar_one_or_none()
     if user is None or not user.password_hash or not verify_password(body.password, user.password_hash):
         raise HTTPException(status_code=401, detail="Ongeldig e-mailadres of wachtwoord")
+
+    user.last_login_at = datetime.now(timezone.utc)
+    await db.commit()
 
     token = create_access_token(user.id, user.email)
     _set_token_cookie(response, token)

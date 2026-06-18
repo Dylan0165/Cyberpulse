@@ -22,6 +22,30 @@ export const authApi = {
 export const usersApi = {
   updateMe: (d: any) => api.patch("/users/me", d),
   regenerateApiKey: () => api.post("/users/me/regenerate-api-key"),
+  plan: () => api.get("/users/me/plan"),
+};
+
+// ── Billing (Stripe) ───────────────────────────────────────────────────────────
+export const billingApi = {
+  checkout: (plan: string, interval: string) =>
+    api.post("/billing/checkout", { plan, interval }),
+  portal: () => api.get("/billing/portal"),
+};
+
+// ── Admin ──────────────────────────────────────────────────────────────────────
+export const adminApi = {
+  stats: () => api.get("/admin/stats"),
+  users: (params?: { search?: string; plan?: string; sort?: string }) =>
+    api.get("/admin/users", { params }),
+  user: (id: string) => api.get(`/admin/users/${id}`),
+  createUser: (d: any) => api.post("/admin/users", d),
+  updateUser: (id: string, d: any) => api.patch(`/admin/users/${id}`, d),
+  deleteUser: (id: string) => api.delete(`/admin/users/${id}`),
+  resetPassword: (id: string) => api.post(`/admin/users/${id}/reset-password`),
+  suspend: (id: string) => api.post(`/admin/users/${id}/suspend`),
+  activate: (id: string) => api.post(`/admin/users/${id}/activate`),
+  init: (d: { email: string; password: string; secret: string }) =>
+    api.post("/admin/init", d),
 };
 
 // API functions

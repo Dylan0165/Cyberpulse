@@ -86,6 +86,14 @@ async def create_schedule(
     user: User = Depends(get_required_user),
 ):
     """Create a new scheduled scan."""
+    # Plan gate: scheduled scans require the Business plan or higher.
+    if not getattr(user, "scheduled_scans", False):
+        raise HTTPException(status_code=403, detail={
+            "error": "plan_limit_reached",
+            "message": "Geplande scans zijn beschikbaar vanaf het Business pakket.",
+            "upgrade_url": "https://scanix.nl/prijzen",
+        })
+
     next_run_at = datetime.now(timezone.utc) + _interval(body.schedule_type)
 
     sched = ScheduledScan(

@@ -48,6 +48,21 @@ class User(Base):
     ai_api_key: Mapped[str | None] = mapped_column(String(255))   # legacy: user's own key (local)
     ai_base_url: Mapped[str | None] = mapped_column(String(255))  # legacy: self-hosted base URL
 
+    # Commercial plan system (migration 0007)
+    plan_interval: Mapped[str | None] = mapped_column(String(20))   # monthly | quarterly | yearly
+    plan_started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    plan_expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    max_targets: Mapped[int] = mapped_column(Integer, server_default="1", default=1)
+    max_scans_per_month: Mapped[int] = mapped_column(Integer, server_default="3", default=3)
+    scans_this_month: Mapped[int] = mapped_column(Integer, server_default="0", default=0)
+    scans_reset_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    custom_modules: Mapped[bool] = mapped_column(Boolean, server_default="false", default=False)
+    scheduled_scans: Mapped[bool] = mapped_column(Boolean, server_default="false", default=False)
+    white_label: Mapped[bool] = mapped_column(Boolean, server_default="false", default=False)
+    ai_upgrade: Mapped[str] = mapped_column(String(20), server_default="deepseek", default="deepseek")  # deepseek | choice
+    role: Mapped[str] = mapped_column(String(20), server_default="user", default="user")  # user | admin
+    last_login_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
     # Relationships
     targets = relationship("Target", back_populates="user", cascade="all, delete-orphan")
     scans = relationship("Scan", back_populates="user", cascade="all, delete-orphan")

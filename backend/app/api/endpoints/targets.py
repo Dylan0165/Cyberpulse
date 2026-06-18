@@ -4,7 +4,7 @@ import uuid
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Request
-from sqlalchemy import select
+from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
@@ -55,6 +55,19 @@ async def create_target(
 ):
     await _student_user(db)  # ensure the demo user exists
     owner = _owner_id(auth_user)
+
+    # ── Plan limit: max targets ───────────────────────────────────────────────
+    max_targets = getattr(auth_user, "max_targets", 1) or 1
+    current_count = await db.scalar(select(func.count(Target.id)).where(Target.user_id == owner))
+    if (current_count or 0) >= max_targets:
+        raise HTTPException(status_code=403, detail={
+            "error": "plan_limit_reached",
+            "message": (
+                f"Uw {auth_user.plan} pakket staat maximaal {max_targets} "
+                f"systeem/systemen toe. Upgrade uw pakket voor meer systemen."
+            ),
+            "upgrade_url": "https://scanix.nl/prijzen",
+        })
 
     # Accept both 'value'/'hostname' and both 'name'/'hostname' field names
     value = body.get("value") or body.get("hostname") or body.get("url") or ""

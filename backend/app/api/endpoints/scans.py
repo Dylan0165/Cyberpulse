@@ -131,6 +131,26 @@ async def create_scan(
                 "message": "U heeft al een actieve scan. Wacht tot deze voltooid is.",
             })
 
+    # ── Plan limit: monthly scan quota ────────────────────────────────────────
+    from app.core.plans import UNLIMITED_SCANS
+    now = datetime.now(timezone.utc)
+    reset_at = getattr(auth_user, "scans_reset_at", None)
+    if reset_at is None or reset_at.year != now.year or reset_at.month != now.month:
+        auth_user.scans_this_month = 0
+        auth_user.scans_reset_at = now
+        await db.commit()
+    max_scans = getattr(auth_user, "max_scans_per_month", 3) or 3
+    used = getattr(auth_user, "scans_this_month", 0) or 0
+    if max_scans < UNLIMITED_SCANS and used >= max_scans:
+        raise HTTPException(status_code=403, detail={
+            "error": "scan_limit_reached",
+            "message": (
+                f"U heeft het maximale aantal scans voor deze maand bereikt "
+                f"({max_scans} scans). Upgrade uw pakket of wacht tot volgende maand."
+            ),
+            "upgrade_url": "https://scanix.nl/prijzen",
+        })
+
     # Determine Kali phases from preset, then append any custom modules
     # from body.phases so user-selected m09-m17 are never dropped.
     _CUSTOM_MODULE_IDS = {"m09", "m10", "m11", "m12", "m13", "m14", "m15", "m16", "m17"}
@@ -144,6 +164,9 @@ async def create_scan(
     for p in (body.phases or []):
         if p in _CUSTOM_MODULE_IDS and p not in phases:
             phases.append(p)
+    # Plan gate: silently strip custom modules if the plan doesn't include them.
+    if not getattr(auth_user, "custom_modules", False):
+        phases = [p for p in phases if p not in _CUSTOM_MODULE_IDS]
 
     config = dict(body.config) if body.config else {}
     config["scan_mode"]   = body.scan_mode
@@ -166,6 +189,13 @@ async def create_scan(
     db.add(scan)
     await db.commit()
     await db.refresh(scan)
+
+    # Count this scan against the monthly quota (best-effort).
+    try:
+        auth_user.scans_this_month = (getattr(auth_user, "scans_this_month", 0) or 0) + 1
+        await db.commit()
+    except Exception:
+        await db.rollback()
 
     ip = await get_client_ip(request)
     await log_action(

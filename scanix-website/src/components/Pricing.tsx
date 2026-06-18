@@ -1,61 +1,115 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useTranslations } from "next-intl";
-import { motion } from "framer-motion";
-import { Check, ArrowRight, Server, Sparkles, FileText, Minus } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Check, X, ArrowRight } from "lucide-react";
 import { Link } from "@/lib/navigation";
 
-const PRICE = 29;
+type Interval = "monthly" | "quarterly" | "yearly";
 
 export function Pricing() {
   const t = useTranslations("pricing");
-  const tp = useTranslations("plans");
-  const [systems, setSystems] = useState(3);
-  const total = useMemo(() => systems * PRICE, [systems]);
+  const tt = useTranslations("tiers");
+  const [interval, setInterval] = useState<Interval>("monthly");
 
-  const plans = [
+  const intervals: { key: Interval; label: string }[] = [
+    { key: "monthly", label: tt("intMonthly") },
+    { key: "quarterly", label: tt("intQuarterly") },
+    { key: "yearly", label: tt("intYearly") },
+  ];
+
+  const starterPrice: Record<Interval, string> = {
+    monthly: "€149/mnd",
+    quarterly: "€399/kwartaal",
+    yearly: "€1.299/jaar",
+  };
+  const businessPrice: Record<Interval, string> = {
+    monthly: "€349/mnd",
+    quarterly: "€949/kwartaal",
+    yearly: "€2.999/jaar",
+  };
+
+  type Feat = { label: string; included: boolean };
+
+  const plans: {
+    key: string;
+    name: string;
+    price: string;
+    featured: boolean;
+    badge?: string;
+    feats: Feat[];
+    href: string;
+    cta: string;
+    note?: string;
+  }[] = [
     {
       key: "starter",
-      name: tp("starterName"),
-      price: tp("starterPrice"),
-      per: tp("starterPer"),
+      name: tt("starterName"),
+      price: starterPrice[interval],
       featured: false,
-      feats: [tp("starterF1"), tp("starterF2"), tp("starterF3")],
+      feats: [
+        { label: tt("fMonitor1"), included: true },
+        { label: tt("fScan1"), included: true },
+        { label: tt("fPdf"), included: true },
+        { label: tt("fNis2"), included: true },
+        { label: tt("fSecure"), included: true },
+        { label: tt("fModules"), included: false },
+        { label: tt("fScheduled"), included: false },
+      ],
+      href: `https://app.scanix.nl/login?plan=starter&interval=${interval}`,
+      cta: tt("planCta"),
+      note: tt("loginNote"),
     },
     {
-      key: "standard",
-      name: tp("standardName"),
-      price: tp("standardPrice"),
-      per: tp("standardPer"),
-      badge: tp("standardBadge"),
+      key: "business",
+      name: tt("businessName"),
+      price: businessPrice[interval],
       featured: true,
-      feats: [tp("standardF1"), tp("standardF2"), tp("standardF3"), tp("standardF4")],
+      badge: tt("badgePopular"),
+      feats: [
+        { label: tt("bMonitor5"), included: true },
+        { label: tt("bScansUnlimited"), included: true },
+        { label: tt("bAllReports"), included: true },
+        { label: tt("bAllModules"), included: true },
+        { label: tt("bScheduled"), included: true },
+        { label: tt("bCompare"), included: true },
+        { label: tt("bEmailSupport"), included: true },
+      ],
+      href: `https://app.scanix.nl/login?plan=business&interval=${interval}`,
+      cta: tt("planCta"),
+      note: tt("loginNote"),
     },
     {
-      key: "extended",
-      name: tp("extendedName"),
-      price: tp("extendedPrice"),
-      per: tp("extendedPer"),
+      key: "enterprise",
+      name: tt("enterpriseName"),
+      price: tt("enterpriseFrom"),
       featured: false,
-      feats: [tp("extendedF1"), tp("extendedF2"), tp("extendedF3"), tp("extendedF4"), tp("extendedF5")],
+      feats: [
+        { label: tt("eSystems20"), included: true },
+        { label: tt("eAllBusiness"), included: true },
+        { label: tt("eAiUpgrade"), included: true },
+        { label: tt("eWhiteLabel"), included: true },
+        { label: tt("eQuarterlyCall"), included: true },
+        { label: tt("eNis2Audit"), included: true },
+        { label: tt("ePrioritySupport"), included: true },
+      ],
+      href: "/contact",
+      cta: tt("contactCta"),
     },
   ];
 
-  const features = [
-    t("feature1"), t("feature2"), t("feature3"), t("feature4"),
-    t("feature5"), t("feature6"), t("feature7"), t("feature8"),
-    t("feature9"),
+  const rows: { label: string; cells: (boolean | string)[] }[] = [
+    { label: tt("rowSystems"), cells: ["1", "5", "20"] },
+    { label: tt("rowScans"), cells: [tt("cellScans1"), tt("cellUnlimited"), tt("cellUnlimited")] },
+    { label: tt("rowModules"), cells: [false, true, true] },
+    { label: tt("rowScheduled"), cells: [false, true, true] },
+    { label: tt("rowAiUpgrade"), cells: [false, false, true] },
+    { label: tt("rowWhiteLabel"), cells: [false, false, true] },
+    { label: tt("rowSupport"), cells: [tt("cellEmail"), tt("cellEmail"), tt("cellPriority")] },
   ];
 
-  const rows = [
-    { f: t("tablePrice"), a: t("tablePriceScanix"), b: t("tablePriceManual") },
-    { f: t("tableTime"), a: t("tableTimeScanix"), b: t("tableTimeManual") },
-    { f: t("tableFreq"), a: t("tableFreqScanix"), b: t("tableFreqManual") },
-    { f: t("tableNis2"), a: t("tableNis2Scanix"), b: t("tableNis2Manual"), aGood: true },
-    { f: t("tableExploit"), a: t("tableExploitScanix"), b: t("tableExploitManual"), aGood: true },
-    { f: t("tableLang"), a: t("tableLangScanix"), b: t("tableLangManual"), aGood: true },
-  ];
+  const colHeads = [tt("starterName"), tt("businessName"), tt("enterpriseName")];
 
   return (
     <section id="pricing" className="relative mx-auto max-w-content px-5 py-20 md:px-8 md:py-28">
@@ -64,7 +118,27 @@ export function Pricing() {
         <p className="mx-auto mt-3 max-w-xl text-[15px] text-ink-muted">{t("subtitle")}</p>
       </div>
 
-      {/* Yearly plans */}
+      {/* Interval toggle */}
+      <div className="mt-10 flex justify-center">
+        <div className="inline-flex items-center gap-1 rounded-full border border-grid bg-card p-1">
+          {intervals.map((it) => (
+            <button
+              key={it.key}
+              type="button"
+              onClick={() => setInterval(it.key)}
+              className={`rounded-full px-4 py-2 text-[13px] font-semibold transition-all ${
+                interval === it.key
+                  ? "bg-cyan text-bg shadow-glow-cyan"
+                  : "text-ink-muted hover:text-ink"
+              }`}
+            >
+              {it.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Plan cards */}
       <div className="mx-auto mt-12 grid max-w-5xl gap-5 md:grid-cols-3">
         {plans.map((p, i) => (
           <motion.div
@@ -77,175 +151,95 @@ export function Pricing() {
               p.featured ? "border-cyan/50 shadow-glow-cyan" : "border-grid"
             }`}
           >
-            {p.featured && "badge" in p && p.badge && (
+            {p.featured && p.badge && (
               <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-cyan px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-bg">
                 {p.badge}
               </span>
             )}
             <h3 className="font-display text-[18px] font-semibold text-ink">{p.name}</h3>
-            <div className="mt-2 flex items-end gap-1.5">
-              <span className="font-display text-4xl font-bold text-ink">{p.price}</span>
-              <span className="mb-1.5 text-[13px] text-ink-muted">{p.per}</span>
+            <div className="mt-2 h-12 overflow-hidden">
+              <AnimatePresence mode="wait">
+                <motion.span
+                  key={interval + p.key}
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -6 }}
+                  transition={{ duration: 0.2 }}
+                  className="block font-display text-3xl font-bold text-ink"
+                >
+                  {p.price}
+                </motion.span>
+              </AnimatePresence>
             </div>
             <ul className="mt-5 flex-1 space-y-2.5">
               {p.feats.map((f) => (
-                <li key={f} className="flex items-start gap-2 text-[13.5px] text-ink">
-                  <Check className="mt-0.5 h-4 w-4 flex-shrink-0 text-green" strokeWidth={2.5} />
-                  {f}
+                <li
+                  key={f.label}
+                  className={`flex items-start gap-2 text-[13.5px] ${
+                    f.included ? "text-ink" : "text-ink-muted"
+                  }`}
+                >
+                  {f.included ? (
+                    <Check className="mt-0.5 h-4 w-4 flex-shrink-0 text-green" strokeWidth={2} />
+                  ) : (
+                    <X className="mt-0.5 h-4 w-4 flex-shrink-0 text-ink-muted" strokeWidth={2} />
+                  )}
+                  {f.label}
                 </li>
               ))}
             </ul>
             <Link
-              href="/contact"
+              href={p.href}
               className={`mt-6 inline-flex w-full items-center justify-center gap-2 rounded-xl px-5 py-3 text-[14px] font-semibold transition-all active:scale-[0.98] ${
                 p.featured
                   ? "bg-cyan text-bg hover:shadow-glow-cyan"
                   : "border border-grid text-ink hover:border-cyan/40"
               }`}
             >
-              {t("cta")} <ArrowRight className="h-4 w-4" strokeWidth={2} />
+              {p.cta} <ArrowRight className="h-4 w-4" strokeWidth={2} />
             </Link>
+            {p.note && (
+              <p className="mt-3 text-center text-[11px] text-ink-muted">{p.note}</p>
+            )}
           </motion.div>
         ))}
       </div>
 
-      <p className="mt-16 text-center font-display text-[15px] font-semibold uppercase tracking-wide text-ink-muted">
-        {tp("perSystemTitle")}
-      </p>
-
-      {/* Main card */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-        transition={{ duration: 0.4 }}
-        className="mx-auto mt-6 max-w-lg rounded-2xl border border-cyan/30 bg-card p-8 shadow-glow-cyan"
-      >
-        <p className="font-mono text-[12px] uppercase tracking-[0.18em] text-cyan">{t("base")}</p>
-        <div className="mt-3 flex items-end gap-2">
-          <span className="font-display text-6xl font-bold text-ink">{t("price")}</span>
-          <span className="mb-2 text-[14px] text-ink-muted">{t("per")}</span>
-        </div>
-        <ul className="mt-7 grid gap-2.5 sm:grid-cols-2">
-          {features.map((f) => (
-            <li key={f} className="flex items-start gap-2 text-[13.5px] text-ink">
-              <Check className="mt-0.5 h-4 w-4 flex-shrink-0 text-green" strokeWidth={2.5} />
-              {f}
-            </li>
-          ))}
-        </ul>
-        <Link
-          href="/contact"
-          className="mt-8 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-cyan px-6 py-3.5 text-[15px] font-semibold text-bg transition-all hover:shadow-glow-cyan active:scale-[0.98]"
-        >
-          {t("cta")}
-          <ArrowRight className="h-4.5 w-4.5" strokeWidth={2} />
-        </Link>
-      </motion.div>
-
-      {/* Calculator */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-        transition={{ duration: 0.4 }}
-        className="mx-auto mt-8 max-w-lg rounded-2xl border border-grid bg-card/60 p-7"
-      >
-        <p className="font-display text-[16px] font-semibold text-ink">{t("calcTitle")}</p>
-        <div className="mt-5 flex items-center justify-between">
-          <span className="font-mono text-[13px] text-ink-muted">
-            {systems} {t("calcSystems")}
-          </span>
-          <span className="font-mono text-[15px] font-semibold text-cyan">
-            {systems} × €{PRICE} = €{total} {t("calcPerMonth")}
-          </span>
-        </div>
-        <input
-          type="range"
-          min={1}
-          max={50}
-          value={systems}
-          onChange={(e) => setSystems(Number(e.target.value))}
-          className="mt-3 w-full"
-          aria-label={t("calcSystems")}
-        />
-        <p className="mt-4 text-center text-[13px] text-ink-muted">
-          {t("calcCoffee", { count: systems })}
-        </p>
-      </motion.div>
-
-      {/* AI upgrades */}
-      <div className="mx-auto mt-14 max-w-3xl">
-        <p className="mb-4 text-center font-display text-[15px] font-semibold uppercase tracking-wide text-ink-muted">{t("aiTitle")}</p>
-        <div className="grid gap-4 md:grid-cols-2">
-          {[
-            { icon: Server, name: t("scanixAiName"), price: t("scanixAiPrice"), badge: t("scanixAiBadge"), desc: t("scanixAiDesc"), color: "#00B4D8" },
-            { icon: Sparkles, name: t("claudeName"), price: t("claudePrice"), badge: t("claudeBadge"), desc: t("claudeDesc"), color: "#FF8C00" },
-          ].map((c) => (
-            <div key={c.name} className="flex flex-col rounded-xl border border-grid bg-card p-6">
-              <div className="mb-2 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <c.icon className="h-5 w-5 text-cyan" strokeWidth={2} />
-                  <span className="font-display text-[15px] font-semibold text-ink">{c.name}</span>
-                </div>
-                <span className="rounded-full border px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide" style={{ color: c.color, borderColor: `${c.color}55`, background: `${c.color}14` }}>
-                  {c.badge}
-                </span>
-              </div>
-              <p className="text-[14px] font-semibold text-ink">{c.price}</p>
-              <p className="mt-2 flex-1 text-[13px] leading-relaxed text-ink-muted">{c.desc}</p>
-              <Link href="/contact" className="mt-4 inline-flex items-center gap-1.5 text-[13px] font-medium text-cyan hover:underline">
-                {t("moreInfo")} <ArrowRight className="h-3.5 w-3.5" strokeWidth={2} />
-              </Link>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* NIS2 add-on */}
-      <div className="mx-auto mt-6 max-w-3xl">
-        <div className="flex flex-col items-start justify-between gap-4 rounded-xl border border-grid bg-card/60 p-6 sm:flex-row sm:items-center">
-          <div className="flex items-start gap-3">
-            <FileText className="mt-0.5 h-5 w-5 flex-shrink-0 text-cyan" strokeWidth={2} />
-            <div>
-              <p className="font-display text-[15px] font-semibold text-ink">{t("nis2Title")}</p>
-              <p className="mt-1 text-[13px] text-ink-muted">{t("nis2Desc")}</p>
-            </div>
-          </div>
-          <Link href="/contact" className="inline-flex flex-shrink-0 items-center gap-1.5 rounded-lg border border-cyan/40 px-4 py-2 text-[13px] font-semibold text-cyan transition-colors hover:bg-cyan/10">
-            {t("nis2Cta")} <ArrowRight className="h-3.5 w-3.5" strokeWidth={2} />
-          </Link>
-        </div>
-      </div>
-
       {/* Comparison table */}
-      <div className="mx-auto mt-14 max-w-3xl overflow-x-auto rounded-2xl border border-grid">
+      <div className="mx-auto mt-14 max-w-4xl overflow-x-auto rounded-2xl border border-grid">
         <table className="w-full text-left">
           <thead>
             <tr className="border-b border-grid bg-card">
-              <th className="px-4 py-3 text-[12px] uppercase tracking-wide text-ink-muted">{t("tableFeature")}</th>
-              <th className="px-4 py-3 text-center text-[12px] uppercase tracking-wide text-cyan">{t("tableScanix")}</th>
-              <th className="px-4 py-3 text-center text-[12px] uppercase tracking-wide text-ink-muted">{t("tableManual")}</th>
+              <th className="px-4 py-3 text-[12px] uppercase tracking-wide text-ink-muted">{tt("tableFeature")}</th>
+              {colHeads.map((h, idx) => (
+                <th
+                  key={h}
+                  className={`px-4 py-3 text-center text-[12px] uppercase tracking-wide ${
+                    idx === 1 ? "text-cyan" : "text-ink-muted"
+                  }`}
+                >
+                  {h}
+                </th>
+              ))}
             </tr>
           </thead>
           <tbody>
             {rows.map((row, i) => (
-              <tr key={row.f} className={i % 2 ? "bg-bg-secondary/40" : ""}>
-                <td className="px-4 py-3 text-[13px] text-ink">{row.f}</td>
-                <td className="px-4 py-3 text-center text-[13px]">
-                  {row.aGood ? (
-                    <span className="inline-flex items-center gap-1.5 font-medium text-green">
-                      <Check className="h-4 w-4" strokeWidth={2.5} /> {row.a}
-                    </span>
-                  ) : (
-                    <span className="font-mono text-ink">{row.a}</span>
-                  )}
-                </td>
-                <td className="px-4 py-3 text-center font-mono text-[13px] text-ink-muted">
-                  <span className="inline-flex items-center gap-1.5">
-                    <Minus className="h-3.5 w-3.5 text-ink-muted/50" /> {row.b}
-                  </span>
-                </td>
+              <tr key={row.label} className={i % 2 ? "bg-bg-secondary/40" : ""}>
+                <td className="px-4 py-3 text-[13px] text-ink">{row.label}</td>
+                {row.cells.map((cell, ci) => (
+                  <td key={ci} className="px-4 py-3 text-center text-[13px]">
+                    {typeof cell === "boolean" ? (
+                      cell ? (
+                        <Check className="mx-auto h-4 w-4 text-green" strokeWidth={2} />
+                      ) : (
+                        <X className="mx-auto h-4 w-4 text-ink-muted/60" strokeWidth={2} />
+                      )
+                    ) : (
+                      <span className="font-mono text-ink-muted">{cell}</span>
+                    )}
+                  </td>
+                ))}
               </tr>
             ))}
           </tbody>

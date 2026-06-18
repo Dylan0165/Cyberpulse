@@ -38,7 +38,34 @@ def _user_dict(u: User) -> dict:
         "ai_base_url": getattr(u, "ai_base_url", None),
         "ai_api_key_set": bool(getattr(u, "ai_api_key", None)),
         "plan": u.plan,
+        "role": getattr(u, "role", "user"),
         "created_at": u.created_at.isoformat() if u.created_at else None,
+    }
+
+
+def _plan_dict(u: User) -> dict:
+    from app.core.plans import UNLIMITED_SCANS
+    max_scans = getattr(u, "max_scans_per_month", 3) or 3
+    used = getattr(u, "scans_this_month", 0) or 0
+    unlimited = max_scans >= UNLIMITED_SCANS
+    return {
+        "plan": u.plan,
+        "plan_interval": getattr(u, "plan_interval", None),
+        "plan_expires_at": u.plan_expires_at.isoformat() if getattr(u, "plan_expires_at", None) else None,
+        "max_targets": getattr(u, "max_targets", 1),
+        "max_scans_per_month": max_scans,
+        "scans_this_month": used,
+        "scans_remaining": -1 if unlimited else max(0, max_scans - used),
+        "unlimited_scans": unlimited,
+        "custom_modules": bool(getattr(u, "custom_modules", False)),
+        "scheduled_scans": bool(getattr(u, "scheduled_scans", False)),
+        "role": getattr(u, "role", "user"),
+        "features": {
+            "custom_modules": bool(getattr(u, "custom_modules", False)),
+            "scheduled_scans": bool(getattr(u, "scheduled_scans", False)),
+            "white_label": bool(getattr(u, "white_label", False)),
+            "ai_upgrade": getattr(u, "ai_upgrade", "deepseek"),
+        },
     }
 
 
@@ -89,6 +116,12 @@ async def regenerate_api_key(
     user.api_key = secrets.token_hex(32)
     await db.commit()
     return {"api_key": user.api_key}
+
+
+@router.get("/me/plan")
+async def get_my_plan(user: User = Depends(get_required_user)):
+    """Current plan + usage for the dashboard plan widget and gating."""
+    return _plan_dict(user)
 
 
 @router.get("/me", response_model=UserResponse)

@@ -23,6 +23,8 @@ from app.api.endpoints import (
     auth,
     notifications,
     schedule,
+    billing,
+    admin,
 )
 
 logging.basicConfig(level=logging.INFO)
@@ -105,6 +107,8 @@ app.include_router(settings_routes.router, prefix="/api")
 app.include_router(auth.router, prefix="/api")
 app.include_router(notifications.router, prefix="/api")
 app.include_router(schedule.router, prefix="/api")
+app.include_router(billing.router, prefix="/api")
+app.include_router(admin.router, prefix="/api")
 
 # WebSocket Routes
 app.include_router(websocket.router)

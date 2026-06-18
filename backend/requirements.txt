@@ -25,3 +25,4 @@ tenacity==8.4.2
 requests==2.32.3
 reportlab==4.2.5
 slowapi==0.1.9
+stripe>=10.0.0,<13.0.0
