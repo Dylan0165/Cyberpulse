@@ -5,9 +5,10 @@ import { targetsApi } from "@/lib/api";
 import Link from "next/link";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Target, Plus, ExternalLink, Trash2, Loader2, X } from "lucide-react";
+import { Plus, ExternalLink, Trash2, Loader2, X, Server } from "lucide-react";
 import { GlowCard } from "@/components/cyber/glow-card";
 import { SkeletonCard } from "@/components/cyber/skeleton";
+import FloatingEmptyState from "@/components/animations/FloatingEmptyState";
 
 const TYPE_OPTIONS = [
   { value: "url",      label: "Web Application / URL" },
@@ -176,18 +177,14 @@ export default function TargetsPage() {
           {Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />)}
         </div>
       ) : targets.length === 0 ? (
-        <div className="rounded-lg border border-grid bg-card2 p-16 text-center">
-          <Target className="mx-auto mb-4 h-12 w-12 text-ink-muted/30" />
-          <p className="font-display text-[17px] font-semibold text-ink mb-2">Nog geen doelen</p>
-          <p className="mb-6 text-[14px] text-ink-muted">
-            Voeg uw eerste doel toe om te beginnen
-          </p>
-          <button
-            onClick={() => setShowAdd(true)}
-            className="inline-flex items-center gap-2 rounded-lg bg-cyan px-5 py-2.5 text-[14px] font-semibold text-black transition-shadow hover:shadow-glow-cyan"
-          >
-            <Plus className="h-4 w-4" /> Doel toevoegen
-          </button>
+        <div className="rounded-lg border border-grid bg-card2">
+          <FloatingEmptyState
+            icon={Server}
+            title="Nog geen doelen"
+            description="Voeg uw eerste doel toe om te beginnen"
+            ctaLabel="Doel toevoegen"
+            onCta={() => setShowAdd(true)}
+          />
         </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

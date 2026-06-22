@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { motion, useInView } from "framer-motion";
 import { Lock, ArrowRight, ArrowDown, Check } from "lucide-react";
 import { Link } from "@/lib/navigation";
+import { VideoBackground } from "./video/VideoBackground";
 
 const APP_URL = "https://app.scanix.nl";
 
@@ -131,17 +132,7 @@ export function Hero() {
   return (
     <section className="relative min-h-[100dvh] overflow-hidden pt-10">
       {/* Abstract generated background video */}
-      <video
-        autoPlay
-        muted
-        loop
-        playsInline
-        preload="auto"
-        aria-hidden
-        className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-70"
-      >
-        <source src="/videos/hero-bg.mp4" type="video/mp4" />
-      </video>
+      <VideoBackground src="/videos/hero-bg.mp4" overlayClassName="bg-transparent" />
       {/* Overlays: dark on the left (text) fading right (video shows), plus a
           soft bottom fade so the section blends into the next one. */}
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-bg via-bg/75 to-bg/20" />

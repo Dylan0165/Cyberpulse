@@ -15,6 +15,7 @@ import Link from "next/link";
 import { GlowCard } from "@/components/cyber/glow-card";
 import { VerificationModal } from "@/components/cyber/verification-modal";
 import { PlanLimitModal } from "@/components/cyber/plan-limit-modal";
+import RadarLaunch from "@/components/animations/RadarLaunch";
 import { useAuth } from "@/contexts/auth-context";
 import { scanTypeLabel, scanTypeSubtitle, phaseLabel, phaseDesc } from "@/lib/labels";
 
@@ -107,6 +108,10 @@ function NewScanContent() {
 
   // Plan-limit modal ("scan" | "target")
   const [planLimit, setPlanLimit] = useState<null | "scan" | "target">(null);
+
+  // Cinematic radar lead-in shown on the confirm step before the scan actually fires.
+  // Purely visual: onDone runs the existing handleCreate (which keeps all 403/validation handling).
+  const [launching, setLaunching] = useState(false);
 
   // Step state
   const [step, setStep] = useState(1);
@@ -245,6 +250,18 @@ function NewScanContent() {
 
     setLastPayload(payload);
     createScanMutation.mutate(payload);
+  };
+
+  // Confirm-button entry point: play the radar lead-in, then fire the real scan.
+  // RadarLaunch's onDone calls handleCreate so all validation / 403 handling is untouched.
+  const handleLaunch = () => {
+    if (createScanMutation.isPending || launching) return;
+    setLaunching(true);
+  };
+
+  const handleRadarDone = () => {
+    setLaunching(false);
+    handleCreate();
   };
 
   const handleVerified = () => {
@@ -896,13 +913,13 @@ function NewScanContent() {
               </button>
               <motion.button
                 type="button"
-                onClick={handleCreate}
-                disabled={createScanMutation.isPending}
-                whileHover={{ scale: createScanMutation.isPending ? 1 : 1.02 }}
-                whileTap={{ scale: createScanMutation.isPending ? 1 : 0.98 }}
+                onClick={handleLaunch}
+                disabled={createScanMutation.isPending || launching}
+                whileHover={{ scale: createScanMutation.isPending || launching ? 1 : 1.02 }}
+                whileTap={{ scale: createScanMutation.isPending || launching ? 1 : 0.98 }}
                 className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-cyan px-4 py-3 font-display text-[13px] font-bold uppercase tracking-[0.12em] text-app shadow-glow-cyan transition-colors duration-150 disabled:cursor-not-allowed disabled:opacity-70"
               >
-                {createScanMutation.isPending ? (
+                {createScanMutation.isPending || launching ? (
                   <>
                     <motion.span
                       animate={{ rotate: 360 }}
@@ -940,6 +957,9 @@ function NewScanContent() {
         kind={planLimit ?? "scan"}
         onClose={() => setPlanLimit(null)}
       />
+
+      {/* Cinematic radar lead-in — visual only; onDone fires the real scan via handleCreate */}
+      <RadarLaunch active={launching} onDone={handleRadarDone} />
     </div>
   );
 }

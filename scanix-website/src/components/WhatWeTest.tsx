@@ -1,5 +1,6 @@
 "use client";
 
+import { useRef } from "react";
 import { useTranslations } from "next-intl";
 import { motion } from "framer-motion";
 import { Search, Bug, Globe, KeyRound, Lock, Cpu, ArrowRight } from "lucide-react";
@@ -7,6 +8,8 @@ import { Link } from "@/lib/navigation";
 
 export function WhatWeTest() {
   const t = useTranslations("what");
+
+  const videoRefs = useRef<Array<HTMLVideoElement | null>>([]);
 
   const cards = [
     { icon: Search, title: t("card1Title"), text: t("card1Text") },
@@ -16,6 +19,21 @@ export function WhatWeTest() {
     { icon: Lock, title: t("card5Title"), text: t("card5Text") },
     { icon: Cpu, title: t("card6Title"), text: t("card6Text") },
   ];
+
+  const handleEnter = (index: number): void => {
+    const video = videoRefs.current[index];
+    if (!video) return;
+    void video.play().catch(() => {
+      /* autoplay/play interruption is non-fatal */
+    });
+  };
+
+  const handleLeave = (index: number): void => {
+    const video = videoRefs.current[index];
+    if (!video) return;
+    video.pause();
+    video.currentTime = 0;
+  };
 
   return (
     <section
@@ -51,15 +69,36 @@ export function WhatWeTest() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.4, delay: i * 0.08 }}
-              className="rounded-xl border border-grid bg-card p-6 transition hover:border-cyan/30"
+              onMouseEnter={() => handleEnter(i)}
+              onMouseLeave={() => handleLeave(i)}
+              className="sxt-card group relative overflow-hidden rounded-xl border border-grid bg-card p-6 transition hover:border-cyan/30"
             >
-              <Icon className="h-7 w-7 text-cyan" strokeWidth={2} />
-              <h3 className="mt-4 font-display text-lg font-bold text-ink">
-                {card.title}
-              </h3>
-              <p className="mt-2 text-[15px] leading-relaxed text-ink-muted">
-                {card.text}
-              </p>
+              {/* Hover video preview (behind text) */}
+              <video
+                ref={(el) => {
+                  videoRefs.current[i] = el;
+                }}
+                src="/videos/animatie2.mp4"
+                muted
+                loop
+                playsInline
+                preload="none"
+                aria-hidden="true"
+                tabIndex={-1}
+                className="sxt-card-video pointer-events-none absolute inset-0 z-0 h-full w-full rounded-[inherit] object-cover opacity-0 transition-opacity duration-300"
+              />
+              {/* Dark overlay to keep text readable while video plays */}
+              <div className="sxt-card-scrim pointer-events-none absolute inset-0 z-[1] rounded-[inherit] bg-card/70 opacity-0 transition-opacity duration-300" />
+
+              <div className="relative z-[2]">
+                <Icon className="h-7 w-7 text-cyan" strokeWidth={2} />
+                <h3 className="mt-4 font-display text-lg font-bold text-ink">
+                  {card.title}
+                </h3>
+                <p className="mt-2 text-[15px] leading-relaxed text-ink-muted">
+                  {card.text}
+                </p>
+              </div>
             </motion.div>
           );
         })}
@@ -81,6 +120,19 @@ export function WhatWeTest() {
           <ArrowRight className="h-4 w-4" strokeWidth={2} />
         </Link>
       </motion.div>
+
+      <style>{`
+        .sxt-card:hover .sxt-card-video,
+        .sxt-card:hover .sxt-card-scrim {
+          opacity: 1;
+        }
+        @media (hover: none) {
+          .sxt-card:hover .sxt-card-video,
+          .sxt-card:hover .sxt-card-scrim {
+            opacity: 0;
+          }
+        }
+      `}</style>
     </section>
   );
 }

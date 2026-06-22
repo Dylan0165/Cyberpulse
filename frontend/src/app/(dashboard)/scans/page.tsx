@@ -4,8 +4,10 @@ import { useQuery } from "@tanstack/react-query";
 import { dashboardApi } from "@/lib/api";
 import Link from "next/link";
 import { useState } from "react";
-import { Shield, Plus, Search, ArrowRight, Download } from "lucide-react";
+import { Shield, Plus, Search, ArrowRight, Download, ShieldCheck } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { scanTypeLabel, statusLabel } from "@/lib/labels";
+import FloatingEmptyState from "@/components/animations/FloatingEmptyState";
 
 type StatusFilter = "all" | "running" | "completed" | "failed" | "pending";
 
@@ -234,27 +236,29 @@ function FindingsSummary({ scan }: { scan: any }) {
 }
 
 function EmptyState({ hasFilter }: { hasFilter: boolean }) {
+  const router = useRouter();
+
+  if (hasFilter) {
+    return (
+      <div className="rounded-2xl border border-border bg-card p-16 text-center shadow-apple">
+        <Shield className="h-12 w-12 text-muted-foreground/20 mx-auto mb-4" />
+        <p className="text-[17px] font-semibold mb-2">Geen resultaten</p>
+        <p className="text-[14px] text-muted-foreground mb-6">
+          Pas de filters aan of wis de zoekopdracht.
+        </p>
+      </div>
+    );
+  }
+
   return (
-    <div className="rounded-2xl border border-border bg-card p-16 text-center shadow-apple">
-      <Shield className="h-12 w-12 text-muted-foreground/20 mx-auto mb-4" />
-      <p className="text-[17px] font-semibold mb-2">
-        {hasFilter ? "Geen resultaten" : "Nog geen scans uitgevoerd"}
-      </p>
-      <p className="text-[14px] text-muted-foreground mb-6">
-        {hasFilter
-          ? "Pas de filters aan of wis de zoekopdracht."
-          : "Start je eerste penetratietest om resultaten te zien."}
-      </p>
-      {!hasFilter && (
-        <Link
-          href="/scans/new"
-          className="inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-[14px] font-semibold transition-opacity hover:opacity-90"
-          style={{ background: "#0071e3", color: "#fff" }}
-        >
-          <Plus className="h-4 w-4" />
-          Scan starten
-        </Link>
-      )}
+    <div className="rounded-2xl border border-border bg-card shadow-apple">
+      <FloatingEmptyState
+        icon={ShieldCheck}
+        title="Nog geen scans uitgevoerd"
+        description="Start je eerste penetratietest om resultaten te zien."
+        ctaLabel="Scan starten"
+        onCta={() => router.push("/scans/new")}
+      />
     </div>
   );
 }

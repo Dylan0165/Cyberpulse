@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
@@ -12,6 +12,7 @@ import { ArrowRight } from "lucide-react";
  */
 function StepVideo({ src }: { src: string }) {
   const ref = useRef<HTMLVideoElement>(null);
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
     const el = ref.current;
@@ -31,16 +32,40 @@ function StepVideo({ src }: { src: string }) {
   }, []);
 
   return (
-    <video
-      ref={ref}
-      src={src}
-      autoPlay
-      muted
-      loop
-      playsInline
-      preload="none"
-      className="mx-auto aspect-square w-full max-w-[280px] rounded-lg border border-[#0D1F35] object-cover"
-    />
+    <div className="relative mx-auto aspect-square w-full max-w-[280px] overflow-hidden rounded-2xl border border-cyan-500/30">
+      {/* Loading skeleton: shimmer placeholder shown until the first frame is
+          ready, then hidden so it never lingers over the playing video. */}
+      {!ready && (
+        <div className="sxw-how-skeleton pointer-events-none absolute inset-0 bg-grid" />
+      )}
+      <video
+        ref={ref}
+        src={src}
+        autoPlay
+        muted
+        loop
+        playsInline
+        preload="none"
+        onCanPlay={() => setReady(true)}
+        className="h-full w-full object-cover"
+      />
+      <style>{`
+        @keyframes sxw-how-shimmer {
+          0% { background-position: -150% 0; }
+          100% { background-position: 250% 0; }
+        }
+        .sxw-how-skeleton {
+          background-image: linear-gradient(
+            110deg,
+            rgba(13, 31, 53, 0) 20%,
+            rgba(0, 180, 216, 0.18) 50%,
+            rgba(13, 31, 53, 0) 80%
+          );
+          background-size: 200% 100%;
+          animation: sxw-how-shimmer 1.6s linear infinite;
+        }
+      `}</style>
+    </div>
   );
 }
 

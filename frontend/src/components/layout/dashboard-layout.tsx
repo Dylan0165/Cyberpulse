@@ -6,6 +6,7 @@ import { LogoutButton } from "./logout-button";
 import { PageTransition } from "@/components/cyber/page-transition";
 import { TermsModal } from "@/components/cyber/terms-modal";
 import { TrialBanner } from "@/components/cyber/trial-banner";
+import CinematicIntro from "@/components/animations/CinematicIntro";
 import { useAuth } from "@/contexts/auth-context";
 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -14,6 +15,8 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex h-screen overflow-hidden bg-app">
+      {/* Once-per-session cinematic intro (self-gates via sessionStorage + reduced-motion) */}
+      <CinematicIntro />
       <Sidebar />
       <main className="flex-1 overflow-auto">
         {/* Slim top header bar */}

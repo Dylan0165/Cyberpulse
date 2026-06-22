@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { motion } from "framer-motion";
 import { toast } from "sonner";
 import {
   CreditCard, ArrowRight, ExternalLink, Sparkles, Calendar, Infinity as InfinityIcon,
@@ -10,6 +9,9 @@ import {
 import { GlowCard } from "@/components/cyber/glow-card";
 import { useAuth } from "@/contexts/auth-context";
 import { billingApi } from "@/lib/api";
+import TiltCard from "@/components/animations/TiltCard";
+import ShineButton from "@/components/animations/ShineButton";
+import { usePrefersReducedMotion } from "@/hooks/useAnimation";
 
 function formatDate(value?: string | null): string {
   if (!value) return "—";
@@ -34,8 +36,12 @@ const INTERVAL_LABEL: Record<string, string> = {
 export default function BillingPage() {
   const { planInfo } = useAuth();
   const [loadingPortal, setLoadingPortal] = useState(false);
+  const [cardHover, setCardHover] = useState(false);
+  const reduced = usePrefersReducedMotion();
 
   const planName = String(planInfo?.plan ?? "—").toUpperCase();
+  // "Business" is the recommended/flagship plan — give its card extra flair.
+  const isRecommended = String(planInfo?.plan ?? "").toLowerCase() === "business";
   const interval = planInfo?.plan_interval
     ? INTERVAL_LABEL[planInfo.plan_interval] ?? planInfo.plan_interval
     : null;
@@ -83,7 +89,58 @@ export default function BillingPage() {
       </div>
 
       {/* Current plan card */}
-      <GlowCard glowColor="#00B4D8" accentBorder="#00B4D8" className="p-6">
+      <style>{`
+        @keyframes sxd3-billing-hue {
+          0%   { filter: hue-rotate(0deg); }
+          100% { filter: hue-rotate(360deg); }
+        }
+        .sxd3-billing-gradient {
+          position: absolute;
+          inset: -1px;
+          border-radius: 0.85rem;
+          padding: 1px;
+          background: linear-gradient(120deg, #00B4D8, #00FF88, #A855F7, #00B4D8);
+          background-size: 300% 300%;
+          -webkit-mask:
+            linear-gradient(#fff 0 0) content-box,
+            linear-gradient(#fff 0 0);
+          -webkit-mask-composite: xor;
+          mask-composite: exclude;
+          animation: sxd3-billing-hue 8s linear infinite, sxd3-billing-flow 6s ease-in-out infinite;
+          pointer-events: none;
+          z-index: 1;
+        }
+        @keyframes sxd3-billing-flow {
+          0%, 100% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+        }
+        .motion-reduce\\:sxd3-still .sxd3-billing-gradient { animation: none; }
+      `}</style>
+      <TiltCard className="relative motion-reduce:sxd3-still">
+        {isRecommended && !reduced && <span className="sxd3-billing-gradient" aria-hidden="true" />}
+        <div
+          className="relative"
+          onMouseEnter={() => setCardHover(true)}
+          onMouseLeave={() => setCardHover(false)}
+        >
+          <GlowCard glowColor="#00B4D8" accentBorder="#00B4D8" className="relative overflow-hidden p-6">
+            {/* Subtle demo video preview behind the text on hover */}
+            <video
+              src="/videos/demo1.mp4"
+              muted
+              loop
+              playsInline
+              preload="none"
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-0 transition-opacity duration-700 motion-reduce:hidden"
+              style={{ opacity: cardHover && !reduced ? 0.12 : 0 }}
+              ref={(el) => {
+                if (!el) return;
+                if (cardHover && !reduced) void el.play().catch(() => {});
+                else el.pause();
+              }}
+            />
+            <div className="relative">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <span className="flex h-10 w-10 items-center justify-center rounded-lg border border-grid bg-app">
@@ -141,17 +198,14 @@ export default function BillingPage() {
         </div>
 
         <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-          <motion.button
-            type="button"
+          <ShineButton
             onClick={openPortal}
             disabled={loadingPortal}
-            whileHover={{ scale: loadingPortal ? 1 : 1.02 }}
-            whileTap={{ scale: loadingPortal ? 1 : 0.98 }}
-            className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-cyan px-4 py-2.5 font-display text-[12px] font-bold uppercase tracking-[0.1em] text-app shadow-glow-cyan transition-colors duration-150 disabled:cursor-not-allowed disabled:opacity-70"
+            className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-cyan px-4 py-2.5 font-display text-[12px] font-bold uppercase tracking-[0.1em] text-app shadow-glow-cyan transition-transform duration-150 hover:scale-[1.02] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-70"
           >
             {loadingPortal ? "Bezig..." : "Beheer abonnement"}
             {!loadingPortal && <ExternalLink className="h-4 w-4" />}
-          </motion.button>
+          </ShineButton>
 
           <Link
             href="https://scanix.nl/prijzen"
@@ -162,7 +216,10 @@ export default function BillingPage() {
             <Sparkles className="h-4 w-4" /> Upgrade pakket <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
-      </GlowCard>
+            </div>
+          </GlowCard>
+        </div>
+      </TiltCard>
 
       <p className="text-center font-mono text-[11px] text-ink-muted">
         Vragen over uw abonnement? Mail naar{" "}

@@ -8,8 +8,9 @@ import {
   AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer,
 } from "recharts";
 import {
-  ScanLine, Target, AlertTriangle, BarChart3,
+  ScanLine, Target, AlertTriangle, BarChart3, Radar,
 } from "lucide-react";
+import FloatingEmptyState from "@/components/animations/FloatingEmptyState";
 
 import { statusLabel } from "@/lib/labels";
 import { StatCard } from "@/components/cyber/stat-card";
@@ -224,10 +225,14 @@ export default function DashboardPage() {
               ))}
             </div>
           ) : recentScans.length === 0 ? (
-            <div className="rounded-lg border border-grid bg-card2 p-8">
-              <div className="terminal-cursor font-mono text-[13px] text-ink-muted">
-                Nog geen scans uitgevoerd. Start uw eerste scan.
-              </div>
+            <div className="rounded-lg border border-grid bg-card2">
+              <FloatingEmptyState
+                icon={Radar}
+                title="Nog geen scans uitgevoerd"
+                description="Start uw eerste scan om resultaten te zien."
+                ctaLabel="Start uw eerste scan"
+                onCta={() => router.push("/scans/new")}
+              />
             </div>
           ) : (
             <div className="space-y-2.5">

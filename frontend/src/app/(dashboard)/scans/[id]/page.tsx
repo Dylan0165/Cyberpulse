@@ -15,6 +15,10 @@ import {
 import Link from "next/link";
 
 import { scanTypeLabel, statusLabel, riskBand, severityLabel } from "@/lib/labels";
+import MatrixRain from "@/components/animations/MatrixRain";
+import AnimatedCheckmark from "@/components/animations/AnimatedCheckmark";
+import Confetti from "@/components/animations/Confetti";
+import { usePrefersReducedMotion } from "@/hooks/useAnimation";
 import { GlowCard } from "@/components/cyber/glow-card";
 import { RiskBadge, severityColor } from "@/components/cyber/risk-badge";
 import { RiskGauge } from "@/components/cyber/risk-gauge";
@@ -97,6 +101,7 @@ export default function ScanDetailPage() {
   const [expandedFinding, setExpandedFinding] = useState<number | null>(null);
   const [selectedNode, setSelectedNode] = useState<SurfaceNode | null>(null);
   const wsRef = useRef<WebSocket | null>(null);
+  const reducedMotion = usePrefersReducedMotion();
 
   const { data: scan, isLoading } = useQuery({
     queryKey: ["scan", scanId],
@@ -112,6 +117,8 @@ export default function ScanDetailPage() {
     queryFn: () => scansApi.getReport(scanId).then(r => r.data),
     enabled: scan?.status === "completed",
   });
+
+  const scanActive = scan?.status === "running" || scan?.status === "analyzing";
 
   const startMutation = useMutation({
     mutationFn: () => scansApi.start(scanId),
@@ -416,6 +423,64 @@ export default function ScanDetailPage() {
 
   return (
     <div className="space-y-6">
+      <style>{`
+        @keyframes sxd2-term-glow {
+          0%, 100% { box-shadow: 0 0 0 1px rgba(0,212,255,0.15), 0 0 12px rgba(0,212,255,0.15); }
+          50%      { box-shadow: 0 0 0 1px rgba(0,212,255,0.45), 0 0 26px rgba(0,212,255,0.40); }
+        }
+        .sxd2-terminal-active { animation: sxd2-term-glow 2.4s ease-in-out infinite; }
+
+        @keyframes sxd2-phase-pulse {
+          0%, 100% { transform: scale(1); filter: drop-shadow(0 0 2px rgba(0,212,255,0.5)); }
+          50%      { transform: scale(1.18); filter: drop-shadow(0 0 8px rgba(0,212,255,0.9)); }
+        }
+        .sxd2-phase-pulse { display: inline-flex; animation: sxd2-phase-pulse 1.4s ease-in-out infinite; }
+
+        @keyframes sxd2-slide-in {
+          from { opacity: 0; transform: translateX(28px); }
+          to   { opacity: 1; transform: translateX(0); }
+        }
+        .sxd2-finding-slide { animation: sxd2-slide-in 0.5s cubic-bezier(0.2,0.7,0.2,1) both; }
+
+        @keyframes sxd2-badge-breathe {
+          0%, 100% { box-shadow: 0 0 0 0 var(--sxd2-sev, #00D4FF); filter: drop-shadow(0 0 2px var(--sxd2-sev, #00D4FF)); }
+          50%      { filter: drop-shadow(0 0 7px var(--sxd2-sev, #00D4FF)); }
+        }
+        .sxd2-badge-breathe { display: inline-flex; animation: sxd2-badge-breathe 2.2s ease-in-out infinite; }
+
+        @keyframes sxd2-crit-flash {
+          0%   { opacity: 0; transform: translateX(28px); }
+          12%  { opacity: 1; transform: translateX(0); }
+          24%  { background-color: rgba(255,45,85,0.22); transform: translateX(-3px); }
+          32%  { transform: translateX(3px); }
+          40%  { transform: translateX(-2px); }
+          48%  { transform: translateX(0); background-color: rgba(255,45,85,0.10); }
+          100% { background-color: transparent; }
+        }
+        .sxd2-critical-flash { animation: sxd2-crit-flash 1.2s ease-out 1 both; }
+
+        @keyframes sxd2-shine-sweep {
+          0%   { transform: translateX(-130%) skewX(-18deg); }
+          60%, 100% { transform: translateX(230%) skewX(-18deg); }
+        }
+        .sxd2-shine::after {
+          content: "";
+          position: absolute;
+          top: 0; left: 0; bottom: 0;
+          width: 45%;
+          pointer-events: none;
+          background: linear-gradient(90deg, transparent, rgba(255,255,255,0.55), transparent);
+          animation: sxd2-shine-sweep 3s ease-in-out infinite;
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .sxd2-terminal-active,
+          .sxd2-phase-pulse,
+          .sxd2-finding-slide,
+          .sxd2-badge-breathe,
+          .sxd2-critical-flash { animation: none !important; }
+          .sxd2-shine::after { animation: none !important; display: none; }
+        }
+      `}</style>
       <TopProgressBar
         active={["running", "analyzing", "pending"].includes(scan.status)}
         progress={scan.progress ?? 0}
@@ -601,7 +666,13 @@ export default function ScanDetailPage() {
                     onClick={() => setPhases(prev => prev.map(p => p.name === phase.name ? { ...p, expanded: !p.expanded } : p))}
                     className="flex w-full items-center gap-2.5 px-3 py-2.5 text-left"
                   >
-                    <span className={phase.status === "running" ? "rounded-full animate-pulse-ring" : ""}>
+                    <span
+                      className={
+                        phase.status === "running"
+                          ? "rounded-full animate-pulse-ring motion-reduce:animate-none sxd2-phase-pulse"
+                          : ""
+                      }
+                    >
                       <PhaseIcon status={phase.status} />
                     </span>
                     <span className="flex-1 font-mono text-[12px] font-medium text-ink">{phase.display}</span>
@@ -632,8 +703,17 @@ export default function ScanDetailPage() {
             </div>
 
             {/* Terminal */}
-            <div className="lg:col-span-3">
-              <TerminalOutput lines={renderLines} complete={scan.status === "completed"} />
+            <div
+              className={`relative overflow-hidden rounded-lg lg:col-span-3 ${
+                scanActive && !reducedMotion ? "sxd2-terminal-active" : ""
+              }`}
+            >
+              {!reducedMotion && (
+                <MatrixRain className="pointer-events-none absolute inset-0 z-0 opacity-40 motion-reduce:hidden" />
+              )}
+              <div className="relative z-10">
+                <TerminalOutput lines={renderLines} complete={scan.status === "completed"} />
+              </div>
             </div>
           </motion.div>
         )}
@@ -697,18 +777,34 @@ export default function ScanDetailPage() {
                     transition={{ delay: Math.min(i * 0.03, 0.3) }}
                   >
                     <div
-                      className="overflow-hidden rounded-lg border border-grid bg-card2"
-                      style={
-                        sev === "critical" ? { borderLeft: "2px solid #FF2D55" }
-                        : sev === "high"   ? { borderLeft: "2px solid #FF8C00" }
-                        : undefined
-                      }
+                      className={`overflow-hidden rounded-lg border border-grid bg-card2 ${
+                        reducedMotion
+                          ? ""
+                          : critical
+                          ? "sxd2-critical-flash"
+                          : "sxd2-finding-slide"
+                      }`}
+                      style={{
+                        ...(sev === "critical"
+                          ? { borderLeft: "2px solid #FF2D55" }
+                          : sev === "high"
+                          ? { borderLeft: "2px solid #FF8C00" }
+                          : {}),
+                        ...(reducedMotion ? {} : { animationDelay: `${i * 80}ms` }),
+                      }}
                     >
                       <button
                         onClick={() => setExpandedFinding(open ? null : i)}
                         className="flex w-full items-center gap-3 px-4 py-3 text-left"
                       >
-                        <RiskBadge severity={sev} />
+                        <span
+                          className={reducedMotion ? "" : "sxd2-badge-breathe"}
+                          style={
+                            { "--sxd2-sev": severityColor(sev) } as React.CSSProperties
+                          }
+                        >
+                          <RiskBadge severity={sev} />
+                        </span>
                         <span className="flex-1 text-[14px] font-medium text-ink">{f.title}</span>
                         {f.cvss != null && (
                           <span className="rounded bg-panel px-2 py-0.5 font-mono text-[11px] text-ink-muted">
@@ -761,6 +857,12 @@ export default function ScanDetailPage() {
               </div>
             ) : (
               <>
+                {/* Scan voltooid banner */}
+                <div className="flex items-center justify-center gap-2.5 font-mono text-[13px] uppercase tracking-wider text-neon-green">
+                  <AnimatedCheckmark size={28} />
+                  <span>Scan voltooid</span>
+                </div>
+                {!reducedMotion && riskScore < 30 && <Confetti trigger={true} />}
                 {/* Risk header */}
                 <GlowCard className="flex flex-wrap items-center gap-8 p-6">
                   <RiskGauge score={aiReport.risk_score ?? riskScore} size={150} />
@@ -772,14 +874,16 @@ export default function ScanDetailPage() {
                   </div>
                   {/* Export buttons */}
                   <div className="flex flex-wrap gap-2">
-                    <ActionButton variant="primary" onClick={async () => {
-                      const res = await reportsApi.downloadPdf(scanId);
-                      const url = URL.createObjectURL(new Blob([res.data]));
-                      Object.assign(document.createElement("a"), { href: url, download: `rapport-${scanId}.pdf` }).click();
-                      URL.revokeObjectURL(url);
-                    }}>
-                      <FileText className="h-3.5 w-3.5" />PDF
-                    </ActionButton>
+                    <span className="relative inline-block overflow-hidden rounded-md sxd2-shine">
+                      <ActionButton variant="primary" onClick={async () => {
+                        const res = await reportsApi.downloadPdf(scanId);
+                        const url = URL.createObjectURL(new Blob([res.data]));
+                        Object.assign(document.createElement("a"), { href: url, download: `rapport-${scanId}.pdf` }).click();
+                        URL.revokeObjectURL(url);
+                      }}>
+                        <FileText className="h-3.5 w-3.5" />PDF
+                      </ActionButton>
+                    </span>
                     <ActionButton variant="ghost" onClick={async () => {
                       const res = await reportsApi.downloadJson(scanId);
                       const url = URL.createObjectURL(new Blob([res.data]));
