@@ -335,12 +335,19 @@ function OverviewTab() {
           index={5}
         />
         <StatCard
-          label="Credit-omzet (30d)"
-          value={Number(stats?.credits?.revenue_30d_eur ?? 0)}
+          label="Credit-omzet (totaal)"
+          value={Number(stats?.credits?.revenue_eur ?? 0)}
           icon={TrendingUp}
           color="#A855F7"
           index={6}
           suffix="€"
+        />
+        <StatCard
+          label="Credits in omloop"
+          value={Number(stats?.credits?.in_circulation ?? 0)}
+          icon={Zap}
+          color="#FFB020"
+          index={7}
         />
       </div>
 

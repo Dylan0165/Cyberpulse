@@ -6,37 +6,16 @@ import { toast } from "sonner";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Zap, ArrowRight, Check, Infinity as InfinityIcon, Star, ShieldCheck,
-  Lock, Sparkles, CreditCard,
+  Lock, Sparkles, CreditCard, Crown,
 } from "lucide-react";
 import { GlowCard } from "@/components/cyber/glow-card";
-import { billingApi, type CreditsBalance, type CreditPurchase } from "@/lib/api";
-
-// ── Credit packages (mirrors backend CREDIT_PACKAGES) ───────────────────────────
-type Pkg = {
-  key: string;
-  name: string;
-  credits: number;
-  price: number; // eurocents
-  perScan: number; // euros
-  save?: string;
-  popular?: boolean;
-};
-
-const PACKAGES: Pkg[] = [
-  { key: "kennismaking", name: "Kennismaking", credits: 1, price: 4900, perScan: 49 },
-  { key: "starter", name: "Starter", credits: 3, price: 11900, perScan: 40, save: "Bespaar €28" },
-  { key: "groei", name: "Groei", credits: 10, price: 34900, perScan: 35, save: "Bespaar €141", popular: true },
-  { key: "pro", name: "Pro", credits: 25, price: 74900, perScan: 30, save: "Bespaar €476" },
-];
+import { billingApi, type CreditPackage, type CreditPurchase } from "@/lib/api";
+import { useCredits, formatEuroCents, formatEuroWhole } from "@/hooks/useCredits";
 
 const SUBSCRIPTIONS = [
   { name: "Business", price: "€199/mnd", perks: ["Onbeperkt scans", "5 targets", "Geplande scans"] },
   { name: "Enterprise", price: "€599/mnd", perks: ["Onbeperkt scans", "20 targets", "White-label"] },
 ];
-
-function euro(cents: number): string {
-  return `€${(cents / 100).toLocaleString("nl-NL")}`;
-}
 
 function formatDate(value?: string | null): string {
   if (!value) return "—";
@@ -50,16 +29,11 @@ function formatDate(value?: string | null): string {
 export default function BillingPage() {
   const qc = useQueryClient();
   const [buying, setBuying] = useState<string | null>(null);
-
-  const { data: balance } = useQuery<CreditsBalance>({
-    queryKey: ["credits-balance"],
-    queryFn: () => billingApi.creditsBalance().then((r) => r.data),
-    retry: false,
-  });
+  const { balance } = useCredits();
 
   const { data: history } = useQuery<CreditPurchase[]>({
     queryKey: ["credit-history"],
-    queryFn: () => billingApi.history().then((r) => r.data),
+    queryFn: () => billingApi.creditsHistory().then((r) => r.data),
     retry: false,
   });
 
@@ -81,6 +55,17 @@ export default function BillingPage() {
   const unlimited = !!balance?.is_unlimited;
   const remaining = unlimited ? Infinity : Number(balance?.credits_remaining ?? 0);
   const total = Number(balance?.credits_total ?? 0);
+  const packages: CreditPackage[] = balance?.packages ?? [];
+  const progress = total > 0 && !unlimited ? Math.min(100, Math.round((remaining / total) * 100)) : 0;
+
+  // Balance colour-coding: green 3+, orange 1-2, red 0, purple unlimited.
+  const balanceTone = unlimited
+    ? "text-violet-300"
+    : remaining >= 3
+    ? "text-neon-green"
+    : remaining >= 1
+    ? "text-neon-orange"
+    : "text-neon-red";
 
   const buy = async (pkg: string) => {
     if (buying) return;
@@ -116,123 +101,126 @@ export default function BillingPage() {
         </p>
       </div>
 
-      {/* ── Sectie 1: huidig saldo ── */}
-      <GlowCard glowColor="#00B4D8" className="p-6">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
-            <span className="flex h-12 w-12 items-center justify-center rounded-lg border border-cyan/40 bg-cyan/10">
-              <Zap className="h-6 w-6 text-cyan" fill="currentColor" />
-            </span>
-            <div>
-              <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-ink-muted">Uw saldo</p>
-              {unlimited ? (
-                <p className="flex items-center gap-1.5 font-display text-2xl font-bold text-violet-300">
-                  <InfinityIcon className="h-6 w-6" /> Onbeperkt
-                </p>
-              ) : (
-                <p className="font-display text-2xl font-bold text-ink">
-                  {remaining} <span className="text-base font-medium text-ink-muted">credits</span>
-                </p>
-              )}
+      {/* Rode banner bij 0 credits */}
+      {!unlimited && remaining <= 0 && (
+        <div className="flex items-center gap-2 rounded-lg border border-neon-red/50 bg-neon-red/10 px-4 py-3 font-mono text-[12px] font-semibold text-neon-red">
+          <Zap className="h-4 w-4" fill="currentColor" />
+          U heeft geen credits meer. Koop credits om door te gaan met scannen.
+        </div>
+      )}
+
+      {/* ── Sectie 1: huidig saldo (sticky) ── */}
+      <div className="sticky top-2 z-10">
+        <GlowCard glowColor={remaining <= 0 && !unlimited ? "#FF3B5C" : "#00B4D8"} className="p-6">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <span className={`flex h-12 w-12 items-center justify-center rounded-lg border ${
+                unlimited ? "border-violet-400/40 bg-violet-400/10" : "border-cyan/40 bg-cyan/10"
+              } ${remaining <= 0 && !unlimited ? "animate-pulse" : ""}`}>
+                {unlimited ? <InfinityIcon className="h-6 w-6 text-violet-300" /> : <Zap className="h-6 w-6 text-cyan" fill="currentColor" />}
+              </span>
+              <div>
+                <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-ink-muted">Beschikbaar</p>
+                {unlimited ? (
+                  <p className="flex items-center gap-1.5 font-display text-2xl font-bold text-violet-300">
+                    <InfinityIcon className="h-6 w-6" /> Onbeperkt
+                  </p>
+                ) : (
+                  <p className={`font-display text-2xl font-bold ${balanceTone} ${remaining <= 0 ? "animate-pulse" : ""}`}>
+                    {remaining} <span className="text-base font-medium text-ink-muted">credits</span>
+                  </p>
+                )}
+              </div>
+            </div>
+            <div className="text-right">
+              <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-ink-muted">Totaal ooit gekocht</p>
+              <p className="font-display text-lg font-semibold text-ink">{total} credits</p>
             </div>
           </div>
-          <div className="text-right">
-            <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-ink-muted">Totaal ooit gekocht</p>
-            <p className="font-display text-lg font-semibold text-ink">{total}</p>
-          </div>
-        </div>
 
-        {!unlimited && remaining <= 0 && (
-          <div className="mt-4 flex items-center gap-2 rounded-lg border border-neon-red/50 bg-neon-red/10 px-4 py-3 font-mono text-[12px] text-neon-red">
-            <Zap className="h-4 w-4" fill="currentColor" />
-            U heeft geen credits meer. Koop hieronder een pakket om verder te gaan.
-          </div>
-        )}
-      </GlowCard>
+          {/* Progressiebalk */}
+          {!unlimited && total > 0 && (
+            <div className="mt-4 h-1.5 w-full overflow-hidden rounded-full bg-card2">
+              <div
+                className={`h-full rounded-full transition-all ${remaining >= 3 ? "bg-neon-green" : remaining >= 1 ? "bg-neon-orange" : "bg-neon-red"}`}
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+          )}
+        </GlowCard>
+      </div>
 
-      {/* ── Sectie 2: credit pakketten ── */}
+      {/* ── Sectie 2: credits bijkopen ── */}
       <div>
-        <h2 className="mb-4 font-display text-lg font-bold text-ink">Koop credits</h2>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {PACKAGES.map((p) => (
-            <div
-              key={p.key}
-              className={`relative flex flex-col rounded-xl border bg-card2 p-5 ${
-                p.popular ? "border-cyan/60 shadow-glow-cyan" : "border-grid"
-              }`}
-            >
-              {p.popular && (
-                <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 inline-flex items-center gap-1 rounded-full bg-cyan px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-widest text-app">
-                  <Star className="h-3 w-3" fill="currentColor" /> Meest gekozen
-                </span>
-              )}
-              <p className="font-display text-[15px] font-bold text-ink">{p.name}</p>
-              <div className="mt-3 flex items-end gap-1">
-                <span className="font-display text-3xl font-bold text-ink">{euro(p.price)}</span>
-              </div>
-              <div className="mt-3 flex items-center gap-1.5 font-mono text-[13px] text-cyan">
-                <Zap className="h-3.5 w-3.5" fill="currentColor" />
-                {p.credits} {p.credits === 1 ? "credit" : "credits"}
-              </div>
-              <p className="mt-1 font-mono text-[11px] text-ink-muted">€{p.perScan} per scan</p>
-              {p.save && (
-                <p className="mt-2 inline-flex w-fit rounded-md bg-neon-green/10 px-2 py-0.5 font-mono text-[10px] font-semibold text-neon-green">
-                  {p.save}
-                </p>
-              )}
-              <p className="mt-2 inline-flex w-fit items-center gap-1 font-mono text-[10px] text-ink-muted">
-                <Check className="h-3 w-3 text-neon-green" /> Verlopen nooit
-              </p>
-
-              <button
-                type="button"
-                onClick={() => buy(p.key)}
-                disabled={buying !== null}
-                className={`mt-5 inline-flex w-full items-center justify-center gap-2 rounded-lg px-4 py-2.5 font-display text-[12px] font-bold uppercase tracking-[0.1em] transition-all active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 ${
-                  p.popular
-                    ? "bg-cyan text-app shadow-glow-cyan hover:scale-[1.02]"
-                    : "border border-grid bg-app text-ink hover:border-cyan/50 hover:text-cyan"
+        <h2 className="font-display text-lg font-bold text-ink">Credits bijkopen</h2>
+        <p className="mb-4 mt-1 font-mono text-[12px] text-ink-muted">
+          Eenmalige betaling — credits verlopen nooit.
+        </p>
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {packages.map((p) => {
+            const isGold = p.key === "expert";
+            const isPopular = p.popular;
+            return (
+              <div
+                key={p.key}
+                className={`relative flex flex-col rounded-xl border p-5 ${
+                  isPopular
+                    ? "border-cyan/60 bg-cyan/[0.04] shadow-glow-cyan"
+                    : isGold
+                    ? "border-amber-400/50 bg-amber-400/[0.03]"
+                    : "border-grid bg-card2"
                 }`}
               >
-                {buying === p.key ? "Bezig…" : <>Koop nu <ArrowRight className="h-4 w-4" /></>}
-              </button>
-            </div>
-          ))}
-        </div>
-      </div>
+                {isPopular && (
+                  <span className="absolute -top-2.5 left-1/2 inline-flex -translate-x-1/2 items-center gap-1 rounded-full bg-cyan px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-widest text-app">
+                    <Star className="h-3 w-3" fill="currentColor" /> Meest gekozen
+                  </span>
+                )}
+                {isGold && (
+                  <span className="absolute -top-2.5 left-1/2 inline-flex -translate-x-1/2 items-center gap-1 rounded-full bg-amber-400 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-widest text-app">
+                    <Crown className="h-3 w-3" fill="currentColor" /> Beste waarde
+                  </span>
+                )}
+                <p className="font-display text-[15px] font-bold text-ink">{p.label}</p>
+                <div className="mt-3 flex items-center gap-1.5 font-mono text-[13px] text-cyan">
+                  <Zap className="h-3.5 w-3.5" fill="currentColor" />
+                  {p.credits} {p.credits === 1 ? "credit" : "credits"}
+                </div>
+                <div className="mt-3">
+                  <span className="font-display text-3xl font-bold text-ink">{formatEuroWhole(p.price)}</span>
+                </div>
+                <p className="mt-1 font-mono text-[11px] text-ink-muted">{formatEuroWhole(p.price_per_scan)} per scan</p>
+                {p.savings > 0 ? (
+                  <p className="mt-2 inline-flex w-fit rounded-md bg-neon-green/10 px-2 py-0.5 font-mono text-[10px] font-semibold text-neon-green">
+                    Bespaar {formatEuroWhole(p.savings)}
+                  </p>
+                ) : (
+                  <p className="mt-2 inline-flex w-fit items-center gap-1 font-mono text-[10px] text-ink-muted">
+                    <Check className="h-3 w-3 text-neon-green" /> Verlopen nooit
+                  </p>
+                )}
 
-      {/* ── Sectie 3: abonnementen ── */}
-      <div>
-        <h2 className="font-display text-lg font-bold text-ink">Abonnementen</h2>
-        <p className="mb-4 mt-1 font-mono text-[12px] text-ink-muted">Voor intensieve gebruikers.</p>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          {SUBSCRIPTIONS.map((s) => (
-            <div key={s.name} className="flex flex-col rounded-xl border border-grid bg-card2 p-5">
-              <div className="flex items-center justify-between">
-                <p className="font-display text-[15px] font-bold text-ink">{s.name}</p>
-                <span className="font-display text-lg font-bold text-cyan">{s.price}</span>
+                <button
+                  type="button"
+                  onClick={() => buy(p.key)}
+                  disabled={buying !== null}
+                  className={`mt-5 inline-flex w-full items-center justify-center gap-2 rounded-lg px-4 py-2.5 font-display text-[12px] font-bold uppercase tracking-[0.1em] transition-all active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 ${
+                    isPopular
+                      ? "bg-cyan text-app shadow-glow-cyan hover:scale-[1.02]"
+                      : isGold
+                      ? "bg-amber-400 text-app hover:scale-[1.02]"
+                      : "border border-grid bg-app text-ink hover:border-cyan/50 hover:text-cyan"
+                  }`}
+                >
+                  {buying === p.key ? "Bezig…" : <>Koop nu <ArrowRight className="h-4 w-4" /></>}
+                </button>
               </div>
-              <ul className="mt-3 space-y-1.5">
-                {s.perks.map((perk) => (
-                  <li key={perk} className="flex items-center gap-2 font-mono text-[12px] text-ink-muted">
-                    <Check className="h-3.5 w-3.5 text-neon-green" /> {perk}
-                  </li>
-                ))}
-              </ul>
-              <Link
-                href="https://scanix.nl/contact"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-lg border border-grid bg-app px-4 py-2.5 font-mono text-[12px] uppercase tracking-[0.1em] text-ink-muted transition-colors hover:border-cyan/50 hover:text-cyan"
-              >
-                <Sparkles className="h-4 w-4" /> Neem contact op
-              </Link>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 
-      {/* ── Sectie 4: aankoopgeschiedenis ── */}
+      {/* ── Sectie 3: aankoopgeschiedenis ── */}
       <div>
         <h2 className="mb-4 font-display text-lg font-bold text-ink">Aankoopgeschiedenis</h2>
         <div className="overflow-x-auto rounded-xl border border-grid">
@@ -258,13 +246,13 @@ export default function BillingPage() {
                   <tr key={h.id} className="border-b border-grid/60">
                     <td className="px-4 py-3 font-mono text-[12px] text-ink-muted">{formatDate(h.created_at)}</td>
                     <td className="px-4 py-3 font-mono text-[12px] text-ink">{h.package_name}</td>
-                    <td className="px-4 py-3 font-mono text-[12px] tabular-nums text-cyan">{h.credits}</td>
+                    <td className="px-4 py-3 font-mono text-[12px] tabular-nums text-cyan">{h.credits_purchased}</td>
                     <td className="px-4 py-3 font-mono text-[12px] tabular-nums text-ink">
-                      {h.price_paid > 0 ? euro(h.price_paid) : "Gratis"}
+                      {h.price_paid > 0 ? formatEuroCents(h.price_paid) : "Gratis"}
                     </td>
                     <td className="px-4 py-3">
                       <span className="inline-flex rounded-full bg-neon-green/10 px-2 py-0.5 font-mono text-[10px] font-semibold uppercase text-neon-green">
-                        {h.status}
+                        Voltooid
                       </span>
                     </td>
                   </tr>
@@ -275,9 +263,38 @@ export default function BillingPage() {
         </div>
       </div>
 
+      {/* ── Sectie 4: abonnementen (klein) ── */}
+      <div>
+        <h2 className="font-display text-base font-bold text-ink">Voor intensieve gebruikers</h2>
+        <p className="mb-4 mt-1 font-mono text-[12px] text-ink-muted">Dagelijks scannen? Kijk naar onze abonnementen.</p>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          {SUBSCRIPTIONS.map((s) => (
+            <div key={s.name} className="flex flex-col rounded-xl border border-grid bg-card2 p-5">
+              <div className="flex items-center justify-between">
+                <p className="font-display text-[15px] font-bold text-ink">{s.name}</p>
+                <span className="font-display text-lg font-bold text-cyan">{s.price}</span>
+              </div>
+              <ul className="mt-3 space-y-1.5">
+                {s.perks.map((perk) => (
+                  <li key={perk} className="flex items-center gap-2 font-mono text-[12px] text-ink-muted">
+                    <Check className="h-3.5 w-3.5 text-neon-green" /> {perk}
+                  </li>
+                ))}
+              </ul>
+              <Link
+                href="mailto:info@scanix.nl"
+                className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-lg border border-grid bg-app px-4 py-2.5 font-mono text-[12px] uppercase tracking-[0.1em] text-ink-muted transition-colors hover:border-cyan/50 hover:text-cyan"
+              >
+                <Sparkles className="h-4 w-4" /> Neem contact op
+              </Link>
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* Trust footer */}
       <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 border-t border-grid pt-6 font-mono text-[11px] text-ink-muted">
-        <span className="inline-flex items-center gap-1.5"><ShieldCheck className="h-3.5 w-3.5 text-cyan" /> Veilig via Stripe</span>
+        <span className="inline-flex items-center gap-1.5"><ShieldCheck className="h-3.5 w-3.5 text-cyan" /> Veilig via Stripe (iDEAL &amp; kaart)</span>
         <span className="inline-flex items-center gap-1.5"><Lock className="h-3.5 w-3.5 text-cyan" /> AVG-compliant, data in EU</span>
         <span className="inline-flex items-center gap-1.5"><CreditCard className="h-3.5 w-3.5 text-cyan" /> Geen verborgen kosten</span>
       </div>

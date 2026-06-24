@@ -1,30 +1,29 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
 import { Zap, Infinity as InfinityIcon } from "lucide-react";
-import { billingApi } from "@/lib/api";
+import { useCredits } from "@/hooks/useCredits";
 
 /**
- * Credits balance pill in the top header. Polls the balance and colour-codes it:
- *   3+  → cyan, 1-2 → orange, 0 → red + pulse, business/enterprise → "∞" gold.
- * Click navigates to /billing. Hidden entirely if the balance can't be loaded.
+ * Credits balance pill in the top header. Polls the balance (30s) and
+ * colour-codes it: 3+ → cyan, 1-2 → orange, 0 → red + pulse,
+ * business/enterprise → "∞" gold. Click navigates to /billing.
  */
 export function CreditsBadge() {
   const router = useRouter();
+  const { balance, isLoading } = useCredits();
 
-  const { data } = useQuery({
-    queryKey: ["credits-balance"],
-    queryFn: () => billingApi.creditsBalance().then((r) => r.data),
-    staleTime: 30_000,
-    refetchOnWindowFocus: true,
-    retry: false,
-  });
+  // Skeleton while the first fetch is in flight.
+  if (isLoading) {
+    return <div className="h-7 w-20 animate-pulse rounded-full border border-grid bg-card2" aria-hidden />;
+  }
+  if (!balance) return null;
 
-  if (!data) return null;
-
-  const unlimited = data.is_unlimited;
-  const credits = data.credits_remaining;
+  const unlimited = balance.is_unlimited;
+  const credits = balance.credits_remaining;
+  const tooltip = unlimited
+    ? "Onbeperkt scan credits"
+    : `${credits} scan ${credits === 1 ? "credit" : "credits"} beschikbaar. Klik om bij te kopen.`;
 
   let tone: { border: string; bg: string; text: string; pulse?: boolean };
   if (unlimited) {
@@ -41,7 +40,7 @@ export function CreditsBadge() {
     <button
       type="button"
       onClick={() => router.push("/billing")}
-      title="Bekijk uw credits en koop bij"
+      title={tooltip}
       className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 font-mono text-[12px] font-semibold transition-all hover:brightness-125 ${tone.border} ${tone.bg} ${tone.text} ${
         tone.pulse ? "animate-pulse" : ""
       }`}

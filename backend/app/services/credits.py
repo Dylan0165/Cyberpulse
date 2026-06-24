@@ -24,6 +24,42 @@ from app.models.credits import ScanCredit, CreditUsage
 UNLIMITED_PLANS = {"business", "enterprise"}
 UNLIMITED_SENTINEL = 999999
 
+# ── Credit packages (single source of truth) ────────────────────────────────
+# One-time purchases, price in eurocents. Credits never expire. `popular` marks
+# the recommended pack. The losse_scan price (€100) is the per-scan reference
+# used to compute the savings shown on the larger packs.
+CREDIT_PACKAGES: dict[str, dict] = {
+    "losse_scan": {"credits": 1,  "price": 10000,  "label": "Losse Scan", "popular": False},
+    "starter":    {"credits": 3,  "price": 25000,  "label": "Starter",    "popular": False},
+    "groei":      {"credits": 5,  "price": 37500,  "label": "Groei",      "popular": True},
+    "pro":        {"credits": 10, "price": 65000,  "label": "Pro",        "popular": False},
+    "expert":     {"credits": 25, "price": 125000, "label": "Expert",     "popular": False},
+}
+
+# Per-scan reference price (eurocents) = the single-scan package price.
+_REFERENCE_PRICE = CREDIT_PACKAGES["losse_scan"]["price"]
+
+
+def package_view(key: str, pkg: dict) -> dict:
+    """A package enriched with derived per-scan price and savings (eurocents)."""
+    per_scan = pkg["price"] // pkg["credits"]
+    savings = _REFERENCE_PRICE * pkg["credits"] - pkg["price"]
+    return {
+        "key": key,
+        "label": pkg["label"],
+        "credits": pkg["credits"],
+        "price": pkg["price"],
+        "popular": pkg["popular"],
+        "price_per_scan": per_scan,
+        "savings": max(0, savings),
+    }
+
+
+def packages_payload() -> list[dict]:
+    """All packages as an ordered list for the API / frontend."""
+    return [package_view(k, p) for k, p in CREDIT_PACKAGES.items()]
+
+
 _NO_CREDITS_DETAIL = {
     "error": "no_credits",
     "message": "U heeft geen scan credits meer. Koop credits om door te gaan.",
@@ -42,14 +78,19 @@ def _is_unlimited(user: User) -> bool:
 
 class CreditsService:
     @staticmethod
-    async def get_balance(db: AsyncSession, user_id: uuid.UUID) -> int:
+    async def get_balance(db: AsyncSession, user_id: uuid.UUID) -> dict:
+        """Balance snapshot: {credits_remaining, credits_total, plan, is_unlimited}."""
         result = await db.execute(select(User).where(User.id == user_id))
         user = result.scalar_one_or_none()
         if not user:
-            return 0
-        if _is_unlimited(user):
-            return UNLIMITED_SENTINEL
-        return int(getattr(user, "credits_remaining", 0) or 0)
+            return {"credits_remaining": 0, "credits_total": 0, "plan": "trial", "is_unlimited": False}
+        unlimited = _is_unlimited(user)
+        return {
+            "credits_remaining": UNLIMITED_SENTINEL if unlimited else int(getattr(user, "credits_remaining", 0) or 0),
+            "credits_total": int(getattr(user, "credits_total", 0) or 0),
+            "plan": getattr(user, "plan", "trial") or "trial",
+            "is_unlimited": unlimited,
+        }
 
     @staticmethod
     async def has_credits(db: AsyncSession, user_id: uuid.UUID) -> bool:

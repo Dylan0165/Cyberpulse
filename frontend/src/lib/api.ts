@@ -26,17 +26,28 @@ export const usersApi = {
 };
 
 // ── Billing (Stripe) ───────────────────────────────────────────────────────────
+export type CreditPackage = {
+  key: string;
+  label: string;
+  credits: number;
+  price: number; // eurocents
+  popular: boolean;
+  price_per_scan: number; // eurocents
+  savings: number; // eurocents
+};
+
 export type CreditsBalance = {
   credits_remaining: number;
   credits_total: number;
   plan: string;
   is_unlimited: boolean;
+  packages: CreditPackage[];
 };
 
 export type CreditPurchase = {
   id: string;
   package_name: string;
-  credits: number;
+  credits_purchased: number;
   price_paid: number; // eurocents
   created_at: string | null;
   status: string;
@@ -50,7 +61,7 @@ export const billingApi = {
   buyCredits: (pkg: string) =>
     api.post<{ checkout_url: string; amount: number }>("/billing/buy-credits", { package: pkg }),
   creditsBalance: () => api.get<CreditsBalance>("/billing/credits-balance"),
-  history: () => api.get<CreditPurchase[]>("/billing/history"),
+  creditsHistory: () => api.get<CreditPurchase[]>("/billing/credits-history"),
 };
 
 // ── Admin ──────────────────────────────────────────────────────────────────────

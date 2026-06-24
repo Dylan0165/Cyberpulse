@@ -28,6 +28,15 @@ from app.services.nis2_report import generate_nis2_report
 router = APIRouter(prefix="/reports", tags=["reports"])
 
 
+def _block_trial(user: User) -> None:
+    """Trial accounts get a limited report: PDF + Secure Solution require credits."""
+    if getattr(user, "plan", None) == "trial":
+        raise HTTPException(
+            status_code=403,
+            detail={"error": "trial_limit", "message": "PDF beschikbaar vanaf €100"},
+        )
+
+
 async def _load_owned_scan(db: AsyncSession, scan_id: uuid.UUID, user: User) -> Scan:
     """Fetch a scan the caller actually owns, else 404 (never leak existence)."""
     result = await db.execute(
@@ -62,6 +71,7 @@ async def export_pdf(
     db: AsyncSession = Depends(get_db),
     user: User = Depends(get_required_user),
 ):
+    _block_trial(user)
     scan = await _load_owned_scan(db, scan_id, user)
 
     report_data = await _get_report_data(scan, scan_id)
@@ -226,6 +236,7 @@ async def export_secure_solution(
     (instant, no AI call). Fallback: generate it now (slow, ~10-30s, AI per
     finding) — the blocking work runs in a threadpool to keep the loop free.
     """
+    _block_trial(user)
     scan = await _load_owned_scan(db, scan_id, user)
 
     target_result = await db.execute(select(Target).where(Target.id == scan.target_id))

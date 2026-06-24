@@ -22,7 +22,7 @@ from app.core.auth import get_required_user
 from app.core.plans import apply_plan_limits
 from app.models.user import User
 from app.models.credits import ScanCredit
-from app.services.credits import credits_service
+from app.services.credits import credits_service, CREDIT_PACKAGES, packages_payload
 
 logger = logging.getLogger(__name__)
 
@@ -40,13 +40,7 @@ _NOT_CONFIGURED = (
 # Number of days each billing interval grants.
 _INTERVAL_DAYS = {"monthly": 30, "quarterly": 90, "yearly": 365}
 
-# One-time credit packages (price in eurocents). Credits never expire.
-CREDIT_PACKAGES: dict[str, dict] = {
-    "kennismaking": {"credits": 1,  "price": 4900,  "name": "Kennismaking"},
-    "starter":      {"credits": 3,  "price": 11900, "name": "Starter Pack"},
-    "groei":        {"credits": 10, "price": 34900, "name": "Groei Pack"},
-    "pro":          {"credits": 25, "price": 74900, "name": "Pro Pack"},
-}
+# Credit packages live in app.services.credits (single source of truth).
 
 
 # ---------------------------------------------------------------------------
@@ -90,7 +84,7 @@ class CheckoutRequest(BaseModel):
 
 
 class BuyCreditsRequest(BaseModel):
-    package: str    # 'kennismaking' | 'starter' | 'groei' | 'pro'
+    package: str    # 'losse_scan' | 'starter' | 'groei' | 'pro' | 'expert'
 
 
 # ---------------------------------------------------------------------------
@@ -151,6 +145,7 @@ async def create_checkout(
 async def buy_credits(
     body: BuyCreditsRequest,
     user: User = Depends(get_required_user),
+    db: AsyncSession = Depends(get_db),
 ):
     pkg = CREDIT_PACKAGES.get(body.package)
     if not pkg:
@@ -171,15 +166,29 @@ async def buy_credits(
         import stripe
 
         stripe.api_key = key
+
+        # Ensure the user has a Stripe customer so iDEAL/card details and
+        # purchase history stay attached to one customer record.
+        if not user.stripe_customer_id:
+            customer = stripe.Customer.create(
+                email=user.email,
+                metadata={"user_id": str(user.id)},
+            )
+            user.stripe_customer_id = customer.id
+            await db.commit()
+
+        euros = pkg["price"] // 100
         session = stripe.checkout.Session.create(
             mode="payment",
-            customer_email=user.email,
+            customer=user.stripe_customer_id,
+            payment_method_types=["card", "ideal"],  # iDEAL for the NL market
             line_items=[
                 {
                     "price_data": {
                         "currency": "eur",
                         "product_data": {
-                            "name": f"Scanix {pkg['name']} — {pkg['credits']} scan credits",
+                            "name": f"Scanix {pkg['label']} — {pkg['credits']} scan credits",
+                            "description": f"€{euros} eenmalig. Credits verlopen nooit.",
                         },
                         "unit_amount": pkg["price"],
                     },
@@ -209,20 +218,18 @@ async def buy_credits(
 # 1c) Credits — current balance
 # ---------------------------------------------------------------------------
 @router.get("/credits-balance")
-async def credits_balance(user: User = Depends(get_required_user)):
-    unlimited = getattr(user, "plan", None) in ("business", "enterprise")
-    return {
-        "credits_remaining": 999999 if unlimited else int(getattr(user, "credits_remaining", 0) or 0),
-        "credits_total": int(getattr(user, "credits_total", 0) or 0),
-        "plan": getattr(user, "plan", "credits"),
-        "is_unlimited": unlimited,
-    }
+async def credits_balance(
+    user: User = Depends(get_required_user),
+    db: AsyncSession = Depends(get_db),
+):
+    balance = await credits_service.get_balance(db, user.id)
+    return {**balance, "packages": packages_payload()}
 
 
 # ---------------------------------------------------------------------------
 # 1d) Credits — purchase history (last 20)
 # ---------------------------------------------------------------------------
-@router.get("/history")
+@router.get("/credits-history")
 async def credit_history(
     user: User = Depends(get_required_user),
     db: AsyncSession = Depends(get_db),
@@ -238,7 +245,7 @@ async def credit_history(
         {
             "id": str(r.id),
             "package_name": r.package_name,
-            "credits": r.credits_purchased,
+            "credits_purchased": r.credits_purchased,
             "price_paid": r.price_paid,
             "created_at": r.created_at.isoformat() if r.created_at else None,
             "status": "paid" if r.price_paid > 0 else "gratis",
@@ -393,7 +400,7 @@ async def _handle_credit_purchase(db: AsyncSession, *, metadata: dict, payment_i
     try:
         from app.services.email import send_credits_purchased
 
-        send_credits_purchased(uid, pkg["credits"], pkg["name"])
+        send_credits_purchased(uid, pkg["credits"], pkg["label"])
     except Exception:
         logger.debug("send_credits_purchased unavailable or failed", exc_info=True)
 

@@ -436,15 +436,28 @@ async def get_stats(
         from app.models.credits import ScanCredit, CreditUsage
 
         thirty_days_ago = datetime.now(timezone.utc) - timedelta(days=30)
+        # Sold = paid purchases only (exclude trial/admin grants where price_paid == 0).
         total_credits_sold = await db.scalar(
-            select(func.coalesce(func.sum(ScanCredit.credits_purchased), 0))
+            select(func.coalesce(func.sum(ScanCredit.credits_purchased), 0)).where(
+                ScanCredit.price_paid > 0
+            )
         ) or 0
         total_credits_used = await db.scalar(
             select(func.coalesce(func.sum(CreditUsage.credits_used), 0))
         ) or 0
+        # Total credits revenue (all time), in eurocents.
         credits_revenue_cents = await db.scalar(
+            select(func.coalesce(func.sum(ScanCredit.price_paid), 0))
+        ) or 0
+        credits_revenue_30d_cents = await db.scalar(
             select(func.coalesce(func.sum(ScanCredit.price_paid), 0)).where(
                 ScanCredit.created_at >= thirty_days_ago
+            )
+        ) or 0
+        # Credits still held by non-unlimited users (excludes business/enterprise).
+        credits_in_circulation = await db.scalar(
+            select(func.coalesce(func.sum(User.credits_remaining), 0)).where(
+                User.plan.notin_(("business", "enterprise"))
             )
         ) or 0
 
@@ -462,7 +475,9 @@ async def get_stats(
             "credits": {
                 "total_sold": int(total_credits_sold),
                 "total_used": int(total_credits_used),
-                "revenue_30d_eur": round(int(credits_revenue_cents) / 100, 2),
+                "revenue_eur": round(int(credits_revenue_cents) / 100, 2),
+                "revenue_30d_eur": round(int(credits_revenue_30d_cents) / 100, 2),
+                "in_circulation": int(credits_in_circulation),
             },
         }
     except HTTPException:
