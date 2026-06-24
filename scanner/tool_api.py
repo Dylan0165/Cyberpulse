@@ -10,6 +10,7 @@ Start:
 """
 
 import asyncio
+import json
 import os
 import re
 import shlex
@@ -350,3 +351,150 @@ async def refresh_tools(x_api_key: Optional[str] = Header(default=None)):
     tools = get_tools(force_refresh=True)
     available = sum(1 for t in tools.values() if t["available"])
     return {"total": len(tools), "available": available}
+
+
+# ── Subdomain discovery ───────────────────────────────────────────────────────
+# Combines theHarvester + crt.sh (Certificate Transparency) + a small DNS
+# brute force, dedupes, then keeps only hosts that are alive (nmap -sn).
+# Every stage degrades gracefully — a missing tool or a timeout is skipped, and
+# the endpoint never raises a 500.
+
+_SAFE_DOMAIN = re.compile(r"^[a-zA-Z0-9][a-zA-Z0-9.-]{0,252}$")
+_IPV4 = re.compile(r"\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b")
+
+_DNS_WORDLIST = [
+    "www", "mail", "ftp", "vpn", "api", "app", "dev", "staging",
+    "test", "admin", "portal", "remote", "ssh", "cdn", "ns1", "ns2",
+    "smtp", "pop", "imap", "webmail", "cloud", "git", "gitlab", "jenkins",
+]
+
+
+class SubdomainRequest(BaseModel):
+    domain: str
+    api_key: Optional[str] = None  # accepted for compatibility; header is authoritative
+
+
+async def _run_cmd(cmd: list[str], timeout: int) -> tuple[int, str, str]:
+    """Run a command (no shell), capturing output. Never raises."""
+    try:
+        proc = await asyncio.create_subprocess_exec(
+            *cmd,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+        )
+    except FileNotFoundError:
+        return -1, "", "binary not found"
+    except Exception as exc:  # noqa: BLE001
+        return -1, "", str(exc)
+    try:
+        out, err = await asyncio.wait_for(proc.communicate(), timeout=float(timeout))
+        return proc.returncode, out.decode(errors="replace"), err.decode(errors="replace")
+    except asyncio.TimeoutError:
+        try:
+            proc.kill()
+            await proc.wait()
+        except Exception:
+            pass
+        return -1, "", f"timeout after {timeout}s"
+
+
+async def _sd_theharvester(domain: str) -> set[str]:
+    binary = shutil.which("theHarvester") or shutil.which("theharvester")
+    if not binary:
+        return set()
+    out_base = f"/tmp/harvest_{uuid.uuid4().hex}"
+    _, out, err = await _run_cmd(
+        [binary, "-d", domain, "-b", "all", "-l", "500", "-f", out_base], 120
+    )
+    pattern = re.compile(r"([a-z0-9][a-z0-9-]*\.)+" + re.escape(domain))
+    subs = {m.group(0).strip(".") for m in pattern.finditer((out + "\n" + err).lower())}
+    # Also try the JSON file theHarvester writes, if present.
+    for ext in (".json",):
+        try:
+            with open(out_base + ext, "r", errors="replace") as fh:
+                for m in pattern.finditer(fh.read().lower()):
+                    subs.add(m.group(0).strip("."))
+        except Exception:
+            pass
+    return subs
+
+
+async def _sd_crtsh(domain: str) -> set[str]:
+    _, out, _ = await _run_cmd(
+        ["curl", "-s", "--max-time", "30", f"https://crt.sh/?q=%.{domain}&output=json"], 35
+    )
+    subs: set[str] = set()
+    try:
+        for row in json.loads(out or "[]"):
+            for name in str(row.get("name_value", "")).splitlines():
+                name = name.strip().lower().lstrip("*.")
+                if name.endswith(domain) and "@" not in name and "*" not in name:
+                    subs.add(name)
+    except Exception:
+        pass  # malformed / empty / timeout → skip
+    return subs
+
+
+async def _sd_dns_bruteforce(domain: str) -> set[str]:
+    found: set[str] = set()
+
+    async def _check(entry: str) -> None:
+        host = f"{entry}.{domain}"
+        _, out, _ = await _run_cmd(["dig", "+short", host], 10)
+        if _IPV4.search(out or ""):
+            found.add(host)
+
+    await asyncio.gather(*[_check(e) for e in _DNS_WORDLIST])
+    return found
+
+
+async def _sd_alive(subs: list[str]) -> list[str]:
+    """Keep only subdomains nmap reports as up (-sn ping sweep)."""
+    if not subs:
+        return []
+    _, out, _ = await _run_cmd(["nmap", "-sn", "-T4"] + subs, 180)
+    alive: set[str] = set()
+    sub_set = set(subs)
+    # Each block: "Nmap scan report for <host> (<ip>)\n... Host is up ..."
+    for block in out.split("Nmap scan report for ")[1:]:
+        host = block.split()[0].strip("()").lower()
+        if "host is up" in block.lower() and host in sub_set:
+            alive.add(host)
+    return sorted(alive)
+
+
+@app.post("/subdomain-discovery")
+async def subdomain_discovery(
+    body: SubdomainRequest,
+    x_api_key: Optional[str] = Header(default=None),
+):
+    _check_key(x_api_key)
+    domain = (body.domain or "").strip().lower().lstrip("*.").rstrip("/")
+    if not _SAFE_DOMAIN.match(domain):
+        return {"domain": domain, "subdomains": [], "total_found": 0,
+                "total_alive": 0, "sources": {}, "error": "invalid domain"}
+
+    # Run the three sources concurrently; each is individually fault-tolerant.
+    harvester, crtsh, brute = await asyncio.gather(
+        _sd_theharvester(domain), _sd_crtsh(domain), _sd_dns_bruteforce(domain),
+        return_exceptions=True,
+    )
+    h = harvester if isinstance(harvester, set) else set()
+    c = crtsh if isinstance(crtsh, set) else set()
+    d = brute if isinstance(brute, set) else set()
+
+    found = sorted((h | c | d | {domain}))
+    sources = {"theharvester": len(h), "crt_sh": len(c), "dns_bruteforce": len(d)}
+
+    try:
+        alive = await _sd_alive(found)
+    except Exception:
+        alive = found  # degrade gracefully — better to return found than nothing
+
+    return {
+        "domain": domain,
+        "subdomains": alive,
+        "total_found": len(found),
+        "total_alive": len(alive),
+        "sources": sources,
+    }

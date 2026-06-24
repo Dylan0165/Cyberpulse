@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { dashboardApi, scansApi, billingApi } from "@/lib/api";
+import { dashboardApi, scansApi, billingApi, agentsApi, type ScanixAgentItem } from "@/lib/api";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, Suspense } from "react";
 import { toast } from "sonner";
@@ -122,6 +122,11 @@ function NewScanContent() {
   // Step 1 — Target
   const [selectedTarget, setSelectedTarget] = useState<string>(searchParams.get("target") ?? "");
 
+  // Scan method — external (default) vs via a Scanix Agent (local network).
+  const [scanMethod, setScanMethod] = useState<"external" | "agent">("external");
+  const [selectedAgentId, setSelectedAgentId] = useState<string>("");
+  const [agentTarget, setAgentTarget] = useState<string>("");
+
   // Step 2 — Scan mode + type + target type
   const [scanMode, setScanMode] = useState<"blackbox" | "graybox" | "whitebox">("blackbox");
   const [scanType, setScanType] = useState("full");
@@ -176,6 +181,43 @@ function NewScanContent() {
   });
   const allTargets = targets ?? [];
 
+  // Agents for the "Via Scanix Agent" method.
+  const { data: agents } = useQuery<ScanixAgentItem[]>({
+    queryKey: ["agents"],
+    queryFn: () => agentsApi.list().then((r) => r.data),
+    retry: false,
+  });
+  const allAgents = agents ?? [];
+
+  // Pre-fill the agent target with the agent's local IP when one is picked.
+  const pickAgent = (id: string) => {
+    setSelectedAgentId(id);
+    const a = allAgents.find((x) => x.agent_id === id);
+    if (a?.local_ip && !agentTarget) setAgentTarget(a.local_ip);
+  };
+
+  // Agent scan: backend creates the target+scan and the agent picks it up on
+  // its next heartbeat (no ownership verification — already on the LAN).
+  const agentScanMutation = useMutation({
+    mutationFn: () => agentsApi.startScan(selectedAgentId, agentTarget.trim()),
+    onSuccess: (res) => {
+      toast.success("Scan via agent gepland!");
+      router.push(`/scans/${res.data.scan_id}`);
+    },
+    onError: (err: any) => {
+      const detail = err?.response?.data?.detail;
+      if (err?.response?.status === 402) {
+        setNoCredits(true);
+        return;
+      }
+      toast.error(
+        detail && typeof detail === "object" && detail.message
+          ? detail.message
+          : "Scan via agent kon niet worden gestart."
+      );
+    },
+  });
+
   const createScanMutation = useMutation({
     mutationFn: (data: any) => scansApi.create(data),
     onSuccess: (res) => {
@@ -226,6 +268,12 @@ function NewScanContent() {
   });
 
   const handleCreate = () => {
+    // Agent method: hand off to the agent scan endpoint and stop here.
+    if (scanMethod === "agent") {
+      agentScanMutation.mutate();
+      return;
+    }
+
     const creds: Record<string, string> = {};
     if (username)       creds.username       = username;
     if (password)       creds.password       = password;
@@ -428,42 +476,138 @@ function NewScanContent() {
             transition={{ duration: 0.25 }}
             className="space-y-6"
           >
-            {/* Target select */}
+            {/* Scan method — external vs via Scanix Agent */}
             <div className="space-y-3">
-              <SectionLabel icon={<Target className="h-3.5 w-3.5" />} text="Welk systeem wilt u laten testen?" />
-              {allTargets.length === 0 ? (
-                <GlowCard glowColor="#FF8C00" className="p-8 text-center">
-                  <Target className="mx-auto mb-4 h-12 w-12 text-ink-muted opacity-40" />
-                  <p className="font-mono text-[13px] text-ink-muted">Er zijn nog geen systemen toegevoegd.</p>
-                  <Link
-                    href="/targets"
-                    className="mt-4 inline-flex items-center gap-2 rounded-lg bg-cyan px-4 py-2 font-display text-[12px] font-bold uppercase tracking-[0.08em] text-app transition-transform duration-150 hover:scale-[1.02] active:scale-[0.98]"
-                  >
-                    Systeem toevoegen
-                  </Link>
-                </GlowCard>
-              ) : (
-                <div className="relative">
-                  <select
-                    value={selectedTarget}
-                    onChange={(e) => setSelectedTarget(e.target.value)}
-                    className="w-full appearance-none rounded-lg border border-grid bg-card2 px-4 py-3 pr-10 font-mono text-[13px] text-ink outline-none transition-colors duration-150 focus:border-cyan focus:ring-1 focus:ring-cyan"
-                  >
-                    <option value="" disabled>
-                      — Kies een systeem —
-                    </option>
-                    {allTargets.map((target: any) => (
-                      <option key={target.id} value={target.id} className="bg-card2 text-ink">
-                        {(target.hostname ?? target.value) +
-                          " · " +
-                          (target.target_type?.replace("_", " ") ?? "")}
-                      </option>
-                    ))}
-                  </select>
-                  <Server className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-muted" />
-                </div>
-              )}
+              <SectionLabel icon={<Server className="h-3.5 w-3.5" />} text="Scan methode" />
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                {[
+                  { value: "external" as const, title: "Externe scan", sub: "Publieke IPs en domeinen" },
+                  { value: "agent" as const, title: "Via Scanix Agent", sub: "Lokaal netwerk achter uw router" },
+                ].map((m) => {
+                  const active = scanMethod === m.value;
+                  return (
+                    <button
+                      key={m.value}
+                      type="button"
+                      onClick={() => setScanMethod(m.value)}
+                      className={`rounded-lg border p-4 text-left transition-all duration-150 hover:scale-[1.01] active:scale-[0.99] ${
+                        active ? "border-cyan bg-cyan/5 shadow-glow-cyan" : "border-grid bg-card2 hover:border-cyan/40"
+                      }`}
+                    >
+                      <p className={`font-display text-[13px] font-bold ${active ? "text-cyan" : "text-ink"}`}>{m.title}</p>
+                      <p className="mt-1 font-mono text-[11px] leading-snug text-ink-muted">{m.sub}</p>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
+
+            {/* Target select (external) */}
+            {scanMethod === "external" && (
+              <div className="space-y-3">
+                <SectionLabel icon={<Target className="h-3.5 w-3.5" />} text="Welk systeem wilt u laten testen?" />
+                {allTargets.length === 0 ? (
+                  <GlowCard glowColor="#FF8C00" className="p-8 text-center">
+                    <Target className="mx-auto mb-4 h-12 w-12 text-ink-muted opacity-40" />
+                    <p className="font-mono text-[13px] text-ink-muted">Er zijn nog geen systemen toegevoegd.</p>
+                    <Link
+                      href="/targets"
+                      className="mt-4 inline-flex items-center gap-2 rounded-lg bg-cyan px-4 py-2 font-display text-[12px] font-bold uppercase tracking-[0.08em] text-app transition-transform duration-150 hover:scale-[1.02] active:scale-[0.98]"
+                    >
+                      Systeem toevoegen
+                    </Link>
+                  </GlowCard>
+                ) : (
+                  <div className="relative">
+                    <select
+                      value={selectedTarget}
+                      onChange={(e) => setSelectedTarget(e.target.value)}
+                      className="w-full appearance-none rounded-lg border border-grid bg-card2 px-4 py-3 pr-10 font-mono text-[13px] text-ink outline-none transition-colors duration-150 focus:border-cyan focus:ring-1 focus:ring-cyan"
+                    >
+                      <option value="" disabled>
+                        — Kies een systeem —
+                      </option>
+                      {allTargets.map((target: any) => (
+                        <option key={target.id} value={target.id} className="bg-card2 text-ink">
+                          {(target.hostname ?? target.value) +
+                            " · " +
+                            (target.target_type?.replace("_", " ") ?? "")}
+                        </option>
+                      ))}
+                    </select>
+                    <Server className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-muted" />
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Agent selector + target (agent method) */}
+            {scanMethod === "agent" && (
+              <div className="space-y-3">
+                <SectionLabel icon={<Server className="h-3.5 w-3.5" />} text="Selecteer agent" />
+                {allAgents.length === 0 ? (
+                  <GlowCard glowColor="#FF8C00" className="p-8 text-center">
+                    <Server className="mx-auto mb-4 h-12 w-12 text-ink-muted opacity-40" />
+                    <p className="font-mono text-[13px] text-ink-muted">Nog geen agents geïnstalleerd.</p>
+                    <Link
+                      href="/agents"
+                      className="mt-4 inline-flex items-center gap-2 rounded-lg bg-cyan px-4 py-2 font-display text-[12px] font-bold uppercase tracking-[0.08em] text-app transition-transform duration-150 hover:scale-[1.02] active:scale-[0.98]"
+                    >
+                      Agent installeren →
+                    </Link>
+                  </GlowCard>
+                ) : (
+                  <>
+                    <div className="space-y-2">
+                      {allAgents.map((a) => {
+                        const online = a.status === "online";
+                        const active = selectedAgentId === a.agent_id;
+                        return (
+                          <button
+                            key={a.agent_id}
+                            type="button"
+                            disabled={!online}
+                            title={online ? undefined : "Agent offline"}
+                            onClick={() => pickAgent(a.agent_id)}
+                            className={`flex w-full items-center justify-between gap-3 rounded-lg border p-3 text-left transition-all duration-150 ${
+                              active ? "border-cyan bg-cyan/5 shadow-glow-cyan" : "border-grid bg-card2 hover:border-cyan/40"
+                            } ${online ? "" : "cursor-not-allowed opacity-50"}`}
+                          >
+                            <div>
+                              <p className={`font-display text-[13px] font-semibold ${active ? "text-cyan" : "text-ink"}`}>{a.name}</p>
+                              <p className="font-mono text-[11px] text-ink-muted">
+                                {online ? (a.local_ip ?? "lokaal netwerk") : "Niet beschikbaar"}
+                              </p>
+                            </div>
+                            <span className={`font-mono text-[11px] ${online ? "text-neon-green" : "text-neon-red"}`}>
+                              {online ? "● Online" : "● Offline"}
+                            </span>
+                          </button>
+                        );
+                      })}
+                      <Link href="/agents" className="inline-block font-mono text-[12px] text-cyan hover:underline">
+                        + Agent toevoegen →
+                      </Link>
+                    </div>
+
+                    {selectedAgentId && (
+                      <div className="space-y-2">
+                        <SectionLabel icon={<Target className="h-3.5 w-3.5" />} text="Doel binnen het netwerk" />
+                        <input
+                          value={agentTarget}
+                          onChange={(e) => setAgentTarget(e.target.value)}
+                          placeholder="192.168.1.0/24 of specifiek IP"
+                          className="w-full rounded-lg border border-grid bg-card2 px-4 py-3 font-mono text-[13px] text-ink outline-none transition-colors duration-150 focus:border-cyan focus:ring-1 focus:ring-cyan"
+                        />
+                        <span className="inline-flex items-center gap-1.5 rounded-full border border-cyan/40 bg-cyan/10 px-3 py-1 font-mono text-[11px] text-cyan">
+                          <Server className="h-3.5 w-3.5" /> Scan via agent — 1 credit
+                        </span>
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            )}
 
             {/* Scan mode */}
             <div className="space-y-3">
@@ -530,7 +674,11 @@ function NewScanContent() {
 
             <NavButtons
               onNext={nextStep}
-              nextDisabled={!selectedTarget}
+              nextDisabled={
+                scanMethod === "external"
+                  ? !selectedTarget
+                  : !selectedAgentId || !agentTarget.trim()
+              }
             />
           </motion.div>
         )}
@@ -880,7 +1028,11 @@ function NewScanContent() {
             <GlowCard glowColor="#00FF88" accentBorder="#00D4FF" className="space-y-4 p-5">
               <SummaryRow
                 label="Systeem"
-                value={selectedTarget_obj?.hostname ?? selectedTarget_obj?.value ?? selectedTarget}
+                value={
+                  scanMethod === "agent"
+                    ? `${agentTarget} (via ${allAgents.find((a) => a.agent_id === selectedAgentId)?.name ?? "agent"})`
+                    : selectedTarget_obj?.hostname ?? selectedTarget_obj?.value ?? selectedTarget
+                }
               />
               <SummaryRow
                 label="Soort systeem"

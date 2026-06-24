@@ -163,6 +163,11 @@ async def start_agent_scan(
     agent = result.scalar_one_or_none()
     if not agent:
         raise HTTPException(status_code=404, detail="Agent niet gevonden")
+    if not _is_online(agent):
+        raise HTTPException(status_code=409, detail={
+            "error": "agent_offline",
+            "message": "Deze agent is offline. Start de agent op uw server en probeer opnieuw.",
+        })
 
     target = Target(
         user_id=user.id, name=body.target, target_type="single", value=body.target, is_verified=True
