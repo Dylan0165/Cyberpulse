@@ -9,7 +9,8 @@
     "pricing": "Preise",
     "contact": "Kontakt",
     "login": "Anmelden",
-    "cta": "Kostenlosen Scan anfordern"
+    "cta": "Kostenlosen Scan anfordern",
+    "agent": "Scanix Agent"
   },
   "hero": {
     "badge": "Automatisierte Sicherheitstests",
@@ -72,7 +73,7 @@
   },
   "pricing": {
     "title": "Pro Scan bezahlen. Kein Abo.",
-    "subtitle": "Credits verfallen nie. 1 Credit = 1 vollständiger Scan inklusive Bericht.",
+    "subtitle": "Wofür eine Pentest-Agentur 2.500 € berechnet, machen wir für 100 €.",
     "headline": "Wählen Sie Ihr Paket",
     "perScan": "pro Scan",
     "credits": "Credits",
@@ -85,9 +86,9 @@
     "pkgStarter": "Starter",
     "pkgGroei": "Wachstum",
     "pkgPro": "Pro",
-    "saveStarter": "28 € sparen",
-    "saveGroei": "141 € sparen",
-    "savePro": "476 € sparen",
+    "saveStarter": "Spare 50 €",
+    "saveGroei": "Spare 125 €",
+    "savePro": "Spare 350 €",
     "subsTitle": "Für intensive Nutzer",
     "subsSubtitle": "Unbegrenzte Scans für einen festen Monatsbetrag.",
     "businessName": "Business",
@@ -103,10 +104,14 @@
     "subsCta": "Kontakt aufnehmen",
     "trustTitle": "Warum Scanix",
     "trust1": "Credits verfallen nie",
-    "trust2": "Keine versteckten Kosten",
-    "trust3": "Vollständiger Bericht sofort verfügbar",
-    "trust4": "Sichere Zahlung über Stripe",
-    "trust5": "DSGVO-konform, Daten bleiben in der EU"
+    "trust2": "iDEAL & Kreditkarte",
+    "trust3": "Einmalige Zahlung",
+    "trust4": "Vollständiger Bericht sofort verfügbar",
+    "trust5": "DSGVO-konform, EU-Server",
+    "pkgLosseScan": "Einzelscan",
+    "pkgExpert": "Expert",
+    "bestValue": "Bester Wert",
+    "saveExpert": "Spare 1.250 €"
   },
   "faq": {
     "title": "Häufig gestellte Fragen",
@@ -260,5 +265,38 @@
     "faq4A": "Ja. Sie scannen nur Systeme, die Sie besitzen oder zu deren Test Sie berechtigt sind. Bei offentlichen Zielen prufen wir vor dem Scan den Eigentumsnachweis.",
     "faq5Q": "Was ist der Unterschied zwischen Test- und bezahltem Bericht?",
     "faq5A": "Der kostenlose Testbericht zeigt die Befunde, jedoch ohne PDF-Download, ohne Secure Solution Report und ohne die benutzerdefinierten Module. Mit Credits erhalten Sie den vollstandigen Bericht."
+  },
+  "whyScanix": {
+    "title": "Warum Scanix",
+    "subtitle": "Professionelle Sicherheitstests, ohne den Preis und die Wartezeit einer Beratung.",
+    "col1Title": "10 Minuten",
+    "col1Text": "Wofür eine Agentur 5 Tage braucht, schaffen wir in 10 Minuten — vollautomatisch.",
+    "col2Title": "Vollständiger Bericht",
+    "col2Text": "Nicht nur was falsch ist, sondern genau wie Sie es beheben. Inklusive PDF und Maßnahmenplan.",
+    "col3Title": "EU-Server",
+    "col3Text": "Ihre Daten bleiben in Europa. DSGVO-konform, keine Datenweitergabe an Dritte."
+  },
+  "agentPage": {
+    "title": "Scanix Agent",
+    "subtitle": "Scannen Sie Systeme hinter Ihrem Router — ohne Portweiterleitung oder VPN.",
+    "intro": "Der Scanix Agent ist ein kleines Programm, das Sie auf Ihrem eigenen Server ausführen. Er verbindet sich über sicheres ausgehendes HTTPS mit Scanix, führt Scans lokal aus und sendet die Ergebnisse zurück. So testen Sie interne Systeme, die aus dem Internet nicht erreichbar sind.",
+    "benefitTitle": "Keine Portweiterleitung nötig",
+    "benefitText": "Keine Firewall-Regeln, kein VPN, keine offenen Ports. Der Agent ruft selbst nach außen — Ihr Netzwerk bleibt geschlossen.",
+    "benefit2Title": "Lokal ausgeführt",
+    "benefit2Text": "Scans laufen auf Ihrem eigenen Server mit denselben Tools wie unser Cloud-Scanner. Nur die Ergebnisse verlassen Ihr Netzwerk.",
+    "benefit3Title": "Immer aktuell",
+    "benefit3Text": "Der Agent läuft als Dienst und aktualisiert sich selbst. Einmal installieren, fertig.",
+    "stepsTitle": "In 3 Schritten",
+    "step1Title": "Agent-Token generieren",
+    "step1Text": "Melden Sie sich im Dashboard an und erstellen Sie einen neuen Agent. Sie erhalten ein eindeutiges Token.",
+    "step2Title": "Auf Ihrem Server installieren",
+    "step2Text": "Führen Sie den Installationsbefehl auf einem Linux-Server im zu testenden Netzwerk aus.",
+    "step3Title": "Scans über das Dashboard starten",
+    "step3Text": "Sobald der Agent online ist, wählen Sie ihn als Scan-Methode und starten Scans auf lokalen Systemen.",
+    "linuxTitle": "Linux-Installation",
+    "windowsTitle": "Windows",
+    "windowsSoon": "Demnächst verfügbar",
+    "tokenNote": "Ersetzen Sie IHR_TOKEN durch das Token aus Ihrem Dashboard.",
+    "ctaDashboard": "Dashboard öffnen"
   }
 }

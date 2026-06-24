@@ -7,19 +7,23 @@ import { motion } from "framer-motion";
 import {
   LayoutDashboard, Radar, Target, FileText, Calendar,
   Wrench, Settings, Shield, Sparkles, ShieldCheck,
+  Network, Server, FolderKanban,
 } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
 
 const NAV = [
-  { name: "Overzicht",          href: "/dashboard", icon: LayoutDashboard },
-  { name: "Beveiligingstests",  href: "/scans",     icon: Radar },
-  { name: "Mijn systemen",      href: "/targets",   icon: Target },
-  { name: "Rapporten",          href: "/reports",   icon: FileText },
-  { name: "Automatische tests", href: "/schedule",  icon: Calendar },
-  { name: "Tools",              href: "/tools",     icon: Wrench },
-  { name: "AI Upgraden",        href: "/upgrade",   icon: Sparkles },
-  { name: "Abonnement",         href: "/billing",   icon: Sparkles },
-  { name: "Instellingen",       href: "/settings",  icon: Settings },
+  { name: "Overzicht",          href: "/dashboard",   icon: LayoutDashboard },
+  { name: "Beveiligingstests",  href: "/scans",       icon: Radar },
+  { name: "Multi-scan",         href: "/scans/multi", icon: Network },
+  { name: "Mijn systemen",      href: "/targets",     icon: Target },
+  { name: "Projecten",          href: "/projects",    icon: FolderKanban },
+  { name: "Agents",             href: "/agents",      icon: Server },
+  { name: "Rapporten",          href: "/reports",     icon: FileText },
+  { name: "Automatische tests", href: "/schedule",    icon: Calendar },
+  { name: "Tools",              href: "/tools",       icon: Wrench },
+  { name: "AI Upgraden",        href: "/upgrade",     icon: Sparkles },
+  { name: "Abonnement",         href: "/billing",     icon: Sparkles },
+  { name: "Instellingen",       href: "/settings",    icon: Settings },
 ];
 
 const MOBILE_NAV = [

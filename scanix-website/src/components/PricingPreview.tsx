@@ -6,14 +6,15 @@ import { Zap, ArrowRight } from "lucide-react";
 import { Link } from "@/lib/navigation";
 
 /**
- * Compact homepage teaser for the credits pricing — four price points + a link
+ * Compact homepage teaser for the credits pricing — price points + a link
  * through to the full /prijzen page. Reuses the `pricing` i18n namespace.
  */
 const PREVIEW = [
-  { key: "kennismaking", nameKey: "pkgKennismaking", price: "€49", credits: 1 },
-  { key: "starter", nameKey: "pkgStarter", price: "€119", credits: 3 },
-  { key: "groei", nameKey: "pkgGroei", price: "€349", credits: 10, popular: true },
-  { key: "pro", nameKey: "pkgPro", price: "€749", credits: 25 },
+  { key: "losse_scan", nameKey: "pkgLosseScan", price: "€100", credits: 1 },
+  { key: "starter", nameKey: "pkgStarter", price: "€250", credits: 3 },
+  { key: "groei", nameKey: "pkgGroei", price: "€375", credits: 5, popular: true },
+  { key: "pro", nameKey: "pkgPro", price: "€650", credits: 10 },
+  { key: "expert", nameKey: "pkgExpert", price: "€1.250", credits: 25 },
 ] as const;
 
 export function PricingPreview() {
@@ -26,7 +27,7 @@ export function PricingPreview() {
         <p className="mx-auto mt-3 max-w-xl text-[15px] text-ink-muted">{t("subtitle")}</p>
       </div>
 
-      <div className="mx-auto mt-12 grid max-w-4xl gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mx-auto mt-12 grid max-w-5xl gap-4 sm:grid-cols-2 lg:grid-cols-5">
         {PREVIEW.map((p, i) => (
           <motion.div
             key={p.key}

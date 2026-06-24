@@ -24,6 +24,15 @@ class Target(Base):
     scope: Mapped[dict | None] = mapped_column(JSONB, default=dict)
     # Example: {"ports": [80, 443, 8080], "paths": ["/api", "/admin"], "exclude": ["192.168.1.5"]}
 
+    # Multi-target scanning (migration 0009) — CIDR / IP range / discovered hosts.
+    cidr_notation: Mapped[str | None] = mapped_column(String(64))
+    ip_range_start: Mapped[str | None] = mapped_column(String(64))
+    ip_range_end: Mapped[str | None] = mapped_column(String(64))
+    discovered_hosts: Mapped[list | None] = mapped_column(JSONB)
+    parent_target_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("targets.id", ondelete="CASCADE"), nullable=True
+    )
+
     # Verification
     verification_method: Mapped[str | None] = mapped_column(String(50))  # dns_txt, file_upload, legal_declaration
     verification_token: Mapped[str | None] = mapped_column(String(255))

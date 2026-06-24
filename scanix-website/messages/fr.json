@@ -9,7 +9,8 @@
     "pricing": "Tarifs",
     "contact": "Contact",
     "login": "Connexion",
-    "cta": "Demander un scan gratuit"
+    "cta": "Demander un scan gratuit",
+    "agent": "Agent Scanix"
   },
   "hero": {
     "badge": "Tests de sécurité automatisés",
@@ -72,7 +73,7 @@
   },
   "pricing": {
     "title": "Payez par scan. Sans abonnement.",
-    "subtitle": "Les crédits n'expirent jamais. 1 crédit = 1 scan complet, rapport inclus.",
+    "subtitle": "Ce qu un cabinet de pentest facture 2 500 €, nous le faisons pour 100 €.",
     "headline": "Choisissez votre forfait",
     "perScan": "par scan",
     "credits": "crédits",
@@ -85,9 +86,9 @@
     "pkgStarter": "Starter",
     "pkgGroei": "Croissance",
     "pkgPro": "Pro",
-    "saveStarter": "Économisez 28 €",
-    "saveGroei": "Économisez 141 €",
-    "savePro": "Économisez 476 €",
+    "saveStarter": "Économisez 50 €",
+    "saveGroei": "Économisez 125 €",
+    "savePro": "Économisez 350 €",
     "subsTitle": "Pour les utilisateurs intensifs",
     "subsSubtitle": "Scans illimités pour un montant mensuel fixe.",
     "businessName": "Business",
@@ -102,11 +103,15 @@
     "enterpriseF3": "Rapports en marque blanche",
     "subsCta": "Nous contacter",
     "trustTitle": "Pourquoi Scanix",
-    "trust1": "Les crédits n'expirent jamais",
-    "trust2": "Aucun frais caché",
-    "trust3": "Rapport complet disponible immédiatement",
-    "trust4": "Paiement sécurisé via Stripe",
-    "trust5": "Conforme au RGPD, données conservées dans l'UE"
+    "trust1": "Les crédits n expirent jamais",
+    "trust2": "iDEAL & carte bancaire",
+    "trust3": "Paiement unique",
+    "trust4": "Rapport complet disponible immédiatement",
+    "trust5": "Conforme RGPD, serveurs UE",
+    "pkgLosseScan": "Scan unique",
+    "pkgExpert": "Expert",
+    "bestValue": "Meilleure valeur",
+    "saveExpert": "Économisez 1 250 €"
   },
   "faq": {
     "title": "Questions fréquentes",
@@ -260,5 +265,38 @@
     "faq4A": "Oui. Vous ne scannez que des systemes que vous possedez ou etes autorise a tester. Nous verifions la propriete des cibles publiques avant le scan.",
     "faq5Q": "Quelle est la difference entre le rapport d'essai et le rapport payant ?",
     "faq5A": "Le rapport d'essai gratuit montre les resultats, mais sans telechargement PDF, sans Secure Solution Report et sans les modules personnalises. Les credits debloquent le rapport complet."
+  },
+  "whyScanix": {
+    "title": "Pourquoi Scanix",
+    "subtitle": "Des tests de sécurité professionnels, sans le prix ni l attente d un cabinet de conseil.",
+    "col1Title": "10 minutes",
+    "col1Text": "Ce qu un cabinet met 5 jours à faire, nous le faisons en 10 minutes — entièrement automatisé.",
+    "col2Title": "Rapport complet",
+    "col2Text": "Pas seulement ce qui ne va pas, mais exactement comment le corriger. PDF et plan de remédiation inclus.",
+    "col3Title": "Serveurs UE",
+    "col3Text": "Vos données restent en Europe. Conforme RGPD, aucune donnée partagée avec des tiers."
+  },
+  "agentPage": {
+    "title": "Agent Scanix",
+    "subtitle": "Scannez les systèmes derrière votre routeur — sans redirection de port ni VPN.",
+    "intro": "L Agent Scanix est un petit programme que vous exécutez sur votre propre serveur. Il se connecte à Scanix via HTTPS sortant sécurisé, exécute les scans localement et renvoie les résultats. Vous testez ainsi des systèmes internes non accessibles depuis Internet.",
+    "benefitTitle": "Aucune redirection de port",
+    "benefitText": "Pas de règles de pare-feu, pas de VPN, pas de ports ouverts. L agent sort de lui-même — votre réseau reste fermé.",
+    "benefit2Title": "Exécuté localement",
+    "benefit2Text": "Les scans s exécutent sur votre serveur avec les mêmes outils que notre scanner cloud. Seuls les résultats quittent votre réseau.",
+    "benefit3Title": "Toujours à jour",
+    "benefit3Text": "L agent fonctionne comme un service et se met à jour. Installez une fois, c est tout.",
+    "stepsTitle": "En 3 étapes",
+    "step1Title": "Générez un token d agent",
+    "step1Text": "Connectez-vous à votre tableau de bord et créez un nouvel agent. Vous obtenez un token unique.",
+    "step2Title": "Installez sur votre serveur",
+    "step2Text": "Exécutez la commande d installation sur un serveur Linux du réseau à tester.",
+    "step3Title": "Lancez des scans depuis le tableau de bord",
+    "step3Text": "Une fois l agent en ligne, choisissez-le comme méthode de scan et lancez des scans sur les systèmes locaux.",
+    "linuxTitle": "Installation Linux",
+    "windowsTitle": "Windows",
+    "windowsSoon": "Bientôt disponible",
+    "tokenNote": "Remplacez VOTRE_TOKEN par le token de votre tableau de bord.",
+    "ctaDashboard": "Ouvrir le tableau de bord"
   }
 }

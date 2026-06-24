@@ -56,18 +56,36 @@ async def create_target(
     await _student_user(db)  # ensure the demo user exists
     owner = _owner_id(auth_user)
 
-    # ── Plan limit: max targets ───────────────────────────────────────────────
-    max_targets = getattr(auth_user, "max_targets", 1) or 1
-    current_count = await db.scalar(select(func.count(Target.id)).where(Target.user_id == owner))
-    if (current_count or 0) >= max_targets:
-        raise HTTPException(status_code=403, detail={
+    # ── Target limit ──────────────────────────────────────────────────────────
+    # Credits model: 1 credit = 1 testable system, so trial/credits users can
+    # manage as many targets as they have credits. Subscriptions keep their
+    # fixed allowance (Business 5 / Enterprise 20, from the stored max_targets).
+    plan = (getattr(auth_user, "plan", "trial") or "trial").lower()
+    if plan in ("business", "enterprise"):
+        max_targets = getattr(auth_user, "max_targets", 5) or 5
+        limit_detail = {
             "error": "plan_limit_reached",
             "message": (
-                f"Uw {auth_user.plan} pakket staat maximaal {max_targets} "
-                f"systeem/systemen toe. Upgrade uw pakket voor meer systemen."
+                f"Uw {plan} pakket staat maximaal {max_targets} systemen toe. "
+                f"Upgrade uw pakket voor meer systemen."
             ),
             "upgrade_url": "https://scanix.nl/prijzen",
-        })
+        }
+    else:
+        # 1 credit = 1 server you may test.
+        max_targets = int(getattr(auth_user, "credits_remaining", 0) or 0)
+        limit_detail = {
+            "error": "no_credits",
+            "message": (
+                "U kunt één systeem per credit testen. "
+                "Koop credits om meer systemen toe te voegen."
+            ),
+            "buy_url": "/billing",
+        }
+
+    current_count = await db.scalar(select(func.count(Target.id)).where(Target.user_id == owner))
+    if (current_count or 0) >= max_targets:
+        raise HTTPException(status_code=403, detail=limit_detail)
 
     # Accept both 'value'/'hostname' and both 'name'/'hostname' field names
     value = body.get("value") or body.get("hostname") or body.get("url") or ""

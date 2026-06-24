@@ -1,6 +1,7 @@
 import { setRequestLocale } from "next-intl/server";
 import { PageFrame } from "@/components/PageFrame";
 import { Hero } from "@/components/Hero";
+import { WhyScanix } from "@/components/WhyScanix";
 import { StickyScrollScene } from "@/components/video/StickyScrollScene";
 import { Demo } from "@/components/Demo";
 import { Problem } from "@/components/Problem";
@@ -17,6 +18,7 @@ export default function LandingPage({
   return (
     <PageFrame>
       <Hero />
+      <WhyScanix />
       <StickyScrollScene />
       <Demo />
       <Problem />

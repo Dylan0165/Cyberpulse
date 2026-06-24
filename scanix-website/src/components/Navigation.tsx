@@ -47,6 +47,7 @@ export function Navigation() {
     { href: "/#demo", label: "Demo" },
     { href: "/hoe-het-werkt", label: t("how") },
     { href: "/wat-we-testen", label: t("what") },
+    { href: "/agent", label: t("agent") },
     { href: "/prijzen", label: t("pricing") },
     { href: "/contact", label: t("contact") },
   ];

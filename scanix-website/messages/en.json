@@ -9,7 +9,8 @@
     "pricing": "Pricing",
     "contact": "Contact",
     "login": "Login",
-    "cta": "Request free scan"
+    "cta": "Request free scan",
+    "agent": "Scanix Agent"
   },
   "hero": {
     "badge": "Automated Security Testing",
@@ -72,7 +73,7 @@
   },
   "pricing": {
     "title": "Pay per scan. No subscription.",
-    "subtitle": "Credits never expire. 1 credit = 1 complete scan including the report.",
+    "subtitle": "What a pentest agency charges €2,500 for, we do for €100.",
     "headline": "Choose your package",
     "perScan": "per scan",
     "credits": "credits",
@@ -85,9 +86,9 @@
     "pkgStarter": "Starter Pack",
     "pkgGroei": "Growth",
     "pkgPro": "Pro",
-    "saveStarter": "Save €28",
-    "saveGroei": "Save €141",
-    "savePro": "Save €476",
+    "saveStarter": "Save €50",
+    "saveGroei": "Save €125",
+    "savePro": "Save €350",
     "subsTitle": "For intensive users",
     "subsSubtitle": "Unlimited scanning for a fixed monthly fee.",
     "businessName": "Business",
@@ -103,10 +104,14 @@
     "subsCta": "Contact us",
     "trustTitle": "Why Scanix",
     "trust1": "Credits never expire",
-    "trust2": "No hidden costs",
-    "trust3": "Full report available instantly",
-    "trust4": "Secure payment via Stripe",
-    "trust5": "GDPR-compliant, data stays in the EU"
+    "trust2": "iDEAL & credit card",
+    "trust3": "One-time payment",
+    "trust4": "Full report instantly available",
+    "trust5": "GDPR-compliant, EU servers",
+    "pkgLosseScan": "Single scan",
+    "pkgExpert": "Expert",
+    "bestValue": "Best value",
+    "saveExpert": "Save €1,250"
   },
   "faq": {
     "title": "Frequently asked questions",
@@ -260,5 +265,38 @@
     "faq4A": "Yes. You only scan systems you own or are authorised to test. We verify ownership of public targets before a scan starts.",
     "faq5Q": "What is the difference between the trial and the paid report?",
     "faq5A": "The free trial report shows the findings, but without PDF download, without the Secure Solution Report and without the custom modules. Credits unlock the full report."
+  },
+  "whyScanix": {
+    "title": "Why Scanix",
+    "subtitle": "Professional security testing, without the price and wait of a consultancy.",
+    "col1Title": "10 minutes",
+    "col1Text": "What an agency takes 5 days to do, we do in 10 minutes — fully automated.",
+    "col2Title": "Complete report",
+    "col2Text": "Not just what is wrong, but exactly how to fix it. Includes PDF and remediation plan.",
+    "col3Title": "EU servers",
+    "col3Text": "Your data stays in Europe. GDPR-compliant, no data shared with third parties."
+  },
+  "agentPage": {
+    "title": "Scanix Agent",
+    "subtitle": "Scan systems behind your router — without port forwarding or VPN.",
+    "intro": "The Scanix Agent is a small program you run on your own server. It connects to Scanix over secure outbound HTTPS, runs scans locally and sends the results back. This lets you test internal systems that aren t reachable from the internet.",
+    "benefitTitle": "No port forwarding needed",
+    "benefitText": "No firewall rules, no VPN, no open ports. The agent calls out on its own — your network stays closed.",
+    "benefit2Title": "Runs locally",
+    "benefit2Text": "Scans run on your own server with the same tools as our cloud scanner. Only the results leave your network.",
+    "benefit3Title": "Always up to date",
+    "benefit3Text": "The agent runs as a service and updates itself. Install once, done.",
+    "stepsTitle": "In 3 steps",
+    "step1Title": "Generate an agent token",
+    "step1Text": "Log in to your dashboard and create a new agent. You get a unique token.",
+    "step2Title": "Install on your server",
+    "step2Text": "Run the install command on a Linux server in the network you want to test.",
+    "step3Title": "Start scans from the dashboard",
+    "step3Text": "Once the agent is online, pick it as the scan method and start scans on local systems.",
+    "linuxTitle": "Linux installation",
+    "windowsTitle": "Windows",
+    "windowsSoon": "Coming soon",
+    "tokenNote": "Replace YOUR_TOKEN with the token from your dashboard.",
+    "ctaDashboard": "Open dashboard"
   }
 }

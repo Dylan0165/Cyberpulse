@@ -4,8 +4,8 @@ import { useTranslations } from "next-intl";
 import { ChevronRight } from "lucide-react";
 import { Link } from "@/lib/navigation";
 
-/** Breadcrumb (Home → title) + large page heading. */
-export function PageHeader({ title }: { title: string }) {
+/** Breadcrumb (Home → title) + large page heading, optional subtitle. */
+export function PageHeader({ title, subtitle }: { title: string; subtitle?: string }) {
   const t = useTranslations("pages");
   return (
     <div className="mx-auto max-w-content px-5 pt-12 md:px-8 md:pt-16">
@@ -19,6 +19,7 @@ export function PageHeader({ title }: { title: string }) {
       <h1 className="mt-3 font-display text-4xl font-bold tracking-tight text-ink md:text-5xl">
         {title}
       </h1>
+      {subtitle && <p className="mt-3 max-w-2xl text-[16px] text-ink-muted">{subtitle}</p>}
     </div>
   );
 }

@@ -10,8 +10,7 @@ import { Link } from "@/lib/navigation";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { useScrollProgress } from "@/hooks/useScrollProgress";
 
-const CARD_DELAYS = [0, 0.1, 0.2, 0.3];
-const APP_LOGIN = "https://app.scanix.nl/login";
+const APP_BILLING = "https://app.scanix.nl/billing";
 
 type Pkg = {
   key: string;
@@ -21,6 +20,7 @@ type Pkg = {
   perScan: string; // display euros
   save?: string;
   popular?: boolean;
+  gold?: boolean; // best-value (Expert) — gold border
 };
 
 export function Pricing() {
@@ -52,10 +52,11 @@ export function Pricing() {
   const bannerShift = reduced ? 0 : bannerProgress * -40;
 
   const packages: Pkg[] = [
-    { key: "kennismaking", name: t("pkgKennismaking"), credits: 1, price: "€49", perScan: "€49" },
-    { key: "starter", name: t("pkgStarter"), credits: 3, price: "€119", perScan: "€40", save: t("saveStarter") },
-    { key: "groei", name: t("pkgGroei"), credits: 10, price: "€349", perScan: "€35", save: t("saveGroei"), popular: true },
-    { key: "pro", name: t("pkgPro"), credits: 25, price: "€749", perScan: "€30", save: t("savePro") },
+    { key: "losse_scan", name: t("pkgLosseScan"), credits: 1, price: "€100", perScan: "€100" },
+    { key: "starter", name: t("pkgStarter"), credits: 3, price: "€250", perScan: "€83", save: t("saveStarter") },
+    { key: "groei", name: t("pkgGroei"), credits: 5, price: "€375", perScan: "€75", save: t("saveGroei"), popular: true },
+    { key: "pro", name: t("pkgPro"), credits: 10, price: "€650", perScan: "€65", save: t("savePro") },
+    { key: "expert", name: t("pkgExpert"), credits: 25, price: "€1.250", perScan: "€50", save: t("saveExpert"), gold: true },
   ];
 
   const subscriptions = [
@@ -129,7 +130,7 @@ export function Pricing() {
       </div>
 
       {/* Credit package cards */}
-      <div className="mx-auto mt-12 grid max-w-5xl gap-5 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mx-auto mt-12 grid max-w-5xl gap-5 sm:grid-cols-2 lg:grid-cols-3">
         {packages.map((p, i) => (
           <motion.div
             key={p.key}
@@ -138,18 +139,25 @@ export function Pricing() {
             viewport={{ once: true }}
             transition={{
               duration: 0.5,
-              delay: CARD_DELAYS[i] ?? i * 0.1,
+              delay: i * 0.08,
               ease: [0.16, 1, 0.3, 1],
             }}
             className={`relative flex flex-col rounded-2xl border bg-card p-6 ${
               p.popular
                 ? "sxw-grad-border border-transparent shadow-glow-cyan"
+                : p.gold
+                ? "border-amber-400/60 bg-amber-400/[0.03]"
                 : "border-grid"
             }`}
           >
             {p.popular && (
               <span className="absolute -top-3 left-1/2 -translate-x-1/2 inline-flex items-center gap-1 whitespace-nowrap rounded-full bg-cyan px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-bg">
                 <Star className="h-3 w-3" fill="currentColor" /> {t("popular")}
+              </span>
+            )}
+            {p.gold && (
+              <span className="absolute -top-3 left-1/2 -translate-x-1/2 inline-flex items-center gap-1 whitespace-nowrap rounded-full bg-amber-400 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-bg">
+                <Star className="h-3 w-3" fill="currentColor" /> {t("bestValue")}
               </span>
             )}
             <h3 className="font-display text-[17px] font-semibold text-ink">{p.name}</h3>
@@ -181,10 +189,12 @@ export function Pricing() {
             </div>
 
             <Link
-              href={`${APP_LOGIN}?package=${p.key}`}
+              href={`${APP_BILLING}?package=${p.key}`}
               className={`mt-6 inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-[13.5px] font-semibold transition-all active:scale-[0.98] ${
                 p.popular
                   ? "bg-cyan text-bg hover:shadow-glow-cyan"
+                  : p.gold
+                  ? "bg-amber-400 text-bg hover:brightness-110"
                   : "border border-grid text-ink hover:border-cyan/40"
               }`}
             >

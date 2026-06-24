@@ -28,6 +28,8 @@ import {
   ShieldAlert,
   TrendingUp,
   Zap,
+  Server,
+  ExternalLink,
 } from "lucide-react";
 
 import { adminApi } from "@/lib/api";
@@ -45,12 +47,13 @@ import {
 } from "@/components/admin/form-controls";
 
 // ── Constants ────────────────────────────────────────────────────────────────
-type TabKey = "overzicht" | "gebruikers" | "scans" | "inkomsten";
+type TabKey = "overzicht" | "gebruikers" | "scans" | "agents" | "inkomsten";
 
 const TABS: { key: TabKey; label: string }[] = [
   { key: "overzicht", label: "Overzicht" },
   { key: "gebruikers", label: "Gebruikers" },
   { key: "scans", label: "Scans" },
+  { key: "agents", label: "Agents" },
   { key: "inkomsten", label: "Inkomsten" },
 ];
 
@@ -186,6 +189,7 @@ export default function AdminPage() {
       {tab === "overzicht" && <OverviewTab />}
       {tab === "gebruikers" && <UsersTab />}
       {tab === "scans" && <ScansTab />}
+      {tab === "agents" && <AgentsTab />}
       {tab === "inkomsten" && <RevenueTab />}
     </div>
   );
@@ -349,6 +353,54 @@ function OverviewTab() {
           color="#FFB020"
           index={7}
         />
+        <StatCard
+          label="Scans deze week"
+          value={Number(stats?.scans_this_week ?? 0)}
+          icon={ScanLine}
+          color="#00B4D8"
+          index={8}
+        />
+        <StatCard
+          label="Gem. scanduur (min)"
+          value={Number(stats?.avg_scan_duration ?? 0)}
+          icon={TrendingUp}
+          color="#0A84FF"
+          index={9}
+        />
+        <StatCard
+          label="Actieve agents"
+          value={Number(stats?.active_agents ?? 0)}
+          icon={Server}
+          color="#00FF88"
+          index={10}
+        />
+      </div>
+
+      {/* Scans per day (last 14d) + top findings */}
+      <div className="grid gap-4 lg:grid-cols-2">
+        <div>
+          <SectionTitle>Scans per dag (14 dagen)</SectionTitle>
+          <Panel className="p-4">
+            <ScansBarChart data={stats?.scans_per_day ?? []} />
+          </Panel>
+        </div>
+        <div>
+          <SectionTitle>Top 5 bevindingen</SectionTitle>
+          <Panel className="p-4">
+            {(stats?.top_findings ?? []).length === 0 ? (
+              <p className="py-8 text-center font-mono text-[12px] text-ink-muted">Nog geen bevindingen.</p>
+            ) : (
+              <ul className="space-y-2">
+                {(stats?.top_findings ?? []).map((f: any) => (
+                  <li key={f.title} className="flex items-center justify-between gap-3 font-mono text-[12px]">
+                    <span className="truncate text-ink">{f.title}</span>
+                    <span className="flex-shrink-0 rounded-full bg-cyan/10 px-2 py-0.5 text-cyan">{f.count}×</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </Panel>
+        </div>
       </div>
 
       {/* Donut + recent users */}
@@ -1158,20 +1210,214 @@ function EditUserModal({
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// TAB: SCANS (placeholder — no dedicated admin scans endpoint)
-// ═══════════════════════════════════════════════════════════════════════════
-function ScansTab() {
+// Simple CSS bar chart (no external library) for scans-per-day.
+function ScansBarChart({ data }: { data: { date: string; count: number }[] }) {
+  const max = Math.max(1, ...data.map((d) => d.count));
   return (
-    <Panel className="px-6 py-16 text-center">
-      <ScanLine className="mx-auto mb-4 h-8 w-8 text-ink-muted" />
-      <h3 className="font-display text-[16px] font-semibold text-ink">
-        Scans-overzicht komt binnenkort
-      </h3>
-      <p className="mx-auto mt-2 max-w-md font-mono text-[12px] text-ink-muted">
-        Een systeembreed overzicht van alle scans wordt binnenkort toegevoegd.
-        Bekijk individuele scans voorlopig via de detailpagina van een
-        gebruiker.
-      </p>
+    <div className="flex h-[200px] items-end gap-1.5">
+      {data.map((d) => (
+        <div key={d.date} className="group flex flex-1 flex-col items-center justify-end gap-1">
+          <span className="font-mono text-[9px] text-ink-muted opacity-0 transition-opacity group-hover:opacity-100">
+            {d.count}
+          </span>
+          <div
+            className="w-full rounded-t bg-cyan/70 transition-all group-hover:bg-cyan"
+            style={{ height: `${(d.count / max) * 100}%`, minHeight: d.count > 0 ? "4px" : "1px" }}
+          />
+          <span className="font-mono text-[8px] text-ink-muted">{d.date.slice(5)}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// TAB: SCANS — system-wide scan overview with filters
+// ═══════════════════════════════════════════════════════════════════════════
+const SCAN_STATUSES = ["all", "running", "completed", "failed", "pending"] as const;
+
+function ScansTab() {
+  const router = useRouter();
+  const [rows, setRows] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [status, setStatus] = useState<string>("all");
+  const [email, setEmail] = useState("");
+  const [debouncedEmail, setDebouncedEmail] = useState("");
+  const [dateFrom, setDateFrom] = useState("");
+
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedEmail(email), 350);
+    return () => clearTimeout(t);
+  }, [email]);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const params: Record<string, string> = {};
+      if (status !== "all") params.status = status;
+      if (dateFrom) params.date_from = dateFrom;
+      const res = await adminApi.scans(params);
+      let list: any[] = Array.isArray(res.data) ? res.data : [];
+      if (debouncedEmail) {
+        list = list.filter((s) => (s.user_email ?? "").toLowerCase().includes(debouncedEmail.toLowerCase()));
+      }
+      setRows(list);
+    } catch {
+      setRows([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [status, dateFrom, debouncedEmail]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  const fmtDuration = (s: number | null) =>
+    s == null ? "—" : s >= 60 ? `${Math.round(s / 60)}m` : `${s}s`;
+
+  return (
+    <Panel className="overflow-hidden">
+      <div className="flex flex-wrap items-center gap-3 border-b border-grid p-4">
+        <select
+          value={status}
+          onChange={(e) => setStatus(e.target.value)}
+          className="rounded-md border border-grid bg-card2 px-3 py-2 font-mono text-[12px] text-ink focus:border-cyan focus:outline-none"
+        >
+          {SCAN_STATUSES.map((s) => (
+            <option key={s} value={s}>{s === "all" ? "Alle statussen" : s}</option>
+          ))}
+        </select>
+        <input
+          type="date"
+          value={dateFrom}
+          onChange={(e) => setDateFrom(e.target.value)}
+          className="rounded-md border border-grid bg-card2 px-3 py-2 font-mono text-[12px] text-ink focus:border-cyan focus:outline-none"
+        />
+        <div className="relative min-w-[200px] flex-1">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-muted" />
+          <input
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="Zoek op email…"
+            className="w-full rounded-md border border-grid bg-card2 py-2 pl-9 pr-3 font-mono text-[12px] text-ink placeholder:text-ink-muted focus:border-cyan focus:outline-none"
+          />
+        </div>
+      </div>
+
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-[760px] border-collapse">
+          <thead>
+            <tr className="border-b border-grid bg-card2 text-left">
+              {["Gebruiker", "Target", "Status", "Gestart", "Duur", "Bevindingen", ""].map((h) => (
+                <th key={h} className="px-4 py-3 font-mono text-[10px] uppercase tracking-wider text-ink-muted">{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {loading ? (
+              <tr><td colSpan={7} className="px-4 py-8 text-center font-mono text-[12px] text-ink-muted">Laden…</td></tr>
+            ) : rows.length === 0 ? (
+              <tr><td colSpan={7} className="px-4 py-8 text-center font-mono text-[12px] text-ink-muted">Geen scans gevonden.</td></tr>
+            ) : (
+              rows.map((s) => (
+                <tr key={s.scan_id} className="border-b border-grid/60">
+                  <td className="px-4 py-3 font-mono text-[12px] text-ink">{s.user_email ?? "—"}</td>
+                  <td className="px-4 py-3 font-mono text-[12px] text-ink-muted">{s.target ?? "—"}</td>
+                  <td className="px-4 py-3 font-mono text-[12px] text-cyan">{s.status}</td>
+                  <td className="px-4 py-3 font-mono text-[12px] text-ink-muted">
+                    {s.created_at ? new Date(s.created_at).toLocaleString("nl-NL") : "—"}
+                  </td>
+                  <td className="px-4 py-3 font-mono text-[12px] tabular-nums text-ink-muted">{fmtDuration(s.duration_s)}</td>
+                  <td className="px-4 py-3 font-mono text-[12px] tabular-nums text-ink">{s.findings_count}</td>
+                  <td className="px-4 py-3 text-right">
+                    <button
+                      type="button"
+                      onClick={() => router.push(`/scans/${s.scan_id}`)}
+                      className="inline-flex items-center gap-1 font-mono text-[12px] text-cyan hover:underline"
+                    >
+                      Bekijk rapport <ExternalLink className="h-3 w-3" />
+                    </button>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+    </Panel>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// TAB: AGENTS — all agents across all users
+// ═══════════════════════════════════════════════════════════════════════════
+function AgentsTab() {
+  const [rows, setRows] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState<"all" | "online" | "offline">("all");
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    adminApi
+      .agents()
+      .then((res) => { if (!cancelled) setRows(Array.isArray(res.data) ? res.data : []); })
+      .catch(() => { if (!cancelled) setRows([]); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, []);
+
+  const shown = filter === "all" ? rows : rows.filter((a) => a.status === filter);
+
+  return (
+    <Panel className="overflow-hidden">
+      <div className="flex items-center gap-2 border-b border-grid p-4">
+        {(["all", "online", "offline"] as const).map((f) => (
+          <button
+            key={f}
+            type="button"
+            onClick={() => setFilter(f)}
+            className={`rounded-md border px-3 py-1.5 font-mono text-[12px] ${
+              filter === f ? "border-cyan/50 bg-cyan/10 text-cyan" : "border-grid text-ink-muted hover:text-ink"
+            }`}
+          >
+            {f === "all" ? "Alle" : f}
+          </button>
+        ))}
+      </div>
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-[680px] border-collapse">
+          <thead>
+            <tr className="border-b border-grid bg-card2 text-left">
+              {["Gebruiker", "Agent", "Status", "Hostname", "Last seen"].map((h) => (
+                <th key={h} className="px-4 py-3 font-mono text-[10px] uppercase tracking-wider text-ink-muted">{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {loading ? (
+              <tr><td colSpan={5} className="px-4 py-8 text-center font-mono text-[12px] text-ink-muted">Laden…</td></tr>
+            ) : shown.length === 0 ? (
+              <tr><td colSpan={5} className="px-4 py-8 text-center font-mono text-[12px] text-ink-muted">Geen agents.</td></tr>
+            ) : (
+              shown.map((a) => (
+                <tr key={a.agent_id} className="border-b border-grid/60">
+                  <td className="px-4 py-3 font-mono text-[12px] text-ink">{a.user_email ?? "—"}</td>
+                  <td className="px-4 py-3 font-mono text-[12px] text-ink">{a.name}</td>
+                  <td className={`px-4 py-3 font-mono text-[12px] ${a.status === "online" ? "text-neon-green" : "text-neon-red"}`}>
+                    {a.status}
+                  </td>
+                  <td className="px-4 py-3 font-mono text-[12px] text-ink-muted">{[a.hostname, a.local_ip].filter(Boolean).join(" · ") || "—"}</td>
+                  <td className="px-4 py-3 font-mono text-[12px] text-ink-muted">
+                    {a.last_seen ? new Date(a.last_seen).toLocaleString("nl-NL") : "nooit"}
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
     </Panel>
   );
 }

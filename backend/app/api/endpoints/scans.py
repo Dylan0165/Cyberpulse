@@ -5,6 +5,7 @@ import uuid
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Request
+from pydantic import BaseModel
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -69,6 +70,86 @@ async def _student_user(db: AsyncSession) -> User:
     await db.commit()
     await db.refresh(user)
     return user
+
+
+# ── Multi-target scanning (CIDR / IP range / subdomain discovery) ─────────────
+class MultiTargetRequest(BaseModel):
+    target: str
+
+
+@router.post("/preview-multi")
+async def preview_multi(
+    body: MultiTargetRequest,
+    auth_user: User = Depends(get_required_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Discovery preview — alive hosts + credits required. No scans, no charge."""
+    from app.services.multi_scan import multi_scan_orchestrator
+    return await multi_scan_orchestrator.preview(auth_user.id, body.target, db)
+
+
+@router.post("/start-multi")
+async def start_multi(
+    body: MultiTargetRequest,
+    auth_user: User = Depends(get_required_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Deduct credits and fan out one scan per discovered host."""
+    from app.services.multi_scan import multi_scan_orchestrator
+    return await multi_scan_orchestrator.start(auth_user.id, body.target, db)
+
+
+@router.get("/multi-job/{job_id}")
+async def multi_job_status(
+    job_id: uuid.UUID,
+    auth_user: User = Depends(get_required_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Combined status of a multi-scan job (progress + per-host scan states)."""
+    from app.models.multi_scan import MultiScanJob
+    result = await db.execute(
+        select(MultiScanJob).where(MultiScanJob.id == job_id, MultiScanJob.user_id == auth_user.id)
+    )
+    job = result.scalar_one_or_none()
+    if not job:
+        raise HTTPException(status_code=404, detail="Multi-scan job niet gevonden")
+
+    scan_ids = [uuid.UUID(s) for s in (job.scan_ids or [])]
+    scans: list[dict] = []
+    completed = 0
+    if scan_ids:
+        res = await db.execute(select(Scan).where(Scan.id.in_(scan_ids)))
+        rows = {s.id: s for s in res.scalars().all()}
+        await _enrich_target_values(db, list(rows.values()))
+        for sid in scan_ids:
+            s = rows.get(sid)
+            if not s:
+                continue
+            if s.status in ("completed", "failed", "cancelled"):
+                completed += 1
+            scans.append({
+                "scan_id": str(s.id),
+                "host": getattr(s, "target_value", None),
+                "status": s.status,
+            })
+
+    # Keep the job's progress + status in sync with its children.
+    if completed != job.scanned_hosts:
+        job.scanned_hosts = completed
+        if completed >= job.total_hosts and job.status == "scanning":
+            job.status = "completed"
+        await db.commit()
+
+    return {
+        "job_id": str(job.id),
+        "status": job.status,
+        "job_type": job.job_type,
+        "input": job.input,
+        "total_hosts": job.total_hosts,
+        "scanned_hosts": job.scanned_hosts,
+        "credits_used": job.credits_used,
+        "scans": scans,
+    }
 
 
 @router.post("/", response_model=ScanResponse)

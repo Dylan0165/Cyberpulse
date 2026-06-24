@@ -15,6 +15,9 @@ from app.models.scan import Scan
 from app.models.notification import Notification
 from app.models.scheduled_scan import ScheduledScan
 from app.models.credits import ScanCredit, CreditUsage
+from app.models.multi_scan import MultiScanJob
+from app.models.agent import ScanixAgent
+from app.models.project import ScanProject
 
 __all__ = [
     "User",
@@ -26,4 +29,7 @@ __all__ = [
     "ScheduledScan",
     "ScanCredit",
     "CreditUsage",
+    "MultiScanJob",
+    "ScanixAgent",
+    "ScanProject",
 ]

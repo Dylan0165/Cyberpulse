@@ -54,6 +54,8 @@ export default function TargetsPage() {
       setErrorMsg(
         typeof detail === "string" ? detail :
         Array.isArray(detail) ? detail.map((d: any) => d.msg ?? String(d)).join(", ") :
+        // Structured errors (e.g. target/credit limit) carry a Dutch message.
+        (detail && typeof detail === "object" && detail.message) ? detail.message :
         "Aanmaken mislukt"
       );
     },

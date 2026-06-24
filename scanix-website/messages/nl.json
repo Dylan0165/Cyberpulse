@@ -9,7 +9,8 @@
     "pricing": "Prijzen",
     "contact": "Contact",
     "login": "Inloggen",
-    "cta": "Gratis scan aanvragen"
+    "cta": "Gratis scan aanvragen",
+    "agent": "Scanix Agent"
   },
   "hero": {
     "badge": "Geautomatiseerde beveiligingstests",
@@ -72,7 +73,7 @@
   },
   "pricing": {
     "title": "Betaal per scan. Geen abonnement.",
-    "subtitle": "Credits verlopen nooit. 1 credit = 1 volledige scan inclusief rapport.",
+    "subtitle": "Wat een pentestbureau €2.500 rekent, doen wij voor €100.",
     "headline": "Kies uw pakket",
     "perScan": "per scan",
     "credits": "credits",
@@ -85,9 +86,9 @@
     "pkgStarter": "Starter",
     "pkgGroei": "Groei",
     "pkgPro": "Pro",
-    "saveStarter": "Bespaar €28",
-    "saveGroei": "Bespaar €141",
-    "savePro": "Bespaar €476",
+    "saveStarter": "Bespaar €50",
+    "saveGroei": "Bespaar €125",
+    "savePro": "Bespaar €350",
     "subsTitle": "Voor intensieve gebruikers",
     "subsSubtitle": "Onbeperkt scannen met een vast maandbedrag.",
     "businessName": "Business",
@@ -103,10 +104,14 @@
     "subsCta": "Neem contact op",
     "trustTitle": "Waarom Scanix",
     "trust1": "Credits verlopen nooit",
-    "trust2": "Geen verborgen kosten",
-    "trust3": "Volledig rapport direct beschikbaar",
-    "trust4": "Veilig betalen via Stripe",
-    "trust5": "AVG-compliant, data blijft in EU"
+    "trust2": "iDEAL & creditcard",
+    "trust3": "Eenmalige betaling",
+    "trust4": "Volledig rapport direct beschikbaar",
+    "trust5": "AVG-compliant, EU servers",
+    "pkgLosseScan": "Losse scan",
+    "pkgExpert": "Expert",
+    "bestValue": "Beste waarde",
+    "saveExpert": "Bespaar €1.250"
   },
   "faq": {
     "title": "Veelgestelde vragen",
@@ -260,5 +265,38 @@
     "faq4A": "Ja. U scant alleen systemen die u bezit of waarvoor u toestemming heeft. Publieke doelen verifieren we op eigendom voordat de scan start.",
     "faq5Q": "Wat is het verschil tussen het trial- en het betaalde rapport?",
     "faq5A": "Het gratis trial-rapport toont de bevindingen, maar zonder PDF-download, zonder Secure Solution Rapport en zonder de custom modules. Met credits krijgt u het volledige rapport."
+  },
+  "whyScanix": {
+    "title": "Waarom Scanix",
+    "subtitle": "Professionele beveiligingstests, zonder de prijs en wachttijd van een adviesbureau.",
+    "col1Title": "10 minuten",
+    "col1Text": "Wat een bureau 5 dagen kost, doen wij in 10 minuten — volledig automatisch.",
+    "col2Title": "Volledig rapport",
+    "col2Text": "Niet alleen wat er mis is, maar exact hoe u het oplost. Inclusief PDF en herstelplan.",
+    "col3Title": "EU servers",
+    "col3Text": "Uw data blijft in Europa. AVG-compliant, geen gegevens naar derden."
+  },
+  "agentPage": {
+    "title": "Scanix Agent",
+    "subtitle": "Scan systemen achter uw router — zonder port forwarding of VPN.",
+    "intro": "De Scanix Agent is een klein programma dat u op uw eigen server draait. Hij maakt zelf verbinding met Scanix via beveiligde uitgaande HTTPS, voert scans lokaal uit en stuurt de resultaten terug. Zo test u interne systemen die niet vanaf het internet bereikbaar zijn.",
+    "benefitTitle": "Geen port forwarding nodig",
+    "benefitText": "Geen firewall-regels, geen VPN, geen open poorten. De agent belt zelf naar buiten — uw netwerk blijft dicht.",
+    "benefit2Title": "Lokaal uitgevoerd",
+    "benefit2Text": "Scans draaien op uw eigen server met dezelfde tools als onze cloud-scanner. Alleen de resultaten verlaten uw netwerk.",
+    "benefit3Title": "Altijd up-to-date",
+    "benefit3Text": "De agent draait als service en werkt zichzelf bij. Eén keer installeren, klaar.",
+    "stepsTitle": "In 3 stappen",
+    "step1Title": "Genereer een agent-token",
+    "step1Text": "Log in op uw dashboard en maak een nieuwe agent aan. U krijgt een uniek token.",
+    "step2Title": "Installeer op uw server",
+    "step2Text": "Voer het installatiecommando uit op een Linux-server in het netwerk dat u wilt testen.",
+    "step3Title": "Start scans vanuit het dashboard",
+    "step3Text": "Zodra de agent online is, kiest u hem als scanmethode en start u scans op lokale systemen.",
+    "linuxTitle": "Linux installatie",
+    "windowsTitle": "Windows",
+    "windowsSoon": "Binnenkort beschikbaar",
+    "tokenNote": "Vervang UW_TOKEN door het token uit uw dashboard.",
+    "ctaDashboard": "Open dashboard"
   }
 }

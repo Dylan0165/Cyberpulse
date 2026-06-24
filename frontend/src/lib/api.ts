@@ -78,6 +78,9 @@ export const adminApi = {
   activate: (id: string) => api.post(`/admin/users/${id}/activate`),
   addCredits: (id: string, credits: number, reason?: string) =>
     api.post(`/admin/users/${id}/add-credits`, { credits, reason }),
+  scans: (params?: { status?: string; user_id?: string; date_from?: string; date_to?: string; limit?: number; offset?: number }) =>
+    api.get("/admin/scans", { params }),
+  agents: () => api.get("/admin/agents"),
   init: (d: { email: string; password: string; secret: string }) =>
     api.post("/admin/init", d),
 };
@@ -100,6 +103,78 @@ export const scansApi = {
   start: (id: string) => api.post(`/scans/${id}/start`),
   cancel: (id: string) => api.post(`/scans/${id}/cancel`),
   getReport: (id: string) => api.get(`/scans/${id}/report`),
+  // Multi-target (CIDR / IP range / subdomain discovery)
+  previewMulti: (target: string) =>
+    api.post<MultiScanPreview>("/scans/preview-multi", { target }),
+  startMulti: (target: string) =>
+    api.post<{ job_id: string; message: string; credits_used: number; total_hosts: number }>(
+      "/scans/start-multi",
+      { target }
+    ),
+  multiJob: (jobId: string) => api.get<MultiScanJobStatus>(`/scans/multi-job/${jobId}`),
+};
+
+export type MultiScanPreview = {
+  type: string;
+  input: string;
+  alive_hosts: string[];
+  estimated_hosts: number;
+  credits_required: number;
+  credits_available: number;
+  can_afford: boolean;
+};
+
+export type MultiScanJobStatus = {
+  job_id: string;
+  status: string;
+  job_type: string;
+  input: string;
+  total_hosts: number;
+  scanned_hosts: number;
+  credits_used: number;
+  scans: { scan_id: string; host: string | null; status: string }[];
+};
+
+export type ScanixAgentItem = {
+  agent_id: string;
+  name: string;
+  status: string;
+  os: string | null;
+  hostname: string | null;
+  local_ip: string | null;
+  version: string | null;
+  last_seen: string | null;
+  created_at: string | null;
+};
+
+export const agentsApi = {
+  list: () => api.get<ScanixAgentItem[]>("/agents"),
+  register: (name: string) =>
+    api.post<{ agent_id: string; agent_token: string; install_command: string }>(
+      "/agents/register",
+      { name }
+    ),
+  remove: (id: string) => api.delete(`/agents/${id}`),
+  startScan: (id: string, target: string) =>
+    api.post<{ scan_id: string; message: string }>(`/agents/${id}/scan`, { target }),
+};
+
+export type ScanProjectItem = {
+  id: string;
+  name: string;
+  description: string | null;
+  status: string;
+  total_scans: number;
+  completed_scans: number;
+  created_at: string | null;
+};
+
+export const projectsApi = {
+  list: () => api.get<ScanProjectItem[]>("/projects"),
+  get: (id: string) => api.get(`/projects/${id}`),
+  create: (data: { name: string; description?: string; target_list: string[] }) =>
+    api.post<{ project_id: string; scans_started: number; credits_used: number }>("/projects", data),
+  reportUrl: (id: string) => `/projects/${id}/report?format=pdf`,
 };
 
 export const reportsApi = {

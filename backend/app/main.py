@@ -25,6 +25,8 @@ from app.api.endpoints import (
     schedule,
     billing,
     admin,
+    agents,
+    projects,
 )
 
 logging.basicConfig(level=logging.INFO)
@@ -109,9 +111,36 @@ app.include_router(notifications.router, prefix="/api")
 app.include_router(schedule.router, prefix="/api")
 app.include_router(billing.router, prefix="/api")
 app.include_router(admin.router, prefix="/api")
+app.include_router(agents.router, prefix="/api")
+app.include_router(projects.router, prefix="/api")
 
 # WebSocket Routes
 app.include_router(websocket.router)
+
+
+# ── Scanix Agent distribution (install script + agent source) ─────────────────
+# Served unauthenticated so `curl | bash` installs work; the agent itself only
+# does anything with a valid AGENT_TOKEN.
+import os as _os
+from fastapi.responses import FileResponse, PlainTextResponse
+
+_AGENT_DIR = _os.path.join(_os.path.dirname(_os.path.dirname(_os.path.dirname(__file__))), "agent")
+
+
+@app.get("/agent/install.sh")
+async def agent_install_script():
+    path = _os.path.join(_AGENT_DIR, "install.sh")
+    if not _os.path.exists(path):
+        return PlainTextResponse("# Scanix agent installer not found\n", status_code=404)
+    return FileResponse(path, media_type="text/x-shellscript", filename="install.sh")
+
+
+@app.get("/agent/scanix_agent.py")
+async def agent_source():
+    path = _os.path.join(_AGENT_DIR, "scanix_agent.py")
+    if not _os.path.exists(path):
+        return PlainTextResponse("# Scanix agent not found\n", status_code=404)
+    return FileResponse(path, media_type="text/x-python", filename="scanix_agent.py")
 
 
 @app.get("/api/health")

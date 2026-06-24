@@ -9,7 +9,7 @@ import logging
 import os
 import secrets
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
@@ -461,12 +461,66 @@ async def get_stats(
             )
         ) or 0
 
+        # ── Operational metrics (Blok 5) ──
+        from app.models.agent import ScanixAgent
+        from app.models.project import ScanProject
+
+        week_ago = datetime.now(timezone.utc) - timedelta(days=7)
+        online_cutoff = datetime.now(timezone.utc) - timedelta(seconds=60)
+
+        active_agents = await db.scalar(
+            select(func.count(ScanixAgent.id)).where(ScanixAgent.last_seen >= online_cutoff)
+        ) or 0
+        total_projects = await db.scalar(select(func.count(ScanProject.id))) or 0
+        scans_this_week = await db.scalar(
+            select(func.count(Scan.id)).where(Scan.created_at >= week_ago)
+        ) or 0
+        avg_duration_s = await db.scalar(
+            select(func.avg(func.extract("epoch", Scan.completed_at - Scan.started_at))).where(
+                Scan.completed_at.isnot(None), Scan.started_at.isnot(None)
+            )
+        )
+        avg_scan_duration_min = round(float(avg_duration_s) / 60, 1) if avg_duration_s else 0
+
+        # Scans per day, last 14 days (grouped, then filled into a dense array).
+        fourteen_ago = datetime.now(timezone.utc) - timedelta(days=13)
+        per_day_res = await db.execute(
+            select(func.date_trunc("day", Scan.created_at).label("d"), func.count(Scan.id))
+            .where(Scan.created_at >= fourteen_ago)
+            .group_by("d")
+        )
+        per_day_map = {row[0].date().isoformat(): int(row[1]) for row in per_day_res.all() if row[0]}
+        scans_per_day = []
+        for i in range(13, -1, -1):
+            day = (datetime.now(timezone.utc) - timedelta(days=i)).date().isoformat()
+            scans_per_day.append({"date": day, "count": per_day_map.get(day, 0)})
+
+        # Top findings across recent completed scans (best-effort, in Python).
+        top_res = await db.execute(
+            select(Scan.findings).where(Scan.status == "completed", Scan.findings.isnot(None)).limit(300)
+        )
+        tally: dict[str, dict] = {}
+        for (findings,) in top_res.all():
+            for f in (findings or []):
+                title = str((f or {}).get("title") or (f or {}).get("name") or "Onbekend")[:120]
+                sev = str((f or {}).get("severity", "info")).lower()
+                entry = tally.setdefault(title, {"title": title, "count": 0, "severity": sev})
+                entry["count"] += 1
+        top_findings = sorted(tally.values(), key=lambda x: x["count"], reverse=True)[:5]
+
         return {
             "total_users": total_users,
             "active_subscriptions": active_subscriptions,
             "trial_users": trial_users,
             "total_scans_today": total_scans_today,
+            "scans_today": total_scans_today,
+            "scans_this_week": int(scans_this_week),
             "total_scans_this_month": total_scans_this_month,
+            "active_agents": int(active_agents),
+            "total_projects": int(total_projects),
+            "avg_scan_duration": avg_scan_duration_min,
+            "scans_per_day": scans_per_day,
+            "top_findings": top_findings,
             "revenue_estimate": {
                 "monthly": monthly_revenue,
                 "yearly": monthly_revenue * 12,
@@ -485,6 +539,110 @@ async def get_stats(
     except Exception:
         logger.exception("admin.get_stats failed")
         raise HTTPException(500, "Kon statistieken niet ophalen")
+
+
+# ── All scans (admin-wide) ────────────────────────────────────────────────────
+@router.get("/scans")
+async def admin_list_scans(
+    status: str | None = None,
+    user_id: str | None = None,
+    date_from: str | None = None,
+    date_to: str | None = None,
+    limit: int = 50,
+    offset: int = 0,
+    admin: User = Depends(require_admin),
+    db: AsyncSession = Depends(get_db),
+):
+    """Every scan across all users, with filters."""
+    from app.models.target import Target
+
+    query = select(Scan)
+    if status and status != "all":
+        query = query.where(Scan.status == status)
+    if user_id:
+        try:
+            query = query.where(Scan.user_id == uuid.UUID(user_id))
+        except (ValueError, TypeError):
+            pass
+    if date_from:
+        try:
+            query = query.where(Scan.created_at >= datetime.fromisoformat(date_from))
+        except ValueError:
+            pass
+    if date_to:
+        try:
+            query = query.where(Scan.created_at <= datetime.fromisoformat(date_to))
+        except ValueError:
+            pass
+
+    query = query.order_by(Scan.created_at.desc()).limit(min(limit, 200)).offset(offset)
+    rows = (await db.execute(query)).scalars().all()
+
+    # Hydrate user emails + target values in bulk.
+    user_ids = {s.user_id for s in rows}
+    target_ids = {s.target_id for s in rows}
+    umap = {}
+    tmap = {}
+    if user_ids:
+        ures = await db.execute(select(User.id, User.email).where(User.id.in_(user_ids)))
+        umap = {uid: email for uid, email in ures.all()}
+    if target_ids:
+        tres = await db.execute(select(Target.id, Target.value).where(Target.id.in_(target_ids)))
+        tmap = {tid: val for tid, val in tres.all()}
+
+    def _duration(s: Scan) -> int | None:
+        if s.started_at and s.completed_at:
+            return int((s.completed_at - s.started_at).total_seconds())
+        return None
+
+    return [
+        {
+            "scan_id": str(s.id),
+            "user_email": umap.get(s.user_id),
+            "target": tmap.get(s.target_id),
+            "status": s.status,
+            "created_at": s.created_at.isoformat() if s.created_at else None,
+            "duration_s": _duration(s),
+            "findings_count": len(s.findings or []),
+        }
+        for s in rows
+    ]
+
+
+# ── All agents (admin-wide) ───────────────────────────────────────────────────
+@router.get("/agents")
+async def admin_list_agents(
+    admin: User = Depends(require_admin),
+    db: AsyncSession = Depends(get_db),
+):
+    from app.models.agent import ScanixAgent
+
+    online_cutoff = datetime.now(timezone.utc) - timedelta(seconds=60)
+    rows = (await db.execute(select(ScanixAgent).order_by(ScanixAgent.created_at.desc()))).scalars().all()
+    user_ids = {a.user_id for a in rows}
+    umap = {}
+    if user_ids:
+        ures = await db.execute(select(User.id, User.email).where(User.id.in_(user_ids)))
+        umap = {uid: email for uid, email in ures.all()}
+
+    def _online(a) -> bool:
+        if not a.last_seen:
+            return False
+        last = a.last_seen if a.last_seen.tzinfo else a.last_seen.replace(tzinfo=timezone.utc)
+        return last >= online_cutoff
+
+    return [
+        {
+            "agent_id": str(a.id),
+            "user_email": umap.get(a.user_id),
+            "name": a.name,
+            "status": "online" if _online(a) else "offline",
+            "hostname": a.hostname,
+            "local_ip": a.local_ip,
+            "last_seen": a.last_seen.isoformat() if a.last_seen else None,
+        }
+        for a in rows
+    ]
 
 
 # ── Password reset & suspend / activate ──────────────────────────────────────
