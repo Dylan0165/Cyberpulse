@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { dashboardApi, scansApi } from "@/lib/api";
+import { dashboardApi, scansApi, billingApi } from "@/lib/api";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, Suspense } from "react";
 import { toast } from "sonner";
@@ -15,6 +15,7 @@ import Link from "next/link";
 import { GlowCard } from "@/components/cyber/glow-card";
 import { VerificationModal } from "@/components/cyber/verification-modal";
 import { PlanLimitModal } from "@/components/cyber/plan-limit-modal";
+import { NoCreditsModal } from "@/components/cyber/no-credits-modal";
 import RadarLaunch from "@/components/animations/RadarLaunch";
 import { useAuth } from "@/contexts/auth-context";
 import { scanTypeLabel, scanTypeSubtitle, phaseLabel, phaseDesc } from "@/lib/labels";
@@ -108,6 +109,8 @@ function NewScanContent() {
 
   // Plan-limit modal ("scan" | "target")
   const [planLimit, setPlanLimit] = useState<null | "scan" | "target">(null);
+  // "Geen credits" modal (credits model)
+  const [noCredits, setNoCredits] = useState(false);
 
   // Cinematic radar lead-in shown on the confirm step before the scan actually fires.
   // Purely visual: onDone runs the existing handleCreate (which keeps all 403/validation handling).
@@ -181,6 +184,11 @@ function NewScanContent() {
     },
     onError: (err: any) => {
       const detail = err?.response?.data?.detail;
+      if (err?.response?.status === 402) {
+        // Out of credits (e.g. balance changed between gate and submit).
+        setNoCredits(true);
+        return;
+      }
       if (err?.response?.status === 429) {
         toast.error(detail?.message ?? "Er lopen al te veel tests tegelijk. Probeer het later opnieuw.");
         return;
@@ -252,10 +260,23 @@ function NewScanContent() {
     createScanMutation.mutate(payload);
   };
 
-  // Confirm-button entry point: play the radar lead-in, then fire the real scan.
-  // RadarLaunch's onDone calls handleCreate so all validation / 403 handling is untouched.
-  const handleLaunch = () => {
+  // Confirm-button entry point: gate on credits, then play the radar lead-in and
+  // fire the real scan. RadarLaunch's onDone calls handleCreate so all
+  // validation / 403 handling is untouched.
+  const handleLaunch = async () => {
     if (createScanMutation.isPending || launching) return;
+    // Credits gate: fetch a fresh balance just before starting. Blocks (no
+    // redirect) with a modal when the user is out of credits.
+    try {
+      const { data } = await billingApi.creditsBalance();
+      if (!data.is_unlimited && (data.credits_remaining ?? 0) <= 0) {
+        setNoCredits(true);
+        return;
+      }
+    } catch {
+      // Balance endpoint unavailable (e.g. legacy mode) — don't block; the
+      // backend remains the source of truth and will 402 if needed.
+    }
     setLaunching(true);
   };
 
@@ -957,6 +978,8 @@ function NewScanContent() {
         kind={planLimit ?? "scan"}
         onClose={() => setPlanLimit(null)}
       />
+
+      <NoCreditsModal open={noCredits} onClose={() => setNoCredits(false)} />
 
       {/* Cinematic radar lead-in — visual only; onDone fires the real scan via handleCreate */}
       <RadarLaunch active={launching} onDone={handleRadarDone} />

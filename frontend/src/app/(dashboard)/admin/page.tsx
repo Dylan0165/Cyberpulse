@@ -27,9 +27,11 @@ import {
   RefreshCw,
   ShieldAlert,
   TrendingUp,
+  Zap,
 } from "lucide-react";
 
 import { adminApi } from "@/lib/api";
+import { AddCreditsModal } from "@/components/admin/add-credits-modal";
 import { useAuth } from "@/contexts/auth-context";
 import { StatCard } from "@/components/cyber/stat-card";
 import { Skeleton } from "@/components/cyber/skeleton";
@@ -318,6 +320,28 @@ function OverviewTab() {
           index={3}
           suffix="€"
         />
+        <StatCard
+          label="Credits verkocht"
+          value={Number(stats?.credits?.total_sold ?? 0)}
+          icon={Zap}
+          color="#00B4D8"
+          index={4}
+        />
+        <StatCard
+          label="Credits gebruikt"
+          value={Number(stats?.credits?.total_used ?? 0)}
+          icon={ScanLine}
+          color="#00FF88"
+          index={5}
+        />
+        <StatCard
+          label="Credit-omzet (30d)"
+          value={Number(stats?.credits?.revenue_30d_eur ?? 0)}
+          icon={TrendingUp}
+          color="#A855F7"
+          index={6}
+          suffix="€"
+        />
       </div>
 
       {/* Donut + recent users */}
@@ -469,6 +493,7 @@ function UsersTab() {
 
   const [createOpen, setCreateOpen] = useState(false);
   const [editUser, setEditUser] = useState<any | null>(null);
+  const [creditUser, setCreditUser] = useState<any | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
 
   // Debounce search
@@ -622,6 +647,7 @@ function UsersTab() {
                   "Naam",
                   "Email",
                   "Pakket",
+                  "Credits",
                   "Scans/mnd",
                   "Doelen",
                   "Actief",
@@ -654,6 +680,16 @@ function UsersTab() {
                     </td>
                     <td className="px-4 py-3">
                       <PlanChip plan={u.plan} />
+                    </td>
+                    <td className="px-4 py-3 font-mono text-[12px] tabular-nums">
+                      {u.plan === "business" || u.plan === "enterprise" ? (
+                        <span className="text-violet-300">∞</span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 text-cyan">
+                          <Zap className="h-3 w-3" fill="currentColor" />
+                          {u.credits_remaining ?? 0}
+                        </span>
+                      )}
                     </td>
                     <td className="px-4 py-3 font-mono text-[12px] tabular-nums text-ink">
                       {u.scans_this_month ?? 0}
@@ -689,6 +725,14 @@ function UsersTab() {
                           disabled={isBusy}
                         >
                           <Pencil className="h-3.5 w-3.5" />
+                        </IconBtn>
+                        <IconBtn
+                          title="Credits toevoegen"
+                          onClick={() => setCreditUser(u)}
+                          disabled={isBusy}
+                          color="#00B4D8"
+                        >
+                          <Zap className="h-3.5 w-3.5" />
                         </IconBtn>
                         <IconBtn
                           title="Wachtwoord opnieuw instellen"
@@ -741,6 +785,14 @@ function UsersTab() {
         onClose={() => setEditUser(null)}
         onSaved={() => {
           setEditUser(null);
+          load();
+        }}
+      />
+      <AddCreditsModal
+        user={creditUser}
+        onClose={() => setCreditUser(null)}
+        onDone={() => {
+          setCreditUser(null);
           load();
         }}
       />

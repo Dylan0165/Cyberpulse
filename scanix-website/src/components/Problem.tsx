@@ -173,7 +173,7 @@ export function Problem() {
         preload="none"
         aria-hidden="true"
         tabIndex={-1}
-        className="pointer-events-none absolute inset-0 z-0 h-full w-full object-cover opacity-20"
+        className="pointer-events-none absolute inset-0 z-0 h-full w-full object-cover opacity-25"
       />
 
       {/* CSS-only floating particle overlay */}
@@ -196,6 +196,14 @@ export function Problem() {
         >
           {t("title")}
         </motion.h2>
+
+        {/* Thin line that draws in left→right when the section enters view. */}
+        <div className="mt-8 h-px w-full max-w-xl overflow-hidden bg-grid/40" aria-hidden="true">
+          <div
+            className="h-full bg-gradient-to-r from-cyan to-transparent transition-[width] duration-1000 ease-out"
+            style={{ width: inView ? "100%" : "0%" }}
+          />
+        </div>
 
         <div className="mt-12 grid grid-cols-1 gap-6 md:grid-cols-3">
           {cards.map((card, i) => (

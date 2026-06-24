@@ -126,6 +126,8 @@ async def register(
             is_active=True,
             plan="trial",
             credits=9999,
+            credits_remaining=1,   # 1 free trial scan credit
+            credits_total=1,
             terms_accepted=False,
             onboarding_completed=False,
         )
@@ -135,6 +137,27 @@ async def register(
         db.add(user)
         await db.commit()
         await db.refresh(user)
+
+        # Record the free trial credit in the ledger (credits model only).
+        from app.services.credits import use_credits_model
+
+        if use_credits_model():
+            try:
+                from app.models.credits import ScanCredit
+
+                db.add(
+                    ScanCredit(
+                        user_id=user.id,
+                        package_name="trial",
+                        credits_purchased=1,
+                        price_paid=0,
+                        stripe_payment_id=f"trial_{user.id}",
+                    )
+                )
+                await db.commit()
+            except Exception:
+                await db.rollback()
+                logger.warning("trial credit ledger insert failed for %s", user.id, exc_info=True)
     except HTTPException:
         raise
     except Exception as exc:

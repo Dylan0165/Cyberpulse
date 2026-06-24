@@ -26,10 +26,31 @@ export const usersApi = {
 };
 
 // ── Billing (Stripe) ───────────────────────────────────────────────────────────
+export type CreditsBalance = {
+  credits_remaining: number;
+  credits_total: number;
+  plan: string;
+  is_unlimited: boolean;
+};
+
+export type CreditPurchase = {
+  id: string;
+  package_name: string;
+  credits: number;
+  price_paid: number; // eurocents
+  created_at: string | null;
+  status: string;
+};
+
 export const billingApi = {
   checkout: (plan: string, interval: string) =>
     api.post("/billing/checkout", { plan, interval }),
   portal: () => api.get("/billing/portal"),
+  // Credits model
+  buyCredits: (pkg: string) =>
+    api.post<{ checkout_url: string; amount: number }>("/billing/buy-credits", { package: pkg }),
+  creditsBalance: () => api.get<CreditsBalance>("/billing/credits-balance"),
+  history: () => api.get<CreditPurchase[]>("/billing/history"),
 };
 
 // ── Admin ──────────────────────────────────────────────────────────────────────
@@ -44,6 +65,8 @@ export const adminApi = {
   resetPassword: (id: string) => api.post(`/admin/users/${id}/reset-password`),
   suspend: (id: string) => api.post(`/admin/users/${id}/suspend`),
   activate: (id: string) => api.post(`/admin/users/${id}/activate`),
+  addCredits: (id: string, credits: number, reason?: string) =>
+    api.post(`/admin/users/${id}/add-credits`, { credits, reason }),
   init: (d: { email: string; password: string; secret: string }) =>
     api.post("/admin/init", d),
 };

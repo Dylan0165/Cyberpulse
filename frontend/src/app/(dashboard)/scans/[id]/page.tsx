@@ -8,7 +8,7 @@ import { useState, useEffect, useRef, useMemo } from "react";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Shield, ArrowLeft, Play, StopCircle, Download, FileText,
+  Shield, ArrowLeft, ArrowRight, Play, StopCircle, Download, FileText,
   CheckCircle, AlertTriangle, Activity, Clock, Circle,
   ChevronDown, Cpu, Zap, Wrench, Loader2,
 } from "lucide-react";
@@ -19,6 +19,7 @@ import MatrixRain from "@/components/animations/MatrixRain";
 import AnimatedCheckmark from "@/components/animations/AnimatedCheckmark";
 import Confetti from "@/components/animations/Confetti";
 import { usePrefersReducedMotion } from "@/hooks/useAnimation";
+import { useAuth } from "@/contexts/auth-context";
 import { GlowCard } from "@/components/cyber/glow-card";
 import { RiskBadge, severityColor } from "@/components/cyber/risk-badge";
 import { RiskGauge } from "@/components/cyber/risk-gauge";
@@ -102,6 +103,9 @@ export default function ScanDetailPage() {
   const [selectedNode, setSelectedNode] = useState<SurfaceNode | null>(null);
   const wsRef = useRef<WebSocket | null>(null);
   const reducedMotion = usePrefersReducedMotion();
+  const { planInfo } = useAuth();
+  // Trial accounts get a limited report: no PDF, no Secure Solution Rapport.
+  const isTrial = String(planInfo?.plan ?? "").toLowerCase() === "trial";
 
   const { data: scan, isLoading } = useQuery({
     queryKey: ["scan", scanId],
@@ -355,6 +359,10 @@ export default function ScanDetailPage() {
   );
 
   async function downloadSecureSolution() {
+    if (isTrial) {
+      toast.error("Het Secure Solution Rapport vereist credits. Koop een pakket voor het volledige rapport.");
+      return;
+    }
     setSecureBusy(true);
     const t = toast.loading("Secure Solution Rapport wordt gegenereerd… (10-30s)");
     try {
@@ -709,7 +717,22 @@ export default function ScanDetailPage() {
               }`}
             >
               {!reducedMotion && (
-                <MatrixRain className="pointer-events-none absolute inset-0 z-0 opacity-40 motion-reduce:hidden" />
+                <>
+                  {/* Low-opacity SOC ambience behind the matrix rain (md+ only). */}
+                  <video
+                    src="/videos/animatie2.mp4"
+                    poster="/videos/posters/poster2.jpg"
+                    autoPlay
+                    muted
+                    loop
+                    playsInline
+                    preload="none"
+                    aria-hidden="true"
+                    tabIndex={-1}
+                    className="pointer-events-none absolute inset-0 z-0 hidden h-full w-full object-cover opacity-[0.08] md:block"
+                  />
+                  <MatrixRain className="pointer-events-none absolute inset-0 z-0 opacity-40 motion-reduce:hidden" />
+                </>
               )}
               <div className="relative z-10">
                 <TerminalOutput lines={renderLines} complete={scan.status === "completed"} />
@@ -863,6 +886,23 @@ export default function ScanDetailPage() {
                   <span>Scan voltooid</span>
                 </div>
                 {!reducedMotion && riskScore < 30 && <Confetti trigger={true} />}
+
+                {/* Trial report banner — PDF & Secure Solution are credit-only */}
+                {isTrial && (
+                  <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-orange/50 bg-orange/10 px-4 py-3">
+                    <p className="font-mono text-[12px] leading-relaxed text-orange">
+                      Dit is een trial rapport. Koop credits voor het volledige rapport inclusief
+                      PDF en Secure Solution.
+                    </p>
+                    <Link
+                      href="/billing"
+                      className="inline-flex items-center gap-1.5 rounded-lg bg-orange px-3 py-1.5 text-[12px] font-bold text-app transition-transform hover:scale-[1.02]"
+                    >
+                      Volledig rapport €49 <ArrowRight className="h-3.5 w-3.5" />
+                    </Link>
+                  </div>
+                )}
+
                 {/* Risk header */}
                 <GlowCard className="flex flex-wrap items-center gap-8 p-6">
                   <RiskGauge score={aiReport.risk_score ?? riskScore} size={150} />
@@ -876,6 +916,10 @@ export default function ScanDetailPage() {
                   <div className="flex flex-wrap gap-2">
                     <span className="relative inline-block overflow-hidden rounded-md sxd2-shine">
                       <ActionButton variant="primary" onClick={async () => {
+                        if (isTrial) {
+                          toast.error("PDF-download vereist credits. Koop een pakket voor het volledige rapport.");
+                          return;
+                        }
                         const res = await reportsApi.downloadPdf(scanId);
                         const url = URL.createObjectURL(new Blob([res.data]));
                         Object.assign(document.createElement("a"), { href: url, download: `rapport-${scanId}.pdf` }).click();

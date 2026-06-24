@@ -14,5 +14,16 @@ from app.models.legal import NDAAcceptance, AuditLog
 from app.models.scan import Scan
 from app.models.notification import Notification
 from app.models.scheduled_scan import ScheduledScan
+from app.models.credits import ScanCredit, CreditUsage
 
-__all__ = ["User", "Target", "NDAAcceptance", "AuditLog", "Scan", "Notification", "ScheduledScan"]
+__all__ = [
+    "User",
+    "Target",
+    "NDAAcceptance",
+    "AuditLog",
+    "Scan",
+    "Notification",
+    "ScheduledScan",
+    "ScanCredit",
+    "CreditUsage",
+]

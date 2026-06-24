@@ -63,6 +63,11 @@ class User(Base):
     role: Mapped[str] = mapped_column(String(20), server_default="user", default="user")  # user | admin
     last_login_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
+    # Prepaid credits system (migration 0008). plan now: credits | trial | business | enterprise.
+    # Business/Enterprise are treated as unlimited (credits_remaining sentinel 999999).
+    credits_remaining: Mapped[int] = mapped_column(Integer, server_default="0", default=0)
+    credits_total: Mapped[int] = mapped_column(Integer, server_default="0", default=0)
+
     # Relationships
     targets = relationship("Target", back_populates="user", cascade="all, delete-orphan")
     scans = relationship("Scan", back_populates="user", cascade="all, delete-orphan")

@@ -131,25 +131,40 @@ async def create_scan(
                 "message": "U heeft al een actieve scan. Wacht tot deze voltooid is.",
             })
 
-    # ── Plan limit: monthly scan quota ────────────────────────────────────────
-    from app.core.plans import UNLIMITED_SCANS
-    now = datetime.now(timezone.utc)
-    reset_at = getattr(auth_user, "scans_reset_at", None)
-    if reset_at is None or reset_at.year != now.year or reset_at.month != now.month:
-        auth_user.scans_this_month = 0
-        auth_user.scans_reset_at = now
-        await db.commit()
-    max_scans = getattr(auth_user, "max_scans_per_month", 3) or 3
-    used = getattr(auth_user, "scans_this_month", 0) or 0
-    if max_scans < UNLIMITED_SCANS and used >= max_scans:
-        raise HTTPException(status_code=403, detail={
-            "error": "scan_limit_reached",
-            "message": (
-                f"U heeft het maximale aantal scans voor deze maand bereikt "
-                f"({max_scans} scans). Upgrade uw pakket of wacht tot volgende maand."
-            ),
-            "upgrade_url": "https://scanix.nl/prijzen",
-        })
+    # ── Billing gate ──────────────────────────────────────────────────────────
+    # Credits model (USE_CREDITS_MODEL=true): require >=1 credit up front; the
+    # actual deduction happens atomically just after the scan row is created.
+    # Legacy model: the old monthly subscription quota.
+    from app.services.credits import use_credits_model, credits_service
+    _credits_on = use_credits_model()
+
+    if _credits_on:
+        if auth_user is not None and not await credits_service.has_credits(db, auth_user.id):
+            raise HTTPException(status_code=402, detail={
+                "error": "no_credits",
+                "message": "U heeft geen scan credits meer. Koop credits om door te gaan.",
+                "buy_url": "/billing",
+            })
+    else:
+        # ── Plan limit: monthly scan quota (legacy subscription model) ──
+        from app.core.plans import UNLIMITED_SCANS
+        now = datetime.now(timezone.utc)
+        reset_at = getattr(auth_user, "scans_reset_at", None)
+        if reset_at is None or reset_at.year != now.year or reset_at.month != now.month:
+            auth_user.scans_this_month = 0
+            auth_user.scans_reset_at = now
+            await db.commit()
+        max_scans = getattr(auth_user, "max_scans_per_month", 3) or 3
+        used = getattr(auth_user, "scans_this_month", 0) or 0
+        if max_scans < UNLIMITED_SCANS and used >= max_scans:
+            raise HTTPException(status_code=403, detail={
+                "error": "scan_limit_reached",
+                "message": (
+                    f"U heeft het maximale aantal scans voor deze maand bereikt "
+                    f"({max_scans} scans). Upgrade uw pakket of wacht tot volgende maand."
+                ),
+                "upgrade_url": "https://scanix.nl/prijzen",
+            })
 
     # Determine Kali phases from preset, then append any custom modules
     # from body.phases so user-selected m09-m17 are never dropped.
@@ -187,15 +202,26 @@ async def create_scan(
         status="pending",       # skip NDA/verification flow
     )
     db.add(scan)
-    await db.commit()
-    await db.refresh(scan)
+    # Flush to assign scan.id without committing, so the credit deduction and
+    # the scan row are committed together (atomic — a race that loses the credit
+    # check rolls back the scan too).
+    await db.flush()
 
-    # Count this scan against the monthly quota (best-effort).
-    try:
-        auth_user.scans_this_month = (getattr(auth_user, "scans_this_month", 0) or 0) + 1
+    if _credits_on:
+        if auth_user is not None:
+            # Raises HTTPException(402) if the balance was exhausted concurrently.
+            await credits_service.deduct_credit(db, auth_user.id, scan.id)
         await db.commit()
-    except Exception:
-        await db.rollback()
+        await db.refresh(scan)
+    else:
+        await db.commit()
+        await db.refresh(scan)
+        # Count this scan against the monthly quota (best-effort, legacy model).
+        try:
+            auth_user.scans_this_month = (getattr(auth_user, "scans_this_month", 0) or 0) + 1
+            await db.commit()
+        except Exception:
+            await db.rollback()
 
     ip = await get_client_ip(request)
     await log_action(

@@ -88,11 +88,11 @@ export function WhatWeTest() {
                 className="sxt-card-video pointer-events-none absolute inset-0 z-0 h-full w-full rounded-[inherit] object-cover opacity-0 transition-opacity duration-300"
               />
               {/* Dark overlay to keep text readable while video plays */}
-              <div className="sxt-card-scrim pointer-events-none absolute inset-0 z-[1] rounded-[inherit] bg-card/70 opacity-0 transition-opacity duration-300" />
+              <div className="sxt-card-scrim pointer-events-none absolute inset-0 z-[1] rounded-[inherit] bg-card/55 opacity-0 transition-opacity duration-300" />
 
               <div className="relative z-[2]">
                 <Icon className="h-7 w-7 text-cyan" strokeWidth={2} />
-                <h3 className="mt-4 font-display text-lg font-bold text-ink">
+                <h3 className="sxt-card-title mt-4 font-display text-lg font-bold text-ink">
                   {card.title}
                 </h3>
                 <p className="mt-2 text-[15px] leading-relaxed text-ink-muted">
@@ -122,14 +122,48 @@ export function WhatWeTest() {
       </motion.div>
 
       <style>{`
-        .sxt-card:hover .sxt-card-video,
+        .sxt-card {
+          transition: transform 300ms ease, box-shadow 300ms ease, border-color 300ms ease;
+        }
+        .sxt-card-title {
+          transition: transform 300ms ease;
+        }
+        .sxt-card:hover {
+          transform: scale(1.02);
+          box-shadow: 0 0 20px rgba(6, 182, 212, 0.4);
+        }
+        .sxt-card:hover .sxt-card-video {
+          opacity: 0.3;
+        }
         .sxt-card:hover .sxt-card-scrim {
           opacity: 1;
         }
+        .sxt-card:hover .sxt-card-title {
+          transform: translateY(-8px);
+        }
         @media (hover: none) {
+          /* Mobile: keep only the border glow, no video / no transforms. */
+          .sxt-card:hover {
+            transform: none;
+          }
           .sxt-card:hover .sxt-card-video,
           .sxt-card:hover .sxt-card-scrim {
             opacity: 0;
+          }
+          .sxt-card:hover .sxt-card-title {
+            transform: none;
+          }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .sxt-card,
+          .sxt-card-title {
+            transition: none;
+          }
+          .sxt-card:hover {
+            transform: none;
+          }
+          .sxt-card:hover .sxt-card-title {
+            transform: none;
           }
         }
       `}</style>

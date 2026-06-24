@@ -9,6 +9,7 @@ side tasks (e.g. e-mail) — it only returns 400 on a bad signature.
 import json
 import logging
 import os
+import uuid
 from datetime import datetime, timezone, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, Request
@@ -20,10 +21,15 @@ from app.core.database import get_db
 from app.core.auth import get_required_user
 from app.core.plans import apply_plan_limits
 from app.models.user import User
+from app.models.credits import ScanCredit
+from app.services.credits import credits_service
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/billing", tags=["billing"])
+
+# App URL for Stripe redirects (kept consistent with the billing portal).
+_APP_URL = os.getenv("APP_PUBLIC_URL", "https://app.scanix.nl")
 
 # Generic Dutch message shown whenever payments are unavailable / misconfigured.
 _NOT_CONFIGURED = (
@@ -33,6 +39,14 @@ _NOT_CONFIGURED = (
 
 # Number of days each billing interval grants.
 _INTERVAL_DAYS = {"monthly": 30, "quarterly": 90, "yearly": 365}
+
+# One-time credit packages (price in eurocents). Credits never expire.
+CREDIT_PACKAGES: dict[str, dict] = {
+    "kennismaking": {"credits": 1,  "price": 4900,  "name": "Kennismaking"},
+    "starter":      {"credits": 3,  "price": 11900, "name": "Starter Pack"},
+    "groei":        {"credits": 10, "price": 34900, "name": "Groei Pack"},
+    "pro":          {"credits": 25, "price": 74900, "name": "Pro Pack"},
+}
 
 
 # ---------------------------------------------------------------------------
@@ -73,6 +87,10 @@ def _expires_at(now: datetime, interval: str | None) -> datetime:
 class CheckoutRequest(BaseModel):
     plan: str       # 'starter' | 'business'
     interval: str   # 'monthly' | 'quarterly' | 'yearly'
+
+
+class BuyCreditsRequest(BaseModel):
+    package: str    # 'kennismaking' | 'starter' | 'groei' | 'pro'
 
 
 # ---------------------------------------------------------------------------
@@ -127,6 +145,109 @@ async def create_checkout(
 
 
 # ---------------------------------------------------------------------------
+# 1b) Credits — one-time purchase via Stripe hosted Checkout (mode=payment)
+# ---------------------------------------------------------------------------
+@router.post("/buy-credits")
+async def buy_credits(
+    body: BuyCreditsRequest,
+    user: User = Depends(get_required_user),
+):
+    pkg = CREDIT_PACKAGES.get(body.package)
+    if not pkg:
+        raise HTTPException(status_code=400, detail="Onbekend creditpakket")
+
+    key = os.getenv("STRIPE_SECRET_KEY")
+    if not key:
+        raise HTTPException(status_code=503, detail=_NOT_CONFIGURED)
+
+    meta = {
+        "type": "credits",
+        "user_id": str(user.id),
+        "package": body.package,
+        "credits": str(pkg["credits"]),
+    }
+
+    try:
+        import stripe
+
+        stripe.api_key = key
+        session = stripe.checkout.Session.create(
+            mode="payment",
+            customer_email=user.email,
+            line_items=[
+                {
+                    "price_data": {
+                        "currency": "eur",
+                        "product_data": {
+                            "name": f"Scanix {pkg['name']} — {pkg['credits']} scan credits",
+                        },
+                        "unit_amount": pkg["price"],
+                    },
+                    "quantity": 1,
+                }
+            ],
+            success_url=f"{_APP_URL}/billing?success=true&package={body.package}",
+            cancel_url=f"{_APP_URL}/billing?cancelled=true",
+            metadata=meta,
+            # Mirror metadata onto the PaymentIntent so payment_intent.succeeded
+            # carries it too (idempotency keys off the PaymentIntent id).
+            payment_intent_data={"metadata": meta},
+        )
+    except HTTPException:
+        raise
+    except Exception:
+        logger.exception("Stripe credits checkout session creation failed")
+        raise HTTPException(
+            status_code=503,
+            detail="Er ging iets mis bij het starten van de betaling. Probeer het later opnieuw.",
+        )
+
+    return {"checkout_url": session.url, "amount": pkg["price"]}
+
+
+# ---------------------------------------------------------------------------
+# 1c) Credits — current balance
+# ---------------------------------------------------------------------------
+@router.get("/credits-balance")
+async def credits_balance(user: User = Depends(get_required_user)):
+    unlimited = getattr(user, "plan", None) in ("business", "enterprise")
+    return {
+        "credits_remaining": 999999 if unlimited else int(getattr(user, "credits_remaining", 0) or 0),
+        "credits_total": int(getattr(user, "credits_total", 0) or 0),
+        "plan": getattr(user, "plan", "credits"),
+        "is_unlimited": unlimited,
+    }
+
+
+# ---------------------------------------------------------------------------
+# 1d) Credits — purchase history (last 20)
+# ---------------------------------------------------------------------------
+@router.get("/history")
+async def credit_history(
+    user: User = Depends(get_required_user),
+    db: AsyncSession = Depends(get_db),
+):
+    result = await db.execute(
+        select(ScanCredit)
+        .where(ScanCredit.user_id == user.id)
+        .order_by(ScanCredit.created_at.desc())
+        .limit(20)
+    )
+    rows = result.scalars().all()
+    return [
+        {
+            "id": str(r.id),
+            "package_name": r.package_name,
+            "credits": r.credits_purchased,
+            "price_paid": r.price_paid,
+            "created_at": r.created_at.isoformat() if r.created_at else None,
+            "status": "paid" if r.price_paid > 0 else "gratis",
+        }
+        for r in rows
+    ]
+
+
+# ---------------------------------------------------------------------------
 # 2) Stripe webhook (no auth)
 # ---------------------------------------------------------------------------
 @router.post("/webhook")
@@ -160,7 +281,21 @@ async def stripe_webhook(
 
     try:
         if event_type == "checkout.session.completed":
-            await _handle_checkout_completed(db, data_object)
+            # Credits checkout (mode=payment) vs subscription checkout.
+            if (data_object.get("metadata") or {}).get("type") == "credits":
+                await _handle_credit_purchase(
+                    db,
+                    metadata=data_object.get("metadata") or {},
+                    payment_intent_id=data_object.get("payment_intent"),
+                )
+            else:
+                await _handle_checkout_completed(db, data_object)
+        elif event_type == "payment_intent.succeeded":
+            await _handle_credit_purchase(
+                db,
+                metadata=data_object.get("metadata") or {},
+                payment_intent_id=data_object.get("id"),
+            )
         elif event_type == "customer.subscription.deleted":
             await _handle_subscription_deleted(db, data_object)
         elif event_type == "invoice.payment_failed":
@@ -217,6 +352,50 @@ async def _handle_checkout_completed(db: AsyncSession, session: dict) -> None:
         send_welcome_email(user, plan, interval)
     except Exception:
         logger.debug("send_welcome_email unavailable or failed", exc_info=True)
+
+
+async def _handle_credit_purchase(db: AsyncSession, *, metadata: dict, payment_intent_id) -> None:
+    """Grant credits for a one-time payment. Idempotent on the PaymentIntent id,
+    so duplicate webhook deliveries (e.g. both checkout.session.completed and
+    payment_intent.succeeded) only ever add credits once."""
+    if not metadata or metadata.get("type") != "credits":
+        return
+
+    user_id = metadata.get("user_id")
+    package = metadata.get("package")
+    if not user_id or not package or package not in CREDIT_PACKAGES:
+        logger.warning("credit purchase with bad metadata: %s", metadata)
+        return
+    if not payment_intent_id:
+        logger.warning("credit purchase without payment_intent id; metadata=%s", metadata)
+        return
+
+    try:
+        uid = uuid.UUID(str(user_id))
+    except (ValueError, TypeError):
+        logger.warning("credit purchase with invalid user_id=%s", user_id)
+        return
+
+    pkg = CREDIT_PACKAGES[package]
+    record = await credits_service.add_credits(
+        db,
+        user_id=uid,
+        amount=pkg["credits"],
+        package_name=package,
+        price_paid=pkg["price"],
+        stripe_payment_id=str(payment_intent_id),
+    )
+    if record is None:
+        logger.info("credit purchase already processed (pi=%s)", payment_intent_id)
+        return
+
+    # Best-effort confirmation e-mail (function may not exist yet).
+    try:
+        from app.services.email import send_credits_purchased
+
+        send_credits_purchased(uid, pkg["credits"], pkg["name"])
+    except Exception:
+        logger.debug("send_credits_purchased unavailable or failed", exc_info=True)
 
 
 async def _handle_subscription_deleted(db: AsyncSession, subscription: dict) -> None:

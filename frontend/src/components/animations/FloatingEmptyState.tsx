@@ -9,6 +9,11 @@ interface FloatingEmptyStateProps {
   description: string;
   ctaLabel?: string;
   onCta?: () => void;
+  /** Optional cinematic background video (md+, motion only). */
+  videoSrc?: string;
+  videoPoster?: string;
+  /** Append a blinking terminal cursor to the title. */
+  cursor?: boolean;
 }
 
 export default function FloatingEmptyState({
@@ -17,6 +22,9 @@ export default function FloatingEmptyState({
   description,
   ctaLabel,
   onCta,
+  videoSrc,
+  videoPoster,
+  cursor = false,
 }: FloatingEmptyStateProps) {
   const reduced = usePrefersReducedMotion();
 
@@ -27,6 +35,9 @@ export default function FloatingEmptyState({
     >
       <style>{`
         .sxd-empty {
+          position: relative;
+          overflow: hidden;
+          border-radius: 0.75rem;
           display: flex;
           flex-direction: column;
           align-items: center;
@@ -35,6 +46,37 @@ export default function FloatingEmptyState({
           padding: 3rem 1.5rem;
           gap: 1rem;
         }
+        .sxd-empty-video {
+          position: absolute;
+          inset: 0;
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          opacity: 0.3;
+          z-index: 0;
+          pointer-events: none;
+        }
+        .sxd-empty[data-reduced="1"] .sxd-empty-video { display: none; }
+        @media (max-width: 767px) {
+          .sxd-empty-video { display: none; }
+        }
+        .sxd-empty-content {
+          position: relative;
+          z-index: 1;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 1rem;
+        }
+        .sxd-empty-cursor {
+          display: inline-block;
+          width: 0.6ch;
+          margin-left: 2px;
+          color: #06b6d4;
+          animation: sxd-empty-blink 1s step-end infinite;
+        }
+        .sxd-empty[data-reduced="1"] .sxd-empty-cursor { animation: none; opacity: 0; }
+        @keyframes sxd-empty-blink { 50% { opacity: 0; } }
         .sxd-empty-icon {
           display: flex;
           align-items: center;
@@ -75,16 +117,35 @@ export default function FloatingEmptyState({
           50% { transform: scale(1.06); }
         }
       `}</style>
-      <div className="sxd-empty-icon">
-        <Icon size={40} strokeWidth={1.5} aria-hidden="true" />
-      </div>
-      <h3 className="text-lg font-semibold text-ink">{title}</h3>
-      <p className="max-w-sm text-sm text-ink-muted">{description}</p>
-      {ctaLabel && (
-        <button type="button" className="sxd-empty-cta" onClick={onCta}>
-          {ctaLabel}
-        </button>
+      {videoSrc && !reduced && (
+        <video
+          className="sxd-empty-video"
+          src={videoSrc}
+          poster={videoPoster}
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="none"
+          aria-hidden="true"
+          tabIndex={-1}
+        />
       )}
+      <div className="sxd-empty-content">
+        <div className="sxd-empty-icon">
+          <Icon size={40} strokeWidth={1.5} aria-hidden="true" />
+        </div>
+        <h3 className="text-lg font-semibold text-ink">
+          {title}
+          {cursor && <span className="sxd-empty-cursor" aria-hidden="true">▋</span>}
+        </h3>
+        <p className="max-w-sm text-sm text-ink-muted">{description}</p>
+        {ctaLabel && (
+          <button type="button" className="sxd-empty-cta" onClick={onCta}>
+            {ctaLabel}
+          </button>
+        )}
+      </div>
     </div>
   );
 }

@@ -17,6 +17,7 @@ from app.models.scan import Scan
 from app.models.legal import NDAAcceptance, AuditLog
 from app.models.notification import Notification
 from app.models.scheduled_scan import ScheduledScan
+from app.models.credits import ScanCredit, CreditUsage
 
 config = context.config
 settings = get_settings()

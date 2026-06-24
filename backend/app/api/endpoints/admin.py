@@ -59,6 +59,8 @@ def _user_dict(user: User) -> dict:
         "max_targets": user.max_targets,
         "max_scans_per_month": user.max_scans_per_month,
         "scans_this_month": user.scans_this_month,
+        "credits_remaining": getattr(user, "credits_remaining", 0),
+        "credits_total": getattr(user, "credits_total", 0),
         "is_active": user.is_active,
         "role": user.role,
         "created_at": _iso(user.created_at),
@@ -127,6 +129,11 @@ class PatchUserBody(BaseModel):
     role: str | None = None
     plan_expires_at: str | None = None
     plan_interval: str | None = None
+
+
+class AddCreditsBody(BaseModel):
+    credits: int
+    reason: str | None = None
 
 
 class InitBody(BaseModel):
@@ -344,6 +351,40 @@ async def hard_delete_user(
         raise HTTPException(500, "Kon gebruiker niet verwijderen")
 
 
+# ── Credits (manual grant for support / compensation / test accounts) ─────────
+
+@router.post("/users/{user_id}/add-credits")
+async def admin_add_credits(
+    user_id: str,
+    body: AddCreditsBody,
+    admin: User = Depends(require_admin),
+    db: AsyncSession = Depends(get_db),
+):
+    if body.credits <= 0:
+        raise HTTPException(400, "Aantal credits moet groter zijn dan 0")
+
+    user = await _get_user_or_404(db, user_id)
+
+    import secrets as _secrets
+    from app.services.credits import credits_service
+
+    # stripe_payment_id is unique → suffix a token so repeated grants don't clash.
+    await credits_service.add_credits(
+        db,
+        user_id=user.id,
+        amount=body.credits,
+        package_name="admin",
+        price_paid=0,
+        stripe_payment_id=f"admin_manual_{_secrets.token_hex(8)}",
+    )
+    await db.refresh(user)
+    logger.info(
+        "admin %s granted %d credits to %s (reason=%s)",
+        admin.email, body.credits, user.email, (body.reason or "-"),
+    )
+    return _user_dict(user)
+
+
 # ── Stats ────────────────────────────────────────────────────────────────────
 
 @router.get("/stats")
@@ -383,11 +424,29 @@ async def get_stats(
 
         plans_breakdown = {
             "trial": plan_counts.get("trial", 0),
+            "credits": plan_counts.get("credits", 0),
             "starter": plan_counts.get("starter", 0),
             "business": plan_counts.get("business", 0),
             "enterprise": plan_counts.get("enterprise", 0),
             "admin": plan_counts.get("admin", 0),
         }
+
+        # ── Credits metrics ──
+        from datetime import timedelta
+        from app.models.credits import ScanCredit, CreditUsage
+
+        thirty_days_ago = datetime.now(timezone.utc) - timedelta(days=30)
+        total_credits_sold = await db.scalar(
+            select(func.coalesce(func.sum(ScanCredit.credits_purchased), 0))
+        ) or 0
+        total_credits_used = await db.scalar(
+            select(func.coalesce(func.sum(CreditUsage.credits_used), 0))
+        ) or 0
+        credits_revenue_cents = await db.scalar(
+            select(func.coalesce(func.sum(ScanCredit.price_paid), 0)).where(
+                ScanCredit.created_at >= thirty_days_ago
+            )
+        ) or 0
 
         return {
             "total_users": total_users,
@@ -400,6 +459,11 @@ async def get_stats(
                 "yearly": monthly_revenue * 12,
             },
             "plans_breakdown": plans_breakdown,
+            "credits": {
+                "total_sold": int(total_credits_sold),
+                "total_used": int(total_credits_used),
+                "revenue_30d_eur": round(int(credits_revenue_cents) / 100, 2),
+            },
         }
     except HTTPException:
         raise

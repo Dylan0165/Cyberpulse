@@ -228,10 +228,13 @@ export default function DashboardPage() {
             <div className="rounded-lg border border-grid bg-card2">
               <FloatingEmptyState
                 icon={Radar}
-                title="Nog geen scans uitgevoerd"
+                title="Uw eerste scan wacht"
                 description="Start uw eerste scan om resultaten te zien."
                 ctaLabel="Start uw eerste scan"
                 onCta={() => router.push("/scans/new")}
+                videoSrc="/videos/animatie1.mp4"
+                videoPoster="/videos/posters/poster1.jpg"
+                cursor
               />
             </div>
           ) : (

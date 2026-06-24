@@ -5,7 +5,8 @@ import { useTranslations } from "next-intl";
 import { motion, useInView } from "framer-motion";
 import { Lock, ArrowRight, ArrowDown, Check } from "lucide-react";
 import { Link } from "@/lib/navigation";
-import { VideoBackground } from "./video/VideoBackground";
+import { useVideoScrub } from "@/hooks/useVideoScrub";
+import { useReducedMotion } from "@/hooks/useReducedMotion";
 
 const APP_URL = "https://app.scanix.nl";
 
@@ -113,6 +114,28 @@ export function Hero() {
   const t = useTranslations("hero");
   const trust = [t("trust1"), t("trust2"), t("trust3")];
 
+  const reduced = useReducedMotion();
+  // animatie1 is scrubbed by scroll (0% = frame 0, ~60% = end), not played.
+  const scrubRef = useVideoScrub<HTMLVideoElement>({ endAt: 0.6 });
+  // Parallax: hero copy drifts slower than the background video as you scroll.
+  const [parallax, setParallax] = useState(0);
+  useEffect(() => {
+    if (reduced) return;
+    let raf = 0;
+    const onScroll = () => {
+      if (raf) return;
+      raf = requestAnimationFrame(() => {
+        raf = 0;
+        setParallax(window.scrollY * 0.25);
+      });
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      if (raf) cancelAnimationFrame(raf);
+    };
+  }, [reduced]);
+
   // If the visitor already has a valid dashboard session (cookie on app.scanix.nl),
   // swap the primary CTA for a "go to dashboard" link. Cross-domain, so we ask the
   // app via a credentialed ping rather than reading localStorage. Fails silently.
@@ -131,15 +154,36 @@ export function Hero() {
 
   return (
     <section className="relative min-h-[100dvh] overflow-hidden pt-10">
-      {/* Abstract generated background video */}
-      <VideoBackground src="/videos/hero-bg.mp4" overlayClassName="bg-transparent" />
-      {/* Overlays: dark on the left (text) fading right (video shows), plus a
-          soft bottom fade so the section blends into the next one. */}
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-bg via-bg/75 to-bg/20" />
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-bg/40 via-transparent to-bg" />
+      {/* Scroll-scrubbed background video (animatie1) on md+, static poster on mobile. */}
+      <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-b from-bg via-bg-secondary to-bg" />
+        {!reduced && (
+          <video
+            ref={scrubRef}
+            src="/videos/animatie1.mp4"
+            poster="/videos/posters/poster1.jpg"
+            muted
+            playsInline
+            preload="metadata"
+            tabIndex={-1}
+            className="absolute inset-0 hidden h-full w-full object-cover md:block"
+          />
+        )}
+        <img
+          src="/videos/posters/poster1.jpg"
+          alt=""
+          className={`absolute inset-0 h-full w-full object-cover ${reduced ? "" : "md:hidden"}`}
+        />
+      </div>
+      {/* Spec overlay: top→bottom darken so the hero copy stays readable. */}
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/70 via-black/40 to-black/80" />
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-bg/80 via-bg/40 to-transparent" />
 
       <div className="glow-accent left-[-10%] top-[-5%] h-[420px] w-[420px] bg-cyan" />
-      <div className="relative z-10 mx-auto grid max-w-content items-center gap-12 px-5 py-16 md:px-8 lg:grid-cols-2 lg:gap-8 lg:py-24">
+      <div
+        style={{ transform: `translateY(${parallax}px)` }}
+        className="relative z-10 mx-auto grid max-w-content items-center gap-12 px-5 py-16 md:px-8 lg:grid-cols-2 lg:gap-8 lg:py-24"
+      >
         {/* Left: content */}
         <div>
           <motion.span
