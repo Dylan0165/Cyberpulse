@@ -3,7 +3,7 @@
 import uuid
 from datetime import datetime
 from sqlalchemy import String, DateTime, Integer, Boolean, Text, func
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
@@ -73,6 +73,11 @@ class User(Base):
     notify_critical_only: Mapped[bool] = mapped_column(Boolean, server_default="false", default=False)
     notify_scheduled_fail: Mapped[bool] = mapped_column(Boolean, server_default="true", default=True)
     onboarding_step: Mapped[int] = mapped_column(Integer, server_default="0", default=0)
+
+    # Two-factor authentication (TOTP, migration 0013). Secret stored encrypted.
+    totp_secret: Mapped[str | None] = mapped_column(String(255))
+    totp_enabled: Mapped[bool] = mapped_column(Boolean, server_default="false", default=False)
+    totp_backup_codes: Mapped[list | None] = mapped_column(JSONB)
 
     # Relationships
     targets = relationship("Target", back_populates="user", cascade="all, delete-orphan")

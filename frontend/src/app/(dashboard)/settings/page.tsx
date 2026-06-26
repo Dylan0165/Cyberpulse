@@ -4,16 +4,18 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import Link from "next/link";
-import { User, Bell, Save, LogIn, type LucideIcon } from "lucide-react";
+import { User, Bell, Save, LogIn, ShieldCheck, type LucideIcon } from "lucide-react";
 import { GlowCard } from "@/components/cyber/glow-card";
 import { useAuth } from "@/contexts/auth-context";
 import { usersApi } from "@/lib/api";
+import { SecurityTab } from "@/components/settings/SecurityTab";
 
-type TabId = "account" | "notifications";
+type TabId = "account" | "notifications" | "security";
 
 const TABS: { id: TabId; label: string; icon: LucideIcon }[] = [
   { id: "account", label: "Account", icon: User },
   { id: "notifications", label: "Notificaties", icon: Bell },
+  { id: "security", label: "Beveiliging", icon: ShieldCheck },
 ];
 
 const inputCls =
@@ -354,6 +356,12 @@ export default function SettingsPage() {
               })}
             </GlowCard>
           )}
+        </motion.div>
+      )}
+
+      {tab === "security" && (
+        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }}>
+          <SecurityTab />
         </motion.div>
       )}
     </div>

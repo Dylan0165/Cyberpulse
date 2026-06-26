@@ -47,7 +47,8 @@ interface AuthContextValue {
   user: AuthUser | null;
   loading: boolean;
   isAuthenticated: boolean;
-  login: (email: string, password: string) => Promise<AuthUser>;
+  login: (email: string, password: string) => Promise<any>;
+  verify2fa: (tempToken: string, code: string, useBackup?: boolean) => Promise<AuthUser>;
   register: (data: {
     email: string;
     password: string;
@@ -111,13 +112,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = useCallback(async (email: string, password: string) => {
     const res: any = await authApi.login({ email, password });
+    // 2FA-enabled accounts get no session yet — the page must complete step 2.
+    if (res?.data?.requires_2fa) {
+      return res.data as { requires_2fa: true; temp_token: string };
+    }
     const token = res?.data?.token;
     if (token) setToken(token);
     const u: AuthUser | null = res?.data?.user ?? null;
     setUser(u);
     if (u) loadPlan();
-    return u as AuthUser;
+    return res.data;
   }, [loadPlan]);
+
+  // Complete a 2FA login (TOTP code or backup code) and establish the session.
+  const verify2fa = useCallback(
+    async (tempToken: string, code: string, useBackup = false) => {
+      const res: any = useBackup
+        ? await authApi.twofaUseBackup(tempToken, code)
+        : await authApi.twofaVerify(tempToken, code);
+      const token = res?.data?.token;
+      if (token) setToken(token);
+      const u: AuthUser | null = res?.data?.user ?? null;
+      setUser(u);
+      if (u) loadPlan();
+      return u as AuthUser;
+    },
+    [loadPlan]
+  );
 
   const register = useCallback(
     async (data: {
@@ -159,6 +180,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         loading,
         isAuthenticated: !!user,
         login,
+        verify2fa,
         register,
         logout,
         refresh,

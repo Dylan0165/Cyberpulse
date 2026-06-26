@@ -13,6 +13,7 @@ import {
   LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
 } from "recharts";
 import { GlowCard } from "@/components/cyber/glow-card";
+import { TargetTrendChart } from "@/components/targets/TargetTrendChart";
 
 const TYPE_LABEL: Record<string, string> = {
   url: "Web / URL",
@@ -248,6 +249,9 @@ export default function TargetDetailPage() {
           </dl>
         </GlowCard>
       </div>
+
+      {/* Risico-trend over scans */}
+      <TargetTrendChart targetId={targetId} />
 
       {/* Recente scans */}
       <GlowCard glowColor="#00D4FF" className="p-6" hoverLift={false}>

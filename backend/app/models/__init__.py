@@ -19,6 +19,8 @@ from app.models.multi_scan import MultiScanJob
 from app.models.agent import ScanixAgent
 from app.models.project import ScanProject
 from app.models.finding_status import FindingStatus
+from app.models.api_key import ApiKey
+from app.models.team import TeamMember
 
 __all__ = [
     "User",
@@ -34,4 +36,6 @@ __all__ = [
     "ScanixAgent",
     "ScanProject",
     "FindingStatus",
+    "ApiKey",
+    "TeamMember",
 ]

@@ -8,31 +8,49 @@ import { motion } from "framer-motion";
 import { Shield, Eye, EyeOff, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/auth-context";
+import { TwoFactorPrompt } from "@/components/auth/TwoFactorPrompt";
 
 // Client-only intro overlay (video needs the browser). Plays once per session.
 const LogoIntro = dynamic(() => import("@/components/LogoIntro"), { ssr: false });
 
 export default function LoginPage() {
   const router = useRouter();
-  const { login } = useAuth();
+  const { login, verify2fa } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [tempToken, setTempToken] = useState<string | null>(null);
+
+  const routeAfterLogin = (user: any) =>
+    router.push(user?.onboarding_completed ? "/dashboard" : "/onboarding");
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (submitting) return;
     setSubmitting(true);
     try {
-      const user = await login(email, password);
-      if (user?.onboarding_completed) {
-        router.push("/dashboard");
-      } else {
-        router.push("/onboarding");
+      const res = await login(email, password);
+      if (res?.requires_2fa) {
+        setTempToken(res.temp_token); // show the 2FA prompt
+        return;
       }
+      routeAfterLogin(res?.user ?? res);
     } catch {
       toast.error("Ongeldig e-mailadres of wachtwoord");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  async function handle2fa(code: string, useBackup: boolean) {
+    if (submitting || !tempToken) return;
+    setSubmitting(true);
+    try {
+      const user = await verify2fa(tempToken, code, useBackup);
+      routeAfterLogin(user);
+    } catch {
+      toast.error(useBackup ? "Ongeldige herstelcode" : "Ongeldige code");
     } finally {
       setSubmitting(false);
     }
@@ -55,9 +73,15 @@ export default function LoginPage() {
           <p className="mt-1 text-sm text-ink-muted">Inloggen</p>
         </div>
 
+        {tempToken && (
+          <div className="rounded-xl border border-grid bg-panel p-6 shadow-glow-cyan">
+            <TwoFactorPrompt onVerify={handle2fa} busy={submitting} />
+          </div>
+        )}
+
         <form
           onSubmit={handleSubmit}
-          className="rounded-xl border border-grid bg-panel p-6 shadow-glow-cyan"
+          className={`rounded-xl border border-grid bg-panel p-6 shadow-glow-cyan ${tempToken ? "hidden" : ""}`}
         >
           <label className="mb-4 block">
             <span className="mb-1.5 block text-sm font-medium text-ink-muted">

@@ -63,6 +63,8 @@ Top-level JSON structure:
     "nis2": ["Article 21 - ..."]
   },
   "snelle_fixes": ["⚡ [titel]: [bash commando of 'Zie Secure Solution Rapport']"],
+  "executive_summary": "<exactly 3 sentences in plain Dutch for a non-technical director. No jargon.>",
+  "top_3_actions": [ {"action":"<urgent fix in plain Dutch>", "time_estimate":"<bv. 2 uur>"} ],
   "scan_id": "<scan_id>",
   "target": "<target>",
   "scan_type": "<scan_type>"

@@ -91,6 +91,31 @@ async def get_optional_user(
     token = _extract_token(request)
     if not token:
         return None
+
+    # Programmatic API keys (sx_live_…) authenticate by SHA-256 hash lookup.
+    if token.startswith("sx_live_"):
+        try:
+            import hashlib
+            from datetime import datetime, timezone
+            from app.models.api_key import ApiKey
+
+            key_hash = hashlib.sha256(token.encode()).hexdigest()
+            res = await db.execute(select(ApiKey).where(ApiKey.key_hash == key_hash, ApiKey.is_active == True))  # noqa: E712
+            api_key = res.scalar_one_or_none()
+            if not api_key:
+                return None
+            if api_key.expires_at and api_key.expires_at < datetime.now(timezone.utc):
+                return None
+            api_key.last_used = datetime.now(timezone.utc)
+            try:
+                await db.commit()
+            except Exception:
+                await db.rollback()
+            ures = await db.execute(select(User).where(User.id == api_key.user_id))
+            return ures.scalar_one_or_none()
+        except Exception:
+            return None
+
     payload = _decode_token(token)
     if not payload:
         return None

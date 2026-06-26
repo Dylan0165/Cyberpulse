@@ -53,6 +53,19 @@ _MAX_TIMEOUTS: dict[str, int] = {
     "default": 600,
 }
 
+# Per-module rate limiting — a courtesy pre-run delay so we don't hammer a
+# target (and trip its own rate limiting). Tunable per tool.
+MODULE_RATE_LIMITS: dict[str, dict] = {
+    "nmap":    {"delay_ms": 100,  "max_rps": 10},
+    "nuclei":  {"delay_ms": 200,  "max_rps": 5},
+    "sqlmap":  {"delay_ms": 500,  "max_rps": 2},
+    "hydra":   {"delay_ms": 1000, "max_rps": 1},
+    "ffuf":    {"delay_ms": 50,   "max_rps": 20},
+    "nikto":   {"delay_ms": 300,  "max_rps": 3},
+    "testssl": {"delay_ms": 0,    "max_rps": 1},
+    "default": {"delay_ms": 200,  "max_rps": 5},
+}
+
 
 def _check_key(x_api_key: Optional[str] = None):
     if not SCANNER_API_KEY:
@@ -215,6 +228,11 @@ class RunToolRequest(BaseModel):
 async def _execute(job: Job, tool_path: str, timeout: int):
     extra = shlex.split(job.args) if job.args.strip() else []
     cmd   = [tool_path] + extra
+
+    # Per-module courtesy rate limit (small pre-run delay).
+    rl = MODULE_RATE_LIMITS.get(job.tool, MODULE_RATE_LIMITS["default"])
+    if rl.get("delay_ms"):
+        await asyncio.sleep(rl["delay_ms"] / 1000)
 
     try:
         proc = await asyncio.create_subprocess_exec(

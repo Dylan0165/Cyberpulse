@@ -198,12 +198,152 @@ async def login(
     if user is None or not user.password_hash or not verify_password(body.password, user.password_hash):
         raise HTTPException(status_code=401, detail="Ongeldig e-mailadres of wachtwoord")
 
+    # 2FA gate: password is correct, but require a TOTP code before issuing the
+    # real session. A short-lived temp_token (Redis, 15 min) authorises step 2.
+    if getattr(user, "totp_enabled", False):
+        temp_token = secrets.token_urlsafe(32)
+        try:
+            from app.core.redis import get_redis
+            r = await get_redis()
+            await r.setex(f"2fa:{temp_token}", 900, str(user.id))
+        except Exception:
+            logger.exception("could not store 2FA temp token")
+            raise HTTPException(status_code=503, detail="2FA tijdelijk niet beschikbaar. Probeer later opnieuw.")
+        return {"requires_2fa": True, "temp_token": temp_token}
+
     user.last_login_at = datetime.now(timezone.utc)
     await db.commit()
 
     token = create_access_token(user.id, user.email)
     _set_token_cookie(response, token)
     return {"user": _user_dict(user), "token": token}
+
+
+# ── Two-factor authentication (TOTP) ──────────────────────────────────────────
+class TwoFAVerifyBody(BaseModel):
+    code: str
+
+
+class TwoFALoginBody(BaseModel):
+    temp_token: str
+    code: str
+
+
+class TwoFABackupBody(BaseModel):
+    temp_token: str
+    backup_code: str
+
+
+class TwoFADisableBody(BaseModel):
+    code: str
+    password: str
+
+
+async def _consume_temp_token(temp_token: str) -> User | None:
+    """Resolve a 2FA temp_token to its user (does not delete it yet)."""
+    from app.core.redis import get_redis
+    r = await get_redis()
+    uid = await r.get(f"2fa:{temp_token}")
+    if not uid:
+        return None
+    return uid.decode() if isinstance(uid, bytes) else str(uid)
+
+
+@router.post("/2fa/setup")
+async def twofa_setup(user: User = Depends(get_required_user), db: AsyncSession = Depends(get_db)):
+    from app.services import totp
+    secret = totp.random_base32()
+    backup = totp.generate_backup_codes()
+    user.totp_secret = totp.encrypt_secret(secret)
+    user.totp_backup_codes = backup
+    user.totp_enabled = False  # not active until verified
+    await db.commit()
+    return {
+        "secret": secret,
+        "qr_uri": totp.provisioning_uri(secret, user.email),
+        "backup_codes": backup,
+    }
+
+
+@router.post("/2fa/verify-setup")
+async def twofa_verify_setup(
+    body: TwoFAVerifyBody, user: User = Depends(get_required_user), db: AsyncSession = Depends(get_db)
+):
+    from app.services import totp
+    if not user.totp_secret:
+        raise HTTPException(status_code=400, detail="Start eerst de 2FA-setup")
+    secret = totp.decrypt_secret(user.totp_secret)
+    if not totp.verify(secret, body.code):
+        raise HTTPException(status_code=400, detail="Ongeldige code. Probeer opnieuw.")
+    user.totp_enabled = True
+    await db.commit()
+    return {"enabled": True, "backup_codes": user.totp_backup_codes or []}
+
+
+@router.post("/2fa/verify")
+async def twofa_verify(body: TwoFALoginBody, response: Response, db: AsyncSession = Depends(get_db)):
+    from app.services import totp
+    from app.core.redis import get_redis
+    uid = await _consume_temp_token(body.temp_token)
+    if not uid:
+        raise HTTPException(status_code=401, detail="Sessie verlopen. Log opnieuw in.")
+    user = (await db.execute(select(User).where(User.id == uuid.UUID(uid)))).scalar_one_or_none()
+    if not user or not user.totp_secret:
+        raise HTTPException(status_code=401, detail="2FA niet gevonden")
+    if not totp.verify(totp.decrypt_secret(user.totp_secret), body.code):
+        raise HTTPException(status_code=400, detail="Ongeldige code")
+    r = await get_redis()
+    await r.delete(f"2fa:{body.temp_token}")
+    user.last_login_at = datetime.now(timezone.utc)
+    await db.commit()
+    token = create_access_token(user.id, user.email)
+    _set_token_cookie(response, token)
+    return {"user": _user_dict(user), "token": token}
+
+
+@router.post("/2fa/use-backup")
+async def twofa_use_backup(body: TwoFABackupBody, response: Response, db: AsyncSession = Depends(get_db)):
+    from app.core.redis import get_redis
+    uid = await _consume_temp_token(body.temp_token)
+    if not uid:
+        raise HTTPException(status_code=401, detail="Sessie verlopen. Log opnieuw in.")
+    user = (await db.execute(select(User).where(User.id == uuid.UUID(uid)))).scalar_one_or_none()
+    if not user:
+        raise HTTPException(status_code=401, detail="Gebruiker niet gevonden")
+    codes = list(user.totp_backup_codes or [])
+    code = body.backup_code.strip().lower()
+    if code not in codes:
+        raise HTTPException(status_code=400, detail="Ongeldige herstelcode")
+    codes.remove(code)  # single use
+    user.totp_backup_codes = codes
+    r = await get_redis()
+    await r.delete(f"2fa:{body.temp_token}")
+    user.last_login_at = datetime.now(timezone.utc)
+    await db.commit()
+    token = create_access_token(user.id, user.email)
+    _set_token_cookie(response, token)
+    return {"user": _user_dict(user), "token": token}
+
+
+@router.post("/2fa/disable")
+async def twofa_disable(
+    body: TwoFADisableBody, user: User = Depends(get_required_user), db: AsyncSession = Depends(get_db)
+):
+    from app.services import totp
+    if not user.password_hash or not verify_password(body.password, user.password_hash):
+        raise HTTPException(status_code=401, detail="Onjuist wachtwoord")
+    if not user.totp_secret or not totp.verify(totp.decrypt_secret(user.totp_secret), body.code):
+        raise HTTPException(status_code=400, detail="Ongeldige code")
+    user.totp_enabled = False
+    user.totp_secret = None
+    user.totp_backup_codes = None
+    await db.commit()
+    return {"enabled": False}
+
+
+@router.get("/2fa/status")
+async def twofa_status(user: User = Depends(get_required_user)):
+    return {"enabled": bool(getattr(user, "totp_enabled", False))}
 
 
 @router.post("/logout")

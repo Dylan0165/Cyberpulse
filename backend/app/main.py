@@ -28,6 +28,9 @@ from app.api.endpoints import (
     agents,
     projects,
     findings,
+    api_keys,
+    teams,
+    analytics,
 )
 
 logging.basicConfig(level=logging.INFO)
@@ -115,6 +118,9 @@ app.include_router(admin.router, prefix="/api")
 app.include_router(agents.router, prefix="/api")
 app.include_router(projects.router, prefix="/api")
 app.include_router(findings.router, prefix="/api")
+app.include_router(api_keys.router, prefix="/api")
+app.include_router(teams.router, prefix="/api")
+app.include_router(analytics.router, prefix="/api")
 
 # WebSocket Routes
 app.include_router(websocket.router)

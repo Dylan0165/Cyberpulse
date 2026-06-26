@@ -94,7 +94,7 @@ export default function ScanDetailPage() {
   const scanId = params.id as string;
   const queryClient = useQueryClient();
 
-  const [tab, setTab] = useState<"live" | "findings" | "report">("live");
+  const [tab, setTab] = useState<"live" | "findings" | "report" | "remediation">("live");
   const [phases, setPhases] = useState<PhaseState[]>([]);
   const [wsConnected, setWsConnected] = useState(false);
   const [terminalLines, setTerminalLines] = useState<string[]>([]);
@@ -656,6 +656,7 @@ export default function ScanDetailPage() {
           { key: "live",     label: "Live weergave" },
           { key: "findings", label: `Bevindingen (${findings.length})` },
           { key: "report",   label: "AI Rapport" },
+          { key: "remediation", label: "Herstelplan" },
         ].map((t) => (
           <button
             key={t.key}
@@ -954,6 +955,60 @@ export default function ScanDetailPage() {
           </motion.div>
         )}
 
+        {/* ── Tab: Remediation checklist ── */}
+        {tab === "remediation" && (
+          <motion.div key="remediation" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="space-y-4">
+            {(() => {
+              const FIX_TIME: Record<string, string> = { critical: "2 uur", high: "1 uur", medium: "30 min", low: "15 min", info: "5 min" };
+              const all = (findings as any[]).filter((f) => f.id);
+              const openItems = all.filter((f) => !["resolved", "false_positive"].includes(effStatus(f)));
+              const doneCount = all.length - openItems.length;
+              const pct = all.length ? Math.round((doneCount / all.length) * 100) : 0;
+              const order: Record<string, number> = { critical: 0, high: 1, medium: 2, low: 3, info: 4 };
+              const sorted = [...openItems].sort((a, b) => (order[(a.severity ?? "info").toLowerCase()] ?? 5) - (order[(b.severity ?? "info").toLowerCase()] ?? 5));
+              const csv = () => {
+                const rows = [["severity", "title", "status", "fix_time"], ...all.map((f) => [f.severity ?? "", (f.title ?? "").replace(/[",\n]/g, " "), effStatus(f), FIX_TIME[(f.severity ?? "info").toLowerCase()] ?? ""])];
+                const blob = new Blob([rows.map((r) => r.join(",")).join("\n")], { type: "text/csv" });
+                const url = URL.createObjectURL(blob); const a = document.createElement("a"); a.href = url; a.download = `herstelplan_${scanId}.csv`; a.click(); URL.revokeObjectURL(url);
+              };
+              return (
+                <>
+                  <div className="rounded-lg border border-grid bg-card2 p-4">
+                    <div className="flex items-center justify-between font-mono text-[12px]">
+                      <span className="text-ink">{doneCount} van {all.length} opgelost ({pct}%)</span>
+                      <button onClick={csv} className="rounded-md border border-grid px-2.5 py-1 text-ink-muted hover:border-cyan/50 hover:text-cyan">Exporteer CSV</button>
+                    </div>
+                    <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-app">
+                      <div className="h-full rounded-full bg-neon-green transition-all" style={{ width: `${pct}%` }} />
+                    </div>
+                  </div>
+                  {sorted.length === 0 ? (
+                    <div className="py-10 text-center font-mono text-[13px] text-ink-muted">Alles opgelost — geen open bevindingen 🎉</div>
+                  ) : sorted.map((f) => (
+                    <div key={f.id} className="flex items-start gap-3 rounded-lg border border-grid bg-card2 p-3">
+                      <button
+                        onClick={() => { findingsApi.setStatus(f.id, "resolved").then(() => { setStatusOverrides((p) => ({ ...p, [f.id]: "resolved" })); toast.success("Gemarkeerd als opgelost"); }).catch(() => toast.error("Mislukt")); }}
+                        className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded border border-grid hover:border-neon-green"
+                        aria-label="Markeer als opgelost"
+                      />
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <RiskBadge severity={(f.severity ?? "info").toLowerCase()} />
+                          <span className="text-[13px] font-medium text-ink">{f.title}</span>
+                          <span className="ml-auto font-mono text-[11px] text-ink-muted">{FIX_TIME[(f.severity ?? "info").toLowerCase()] ?? "30 min"}</span>
+                        </div>
+                        {(f.fix_command || f.recommendation) && (
+                          <pre className="mt-2 overflow-x-auto rounded bg-app p-2 font-mono text-[11px] text-ink-muted">{f.fix_command || f.recommendation}</pre>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </>
+              );
+            })()}
+          </motion.div>
+        )}
+
         {/* ── Tab: AI Report ── */}
         {tab === "report" && (
           <motion.div
@@ -987,6 +1042,26 @@ export default function ScanDetailPage() {
                     >
                       Volledig rapport €49 <ArrowRight className="h-3.5 w-3.5" />
                     </Link>
+                  </div>
+                )}
+
+                {/* Executive summary (plain-language, for management) */}
+                {((aiReport as any)?.executive_summary || ((aiReport as any)?.top_3_actions?.length)) && (
+                  <div className="rounded-lg border border-cyan/30 bg-cyan/[0.04] p-4">
+                    <p className="mb-2 font-mono text-[11px] uppercase tracking-wider text-cyan">Samenvatting voor management</p>
+                    {(aiReport as any)?.executive_summary && (
+                      <p className="text-[13px] leading-relaxed text-ink">{(aiReport as any).executive_summary}</p>
+                    )}
+                    {Array.isArray((aiReport as any)?.top_3_actions) && (aiReport as any).top_3_actions.length > 0 && (
+                      <ol className="mt-3 space-y-1.5">
+                        {(aiReport as any).top_3_actions.slice(0, 3).map((a: any, idx: number) => (
+                          <li key={idx} className="flex items-start gap-2 font-mono text-[12px] text-ink-muted">
+                            <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-cyan/15 text-[11px] font-bold text-cyan">{idx + 1}</span>
+                            <span><span className="text-ink">{a.action ?? a}</span>{a.time_estimate ? ` — ${a.time_estimate}` : ""}</span>
+                          </li>
+                        ))}
+                      </ol>
+                    )}
                   </div>
                 )}
 

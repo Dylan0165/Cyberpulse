@@ -16,6 +16,41 @@ export const authApi = {
   me: () => api.get("/auth/me"),
   completeOnboarding: () => api.post("/auth/complete-onboarding"),
   acceptTerms: (version = "1.0") => api.post("/auth/accept-terms", { version }),
+  // Two-factor authentication (TOTP)
+  twofaStatus: () => api.get<{ enabled: boolean }>("/auth/2fa/status"),
+  twofaSetup: () =>
+    api.post<{ secret: string; qr_uri: string; backup_codes: string[] }>("/auth/2fa/setup"),
+  twofaVerifySetup: (code: string) =>
+    api.post<{ enabled: boolean; backup_codes: string[] }>("/auth/2fa/verify-setup", { code }),
+  twofaVerify: (temp_token: string, code: string) =>
+    api.post("/auth/2fa/verify", { temp_token, code }),
+  twofaUseBackup: (temp_token: string, backup_code: string) =>
+    api.post("/auth/2fa/use-backup", { temp_token, backup_code }),
+  twofaDisable: (code: string, password: string) =>
+    api.post("/auth/2fa/disable", { code, password }),
+};
+
+// ── Customer access keys (sx_live_…) ────────────────────────────────────────
+export const accessKeysApi = {
+  list: () => api.get("/api-keys"),
+  create: (data: { name: string; scopes?: string[]; expires_in_days?: number }) =>
+    api.post<{ id: string; key: string; name: string; prefix: string; scopes: string[] }>("/api-keys", data),
+  remove: (id: string) => api.delete(`/api-keys/${id}`),
+};
+
+// ── Team members ────────────────────────────────────────────────────────────
+export const teamApi = {
+  members: () => api.get("/teams/members"),
+  invite: (email: string, role: string) => api.post("/teams/invite", { email, role }),
+  remove: (memberId: string) => api.delete(`/teams/members/${memberId}`),
+};
+
+// ── Analytics: diff / trend / remediation ───────────────────────────────────
+export const analyticsApi = {
+  compare: (scanId: string, previousScanId: string) =>
+    api.get(`/scans/${scanId}/compare/${previousScanId}`),
+  trend: (targetId: string) => api.get(`/targets/${targetId}/trend`),
+  remediation: (scanId: string) => api.get(`/scans/${scanId}/remediation`),
 };
 
 // ── Users ─────────────────────────────────────────────────────────────────────
