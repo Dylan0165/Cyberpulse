@@ -23,6 +23,43 @@ export const usersApi = {
   updateMe: (d: any) => api.patch("/users/me", d),
   regenerateApiKey: () => api.post("/users/me/regenerate-api-key"),
   plan: () => api.get("/users/me/plan"),
+  // Onboarding
+  getOnboarding: () =>
+    api.get<{ onboarding_completed: boolean; onboarding_step: number }>("/users/me/onboarding"),
+  completeOnboarding: () => api.post("/users/me/onboarding-complete"),
+  // Email notification preferences
+  getNotifications: () =>
+    api.get<{ notify_scan_complete: boolean; notify_critical_only: boolean; notify_scheduled_fail: boolean }>(
+      "/users/me/notifications"
+    ),
+  updateNotifications: (d: Partial<{ notify_scan_complete: boolean; notify_critical_only: boolean; notify_scheduled_fail: boolean }>) =>
+    api.patch("/users/me/notifications", d),
+};
+
+export type ScanFinding = {
+  id: string;
+  title?: string;
+  type?: string;
+  severity?: string;
+  description?: string;
+  status: string;
+  status_note: string | null;
+  owasp_category?: string;
+  owasp_label?: string;
+  cwe?: string;
+  cwe_url?: string;
+  cve_id?: string;
+  cve_url?: string;
+  mitre_technique?: string;
+  duplicate_count?: number;
+  evidence?: any;
+};
+
+export const findingsApi = {
+  forScan: (scanId: string, params?: { status?: string; severity?: string }) =>
+    api.get<{ scan_id: string; total: number; findings: ScanFinding[] }>(`/scans/${scanId}/findings`, { params }),
+  setStatus: (findingId: string, status: string, note?: string) =>
+    api.patch(`/findings/${findingId}/status`, { status, note }),
 };
 
 // ── Billing (Stripe) ───────────────────────────────────────────────────────────

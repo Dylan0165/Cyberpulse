@@ -18,6 +18,7 @@ from app.models.credits import ScanCredit, CreditUsage
 from app.models.multi_scan import MultiScanJob
 from app.models.agent import ScanixAgent
 from app.models.project import ScanProject
+from app.models.finding_status import FindingStatus
 
 __all__ = [
     "User",
@@ -32,4 +33,5 @@ __all__ = [
     "MultiScanJob",
     "ScanixAgent",
     "ScanProject",
+    "FindingStatus",
 ]

@@ -74,6 +74,13 @@ export default function SettingsPage() {
   const [notifyEmail, setNotifyEmail] = useState("");
   const [savingNotify, setSavingNotify] = useState(false);
 
+  // Email notification preferences (auto-saving toggles).
+  const [emailPrefs, setEmailPrefs] = useState({
+    notify_scan_complete: true,
+    notify_critical_only: false,
+    notify_scheduled_fail: true,
+  });
+
   // Prefill form fields from the authenticated user.
   useEffect(() => {
     if (!user) return;
@@ -82,6 +89,27 @@ export default function SettingsPage() {
     setNotifyOn(!!user.notify_on_complete);
     setNotifyEmail(user.notification_email ?? "");
   }, [user]);
+
+  // Load the email notification preferences once when the user is known.
+  useEffect(() => {
+    if (!user) return;
+    usersApi
+      .getNotifications()
+      .then((r) => setEmailPrefs(r.data))
+      .catch(() => {});
+  }, [user]);
+
+  async function toggleEmailPref(key: keyof typeof emailPrefs) {
+    const next = { ...emailPrefs, [key]: !emailPrefs[key] };
+    setEmailPrefs(next); // optimistic
+    try {
+      await usersApi.updateNotifications({ [key]: next[key] });
+      toast.success("Voorkeur opgeslagen");
+    } catch {
+      setEmailPrefs(emailPrefs); // revert on failure
+      toast.error("Kon voorkeur niet opslaan");
+    }
+  }
 
   async function saveAccount() {
     setSavingAccount(true);
@@ -282,6 +310,50 @@ export default function SettingsPage() {
               </>
             )}
           </GlowCard>
+
+          {user && (
+            <GlowCard className="mt-5 p-6">
+              <div className="mb-1 flex items-center gap-2">
+                <Bell className="h-4 w-4 text-cyan" />
+                <h2 className="text-[13px] font-semibold uppercase tracking-[0.1em] text-ink">Email notificaties</h2>
+              </div>
+              <p className="mb-5 text-[12px] text-ink-muted">Kies wanneer u een email ontvangt van Scanix. Wijzigingen worden direct opgeslagen.</p>
+
+              {([
+                { key: "notify_scan_complete" as const, label: "Email bij voltooide scan", desc: "Ontvang een email zodra een scan klaar is", disabled: false },
+                { key: "notify_critical_only" as const, label: "Alleen bij kritieke bevindingen", desc: "Stuur alleen een email als er kritieke bevindingen zijn", disabled: !emailPrefs.notify_scan_complete },
+                { key: "notify_scheduled_fail" as const, label: "Email bij mislukte geplande scan", desc: "Ontvang een melding als een ingeplande scan niet kon starten", disabled: false },
+              ]).map((row) => {
+                const on = emailPrefs[row.key];
+                return (
+                  <div
+                    key={row.key}
+                    className={`mb-3 flex items-center justify-between rounded-lg border border-grid bg-app px-4 py-3 ${row.disabled ? "opacity-50" : ""}`}
+                  >
+                    <div>
+                      <div className="text-[13px] text-ink">{row.label}</div>
+                      <div className="text-[11px] text-ink-muted">{row.desc}</div>
+                    </div>
+                    <button
+                      role="switch"
+                      aria-checked={on}
+                      disabled={row.disabled}
+                      onClick={() => toggleEmailPref(row.key)}
+                      className={`relative h-6 w-11 flex-shrink-0 rounded-full border transition-colors disabled:cursor-not-allowed ${
+                        on ? "border-cyan bg-cyan/30" : "border-grid bg-card2"
+                      }`}
+                    >
+                      <span
+                        className={`absolute top-1/2 h-4 w-4 -translate-y-1/2 rounded-full transition-all ${
+                          on ? "right-1 bg-cyan shadow-glow-cyan" : "left-1 bg-ink-muted"
+                        }`}
+                      />
+                    </button>
+                  </div>
+                );
+              })}
+            </GlowCard>
+          )}
         </motion.div>
       )}
     </div>

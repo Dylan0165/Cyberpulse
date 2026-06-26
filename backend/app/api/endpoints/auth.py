@@ -172,6 +172,14 @@ async def register(
             )
         raise HTTPException(status_code=500, detail="Registratie mislukt. Probeer het later opnieuw.")
 
+    # Best-effort welcome email — fire-and-forget, no-ops if SMTP is not set up.
+    try:
+        import asyncio as _asyncio
+        from app.services.email_service import email_service
+        _asyncio.create_task(email_service.send_welcome(user.email, user.full_name or ""))
+    except Exception:
+        logger.debug("welcome email skipped", exc_info=True)
+
     token = create_access_token(user.id, user.email)
     _set_token_cookie(response, token)
     return {"user": _user_dict(user), "token": token}

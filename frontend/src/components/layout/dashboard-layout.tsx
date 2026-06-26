@@ -9,11 +9,14 @@ import { TermsModal } from "@/components/cyber/terms-modal";
 import { TrialBanner } from "@/components/cyber/trial-banner";
 import CinematicIntro from "@/components/animations/CinematicIntro";
 import AppBackgroundVideo from "@/components/animations/AppBackgroundVideo";
+import { OnboardingWizard } from "@/components/onboarding/OnboardingWizard";
 import { useAuth } from "@/contexts/auth-context";
 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { user, refresh } = useAuth();
   const mustAcceptTerms = user != null && user.terms_accepted === false;
+  // Show onboarding once: terms first, then the wizard for users who haven't done it.
+  const showOnboarding = user != null && !mustAcceptTerms && user.onboarding_completed === false;
 
   return (
     <div className="relative flex h-screen overflow-hidden bg-app">
@@ -36,6 +39,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
       </main>
       <MobileNav />
       {mustAcceptTerms && <TermsModal open onAccepted={refresh} />}
+      {showOnboarding && <OnboardingWizard />}
     </div>
   );
 }

@@ -68,6 +68,12 @@ class User(Base):
     credits_remaining: Mapped[int] = mapped_column(Integer, server_default="0", default=0)
     credits_total: Mapped[int] = mapped_column(Integer, server_default="0", default=0)
 
+    # Email notification preferences + onboarding (migration 0012).
+    notify_scan_complete: Mapped[bool] = mapped_column(Boolean, server_default="true", default=True)
+    notify_critical_only: Mapped[bool] = mapped_column(Boolean, server_default="false", default=False)
+    notify_scheduled_fail: Mapped[bool] = mapped_column(Boolean, server_default="true", default=True)
+    onboarding_step: Mapped[int] = mapped_column(Integer, server_default="0", default=0)
+
     # Relationships
     targets = relationship("Target", back_populates="user", cascade="all, delete-orphan")
     scans = relationship("Scan", back_populates="user", cascade="all, delete-orphan")

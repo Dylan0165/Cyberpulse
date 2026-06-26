@@ -116,6 +116,23 @@ def analyze_scan(self, scan_id: str):
             except Exception:
                 pass
 
+        # Deduplicate + enrich findings (OWASP/CWE/MITRE/CVE) and assign a stable
+        # finding_id used by the finding-status table. Best-effort: never break
+        # the analysis result on a post-processing error.
+        try:
+            from app.services.findings_deduplicator import FindingsDeduplicator, stable_finding_id
+            from app.services.finding_mapper import FindingMapper
+            raw = report.get("findings") or []
+            deduped = FindingsDeduplicator.deduplicate(raw)
+            for f in deduped:
+                FindingMapper.enrich(f)
+                f["id"] = stable_finding_id(scan_id, f)
+            report["findings"] = deduped
+            report["owasp_coverage"] = FindingMapper.owasp_coverage(deduped)
+            report.pop("finding_counts", None)  # force recount from deduped set below
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("findings dedup/enrich skipped for %s: %s", scan_id, exc)
+
         # Extract finding counts from report
         counts = report.get("finding_counts") or {}
         if not counts and report.get("findings"):
@@ -178,24 +195,38 @@ def analyze_scan(self, scan_id: str):
         except Exception as exc:
             logger.warning("Scan-complete notification skipped: %s", exc)
 
-        # Best-effort email notification. Gated on NOTIFY_EMAIL env var so it is
-        # fully optional; the email service itself no-ops without SMTP config.
-        # Never let email failures affect the scan result.
+        # Best-effort HTML email, respecting the scan owner's notification prefs.
+        # Falls back to NOTIFY_EMAIL when there is no owner. Email failures and a
+        # missing SMTP config never affect the scan result.
         try:
             import os
-            notify_to = os.getenv("NOTIFY_EMAIL", "")
-            if notify_to:
-                from app.services.email import send_scan_complete_email
-                send_scan_complete_email(
-                    to_email=notify_to,
-                    target=target_obj.value,
-                    risk_score=report.get("risk_score", 0),
-                    critical=counts.get("critical", 0),
-                    high=counts.get("high", 0),
-                    medium=counts.get("medium", 0),
-                    low=counts.get("low", 0),
-                    scan_id=str(scan_id),
-                )
+            import asyncio as _aio
+            from app.models.user import User as _User
+            from app.services.email_service import email_service as _email
+
+            owner = db.query(_User).filter(_User.id == scan.user_id).first() if scan.user_id else None
+            to_addr = (owner.email if owner else None) or os.getenv("NOTIFY_EMAIL", "")
+            if to_addr:
+                crit = counts.get("critical", 0)
+                scan_dict = {
+                    "id": str(scan_id),
+                    "target": target_obj.value,
+                    "risk_score": report.get("risk_score", 0),
+                    "findings_critical": crit,
+                    "findings_high": counts.get("high", 0),
+                }
+                critical_only = bool(owner and getattr(owner, "notify_critical_only", False))
+                want_complete = (owner is None) or getattr(owner, "notify_scan_complete", True)
+                if critical_only:
+                    if crit > 0:
+                        crit_finding = next(
+                            (f for f in (report.get("findings") or [])
+                             if str(f.get("severity", "")).upper() == "CRITICAL"),
+                            {},
+                        )
+                        _aio.run(_email.send_critical_finding(to_addr, scan_dict, crit_finding))
+                elif want_complete:
+                    _aio.run(_email.send_scan_complete(to_addr, scan_dict))
         except Exception as exc:
             logger.warning("Scan-complete email skipped: %s", exc)
 

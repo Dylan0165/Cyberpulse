@@ -31,7 +31,11 @@ def _user_dict(u: User) -> dict:
         "terms_accepted": u.terms_accepted,
         "terms_accepted_at": u.terms_accepted_at.isoformat() if u.terms_accepted_at else None,
         "onboarding_completed": u.onboarding_completed,
+        "onboarding_step": getattr(u, "onboarding_step", 0),
         "notify_on_complete": u.notify_on_complete,
+        "notify_scan_complete": bool(getattr(u, "notify_scan_complete", True)),
+        "notify_critical_only": bool(getattr(u, "notify_critical_only", False)),
+        "notify_scheduled_fail": bool(getattr(u, "notify_scheduled_fail", True)),
         "notification_email": u.notification_email,
         "ai_provider": getattr(u, "ai_provider", "deepseek") or "deepseek",
         "ai_provider_active": bool(getattr(u, "ai_provider_active", False)),
@@ -106,6 +110,53 @@ async def update_me(
     await db.commit()
     await db.refresh(user)
     return _user_dict(user)
+
+
+class NotificationPrefs(BaseModel):
+    notify_scan_complete: bool | None = None
+    notify_critical_only: bool | None = None
+    notify_scheduled_fail: bool | None = None
+
+
+@router.get("/me/notifications")
+async def get_notifications(user: User = Depends(get_required_user)):
+    return {
+        "notify_scan_complete": bool(getattr(user, "notify_scan_complete", True)),
+        "notify_critical_only": bool(getattr(user, "notify_critical_only", False)),
+        "notify_scheduled_fail": bool(getattr(user, "notify_scheduled_fail", True)),
+    }
+
+
+@router.patch("/me/notifications")
+async def update_notifications(
+    body: NotificationPrefs,
+    user: User = Depends(get_required_user),
+    db: AsyncSession = Depends(get_db),
+):
+    data = body.model_dump(exclude_unset=True)
+    for field in ("notify_scan_complete", "notify_critical_only", "notify_scheduled_fail"):
+        if field in data and data[field] is not None:
+            setattr(user, field, bool(data[field]))
+    await db.commit()
+    return await get_notifications(user)
+
+
+@router.get("/me/onboarding")
+async def get_onboarding(user: User = Depends(get_required_user)):
+    return {
+        "onboarding_completed": bool(getattr(user, "onboarding_completed", False)),
+        "onboarding_step": int(getattr(user, "onboarding_step", 0) or 0),
+    }
+
+
+@router.post("/me/onboarding-complete")
+async def complete_onboarding(
+    user: User = Depends(get_required_user),
+    db: AsyncSession = Depends(get_db),
+):
+    user.onboarding_completed = True
+    await db.commit()
+    return {"onboarding_completed": True}
 
 
 @router.post("/me/regenerate-api-key")

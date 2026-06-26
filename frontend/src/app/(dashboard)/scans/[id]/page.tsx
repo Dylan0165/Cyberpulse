@@ -1,7 +1,9 @@
 "use client";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { scansApi, reportsApi } from "@/lib/api";
+import { scansApi, reportsApi, findingsApi } from "@/lib/api";
+import { FindingStatusBadge, STATUS_META } from "@/components/findings/FindingStatusBadge";
+import { FindingMetaBadges } from "@/components/findings/FindingMetaBadges";
 import { getToken } from "@/lib/auth";
 import { useParams } from "next/navigation";
 import { useState, useEffect, useRef, useMemo } from "react";
@@ -98,6 +100,8 @@ export default function ScanDetailPage() {
   const [terminalLines, setTerminalLines] = useState<string[]>([]);
   const [secureBusy, setSecureBusy] = useState(false);
   const [sevFilter, setSevFilter] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [statusOverrides, setStatusOverrides] = useState<Record<string, string>>({});
   const [findingSort, setFindingSort] = useState<"severity" | "cvss">("severity");
   const [expandedFinding, setExpandedFinding] = useState<number | null>(null);
   const [selectedNode, setSelectedNode] = useState<SurfaceNode | null>(null);
@@ -120,6 +124,14 @@ export default function ScanDetailPage() {
     queryKey: ["scan-report", scanId],
     queryFn: () => scansApi.getReport(scanId).then(r => r.data),
     enabled: scan?.status === "completed",
+  });
+
+  // Findings merged with triage status (open/resolved/false_positive/accepted_risk).
+  const { data: findingsData } = useQuery({
+    queryKey: ["scan-findings", scanId],
+    queryFn: () => findingsApi.forScan(scanId).then(r => r.data),
+    enabled: scan?.status === "completed",
+    retry: false,
   });
 
   const scanActive = scan?.status === "running" || scan?.status === "analyzing";
@@ -335,8 +347,12 @@ export default function ScanDetailPage() {
   // Prefer the live stream; fall back to the stored output for historical scans.
   const displayLines = termLines.length > 0 ? termLines : historicalTermLines;
 
-  const findings = report?.report_data?.findings ?? report?.findings ?? [];
+  // Prefer the status-merged findings (they carry id + triage status + OWASP/CWE
+  // enrichment); fall back to the raw report findings until that query loads.
+  const findings = findingsData?.findings ?? report?.report_data?.findings ?? report?.findings ?? [];
   const aiReport = report?.report_data ?? report ?? null;
+
+  const effStatus = (f: any): string => statusOverrides[f.id] ?? f.status ?? "open";
 
   // After the AI analysis, append a "Snelle fixes" block to the terminal with a
   // one-liner fix hint per critical/high finding (comes from the AI report).
@@ -404,12 +420,25 @@ export default function ScanDetailPage() {
     if (sevFilter !== "all") {
       list = list.filter((f: any) => (f.severity ?? "").toUpperCase() === sevFilter.toUpperCase());
     }
+    if (statusFilter !== "all") {
+      list = list.filter((f: any) => (statusOverrides[f.id] ?? f.status ?? "open") === statusFilter);
+    }
     list.sort((a: any, b: any) => {
       if (findingSort === "cvss") return (b.cvss ?? 0) - (a.cvss ?? 0);
       return (SEV_ORDER[(a.severity ?? "INFO").toUpperCase()] ?? 5) - (SEV_ORDER[(b.severity ?? "INFO").toUpperCase()] ?? 5);
     });
     return list;
-  }, [findings, sevFilter, findingSort]);
+  }, [findings, sevFilter, statusFilter, statusOverrides, findingSort]);
+
+  // Counts per triage status for the status filter chips.
+  const statusCounts = useMemo(() => {
+    const c: Record<string, number> = { all: findings.length, open: 0, resolved: 0, false_positive: 0, accepted_risk: 0 };
+    for (const f of findings as any[]) {
+      const s = statusOverrides[f.id] ?? f.status ?? "open";
+      c[s] = (c[s] ?? 0) + 1;
+    }
+    return c;
+  }, [findings, statusOverrides]);
 
   const riskScore = aiReport?.risk_score ?? (scan ? Math.round((100 - (scan.security_score ?? 100))) : 0);
 
@@ -782,6 +811,32 @@ export default function ScanDetailPage() {
               </div>
             )}
 
+            {/* Status filter */}
+            {findings.length > 0 && (
+              <div className="flex flex-wrap items-center gap-2">
+                {([
+                  ["all", "Alle"],
+                  ["open", "Open"],
+                  ["resolved", "Opgelost"],
+                  ["false_positive", "False positive"],
+                  ["accepted_risk", "Geaccepteerd"],
+                ] as const).map(([key, label]) => {
+                  const active = statusFilter === key;
+                  return (
+                    <button
+                      key={key}
+                      onClick={() => setStatusFilter(key)}
+                      className={`rounded-md border px-2.5 py-1 font-mono text-[11px] transition-colors ${
+                        active ? "border-cyan/60 bg-cyan/10 text-cyan" : "border-grid text-ink-muted hover:text-ink"
+                      }`}
+                    >
+                      {label} ({statusCounts[key] ?? 0})
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+
             {visibleFindings.length === 0 ? (
               <div className="py-12 text-center font-mono text-[13px] text-ink-muted">
                 {scan.status === "completed"
@@ -793,6 +848,9 @@ export default function ScanDetailPage() {
                 const sev = (f.severity ?? "info").toLowerCase();
                 const open = expandedFinding === i;
                 const critical = sev === "critical";
+                const fStatus = effStatus(f);
+                const isResolved = fStatus === "resolved" || fStatus === "false_positive";
+                const sMeta = STATUS_META[fStatus] ?? STATUS_META.open;
                 return (
                   <motion.div
                     key={i}
@@ -800,15 +858,17 @@ export default function ScanDetailPage() {
                     transition={{ delay: Math.min(i * 0.03, 0.3) }}
                   >
                     <div
-                      className={`overflow-hidden rounded-lg border border-grid bg-card2 ${
+                      className={`overflow-hidden rounded-lg border border-grid ${isResolved ? "bg-card2/50 opacity-70" : "bg-card2"} ${
                         reducedMotion
                           ? ""
-                          : critical
+                          : critical && !isResolved
                           ? "sxd2-critical-flash"
                           : "sxd2-finding-slide"
                       }`}
                       style={{
-                        ...(sev === "critical"
+                        ...(isResolved
+                          ? {}
+                          : sev === "critical"
                           ? { borderLeft: "2px solid #FF2D55" }
                           : sev === "high"
                           ? { borderLeft: "2px solid #FF8C00" }
@@ -828,7 +888,10 @@ export default function ScanDetailPage() {
                         >
                           <RiskBadge severity={sev} />
                         </span>
-                        <span className="flex-1 text-[14px] font-medium text-ink">{f.title}</span>
+                        <span className={`flex-1 text-[14px] font-medium text-ink ${isResolved ? "line-through decoration-ink-muted/60" : ""}`}>{f.title}</span>
+                        <span className={`hidden items-center rounded-full border px-2 py-0.5 font-mono text-[10px] font-semibold sm:inline-flex ${sMeta.cls}`}>
+                          {sMeta.label}
+                        </span>
                         {f.cvss != null && (
                           <span className="rounded bg-panel px-2 py-0.5 font-mono text-[11px] text-ink-muted">
                             CVSS {f.cvss}
@@ -846,15 +909,39 @@ export default function ScanDetailPage() {
                             className="overflow-hidden"
                           >
                             <div className="space-y-3 border-t border-grid px-4 py-3">
+                              <FindingMetaBadges
+                                owasp_category={f.owasp_category}
+                                owasp_label={f.owasp_label}
+                                cwe={f.cwe}
+                                cwe_url={f.cwe_url}
+                                cve_id={f.cve_id}
+                                cve_url={f.cve_url}
+                                mitre_technique={f.mitre_technique}
+                              />
                               <div className="flex flex-wrap gap-3 font-mono text-[11px] text-ink-muted">
-                                {f.cve && <span className="text-cyan">{f.cve}</span>}
-                                {f.owasp && <span>{f.owasp}</span>}
                                 {f.tool && <span>tool: {f.tool}</span>}
                                 {f.phase && <span>fase: {f.phase}</span>}
+                                {f.duplicate_count > 1 && <span>gevonden door {f.duplicate_count} modules</span>}
                               </div>
                               {f.description && <Field label="Beschrijving" value={f.description} />}
                               {f.impact && <Field label="Impact" value={f.impact} />}
                               {f.recommendation && <Field label="Aanbeveling" value={f.recommendation} accent />}
+                              {f.evidence && (
+                                <Field
+                                  label="Bewijs"
+                                  value={typeof f.evidence === "string" ? f.evidence : JSON.stringify(f.evidence, null, 2)}
+                                />
+                              )}
+                              {f.id && (
+                                <div className="flex items-center justify-end border-t border-grid pt-3">
+                                  <FindingStatusBadge
+                                    findingId={f.id}
+                                    currentStatus={fStatus}
+                                    currentNote={f.status_note}
+                                    onUpdate={(status) => setStatusOverrides((prev) => ({ ...prev, [f.id]: status }))}
+                                  />
+                                </div>
+                              )}
                             </div>
                           </motion.div>
                         )}
@@ -900,6 +987,38 @@ export default function ScanDetailPage() {
                     >
                       Volledig rapport €49 <ArrowRight className="h-3.5 w-3.5" />
                     </Link>
+                  </div>
+                )}
+
+                {/* OWASP Top 10 coverage */}
+                {Array.isArray((aiReport as any)?.owasp_coverage) && (aiReport as any).owasp_coverage.length > 0 && (
+                  <div className="overflow-hidden rounded-lg border border-grid">
+                    <div className="border-b border-grid bg-card2 px-4 py-2.5 font-mono text-[11px] uppercase tracking-wider text-ink-muted">
+                      OWASP Top 10 — dekking
+                    </div>
+                    <table className="w-full text-left">
+                      <tbody>
+                        {[...((aiReport as any).owasp_coverage as any[])]
+                          .sort((a, b) => {
+                            const o = ["CRITICAL", "HIGH", "MEDIUM", "LOW", "INFO"];
+                            return o.indexOf(a.worst) - o.indexOf(b.worst);
+                          })
+                          .map((row) => (
+                            <tr key={row.owasp} className="border-b border-grid/60">
+                              <td className="px-4 py-2 font-mono text-[12px] text-ink">{row.owasp}</td>
+                              <td className="px-4 py-2 font-mono text-[12px] text-ink-muted">{row.label}</td>
+                              <td className="px-4 py-2 font-mono text-[12px] tabular-nums text-ink">
+                                {row.count} {row.count === 1 ? "bevinding" : "bevindingen"}
+                              </td>
+                              <td className="px-4 py-2 text-right">
+                                <span className="font-mono text-[11px] font-semibold" style={{ color: severityColor(String(row.worst).toLowerCase()) }}>
+                                  {severityLabel(String(row.worst).toLowerCase())}
+                                </span>
+                              </td>
+                            </tr>
+                          ))}
+                      </tbody>
+                    </table>
                   </div>
                 )}
 
