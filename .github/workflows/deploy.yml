@@ -26,7 +26,10 @@ jobs:
         run: |
           cd /home/student/cyberpulse
           BEFORE=$(git rev-parse HEAD)
-          git pull origin main
+          # Hard-sync to origin/main (survives force-pushed / rewritten history —
+          # a plain `git pull` fails on divergent branches).
+          git fetch origin main
+          git reset --hard origin/main
           AFTER=$(git rev-parse HEAD)
 
           CHANGED=$(git diff --name-only "$BEFORE" "$AFTER" 2>/dev/null || echo "")

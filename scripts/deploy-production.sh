@@ -7,8 +7,9 @@ echo "$(date)"
 # Ga naar project directory
 cd /opt/scanix
 
-# Pull laatste versie
-git pull origin main
+# Hard-sync naar origin/main (overleeft force-pushes; `git pull` faalt bij divergentie)
+git fetch origin main
+git reset --hard origin/main
 
 # Stop running containers (behalve postgres en redis — data bewaren)
 docker compose -f docker-compose.prod.yml stop frontend backend celery_worker celery_beat nginx
