@@ -134,7 +134,23 @@ app.include_router(websocket.router)
 import os as _os
 from fastapi.responses import FileResponse, PlainTextResponse
 
-_AGENT_DIR = _os.path.join(_os.path.dirname(_os.path.dirname(_os.path.dirname(__file__))), "agent")
+
+def _resolve_agent_dir() -> str:
+    """Locate the agent/ files. The backend image is built from ./backend, so the
+    repo-root /agent isn't inside it — in containers it's mounted at /srv/agent
+    (AGENT_FILES_DIR). Falls back to the repo path for local/dev runs."""
+    candidates = [
+        _os.getenv("AGENT_FILES_DIR"),
+        "/srv/agent",
+        _os.path.join(_os.path.dirname(_os.path.dirname(_os.path.dirname(__file__))), "agent"),
+    ]
+    for c in candidates:
+        if c and _os.path.exists(_os.path.join(c, "install.sh")):
+            return c
+    return candidates[-1]
+
+
+_AGENT_DIR = _resolve_agent_dir()
 
 
 @app.get("/agent/install.sh")

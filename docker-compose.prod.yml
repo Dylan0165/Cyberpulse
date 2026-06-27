@@ -39,6 +39,10 @@ services:
       FRONTEND_URL: https://app.scanix.nl
       APP_PUBLIC_URL: https://app.scanix.nl
       TOTP_ENC_KEY: ${TOTP_ENCRYPTION_KEY}
+      AGENT_FILES_DIR: /srv/agent
+    volumes:
+      # Agent install script + source (repo /agent isn't in the backend image).
+      - ./agent:/srv/agent:ro
     depends_on: [postgres, redis]
     networks: [scanix]
 
