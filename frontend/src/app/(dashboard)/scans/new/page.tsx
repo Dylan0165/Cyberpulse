@@ -122,6 +122,9 @@ function NewScanContent() {
   // Step 1 — Target
   const [selectedTarget, setSelectedTarget] = useState<string>(searchParams.get("target") ?? "");
 
+  // Scan template preset (quick / full / compliance). Presets phases + modules.
+  const [selectedTemplate, setSelectedTemplate] = useState<"quick" | "full" | "compliance">("full");
+
   // Scan method — external (default) vs via a Scanix Agent (local network).
   const [scanMethod, setScanMethod] = useState<"external" | "agent">("external");
   const [selectedAgentId, setSelectedAgentId] = useState<string>("");
@@ -349,6 +352,21 @@ function NewScanContent() {
     }
   };
 
+  const applyTemplate = (key: "quick" | "full" | "compliance") => {
+    setSelectedTemplate(key);
+    if (key === "quick") {
+      setScanType("quick");
+      setSelectedPhases(new Set(["recon", "vulnerability", "ssl"]));
+    } else if (key === "full") {
+      setScanType("full");
+      setSelectedPhases(new Set(["recon", "vulnerability", "webapp", "network", "auth", "ssl", "osint"]));
+    } else {
+      setScanType("custom");
+      setSelectedPhases(new Set(["recon", "vulnerability", "auth", "ssl", "osint"]));
+      if (customModulesAllowed) setSelectedModules(new Set(["m09", "m10", "m11"]));
+    }
+  };
+
   const togglePhase = (phase: string) => {
     setSelectedPhases(prev => {
       const next = new Set(prev);
@@ -476,6 +494,40 @@ function NewScanContent() {
             transition={{ duration: 0.25 }}
             className="space-y-6"
           >
+            {/* Scan template — choose a preset */}
+            <div className="space-y-3">
+              <SectionLabel icon={<Layers className="h-3.5 w-3.5" />} text="Kies een scan type" />
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                {([
+                  { key: "quick" as const, icon: "⚡", title: "Snel", time: "~10 min", desc: "Basis check" },
+                  { key: "full" as const, icon: "🔍", title: "Volledig", time: "~45 min", desc: "Alles" },
+                  { key: "compliance" as const, icon: "📋", title: "Compliance", time: "~30 min", desc: "NIS2 / AVG" },
+                ]).map((tpl) => {
+                  const active = selectedTemplate === tpl.key;
+                  return (
+                    <button
+                      key={tpl.key}
+                      type="button"
+                      onClick={() => applyTemplate(tpl.key)}
+                      className={`rounded-lg border p-4 text-left transition-all duration-150 hover:scale-[1.01] active:scale-[0.99] ${
+                        active ? "border-cyan bg-cyan/5 shadow-glow-cyan" : "border-grid bg-card2 hover:border-cyan/40"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-[18px]">{tpl.icon}</span>
+                        <span className="font-mono text-[10px] text-ink-muted">{tpl.time}</span>
+                      </div>
+                      <p className={`mt-2 font-display text-[13px] font-bold ${active ? "text-cyan" : "text-ink"}`}>{tpl.title}</p>
+                      <p className="font-mono text-[10px] text-ink-muted">{tpl.desc} · 1 credit</p>
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="font-mono text-[11px] text-ink-muted">
+                Geavanceerde opties (fases, modules, inloggegevens) staan in de volgende stappen.
+              </p>
+            </div>
+
             {/* Scan method — external vs via Scanix Agent */}
             <div className="space-y-3">
               <SectionLabel icon={<Server className="h-3.5 w-3.5" />} text="Scan methode" />

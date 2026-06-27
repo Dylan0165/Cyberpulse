@@ -10,7 +10,8 @@
     "contact": "Contact",
     "login": "Inloggen",
     "cta": "Gratis scan aanvragen",
-    "agent": "Scanix Agent"
+    "agent": "Scanix Agent",
+    "demo": "Live demo"
   },
   "hero": {
     "badge": "Geautomatiseerde beveiligingstests",
@@ -29,7 +30,8 @@
     "mockHigh": "Ernstig",
     "mockMedium": "Gemiddeld",
     "mockStatus": "Scan voltooid",
-    "ctaDashboard": "Naar dashboard →"
+    "ctaDashboard": "Naar dashboard →",
+    "ctaDemo": "Bekijk live demo"
   },
   "problem": {
     "title": "Waarom dit belangrijk is",
@@ -298,5 +300,18 @@
     "windowsSoon": "Binnenkort beschikbaar",
     "tokenNote": "Vervang UW_TOKEN door het token uit uw dashboard.",
     "ctaDashboard": "Open dashboard"
+  },
+  "demoPage": {
+    "title": "Zie Scanix in actie",
+    "subtitle": "Live scan op scanme.nmap.org — geen account nodig.",
+    "startButton": "Start gratis demo scan",
+    "duration": "Duurt ~2 minuten",
+    "running": "Scan loopt…",
+    "findingsTitle": "Eerste bevindingen",
+    "lockedMore": "+{count} bevindingen — maak een gratis account aan voor het volledige rapport",
+    "createAccount": "Gratis account aanmaken",
+    "done": "Demo voltooid",
+    "rateLimit": "Te veel demo-aanvragen. Probeer het later opnieuw of maak een gratis account aan.",
+    "error": "Demo kon niet starten. Probeer het later opnieuw."
   }
 }

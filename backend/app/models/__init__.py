@@ -21,6 +21,7 @@ from app.models.project import ScanProject
 from app.models.finding_status import FindingStatus
 from app.models.api_key import ApiKey
 from app.models.team import TeamMember
+from app.models.demo_scan import DemoScan
 
 __all__ = [
     "User",
@@ -38,4 +39,5 @@ __all__ = [
     "FindingStatus",
     "ApiKey",
     "TeamMember",
+    "DemoScan",
 ]

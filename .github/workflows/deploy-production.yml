@@ -1,0 +1,52 @@
+name: Deploy naar productie
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Bouw frontend
+        run: |
+          cd frontend
+          npm ci
+          npm run build
+
+      - name: Bouw marketing site
+        run: |
+          cd scanix-website
+          npm ci
+          npm run build
+
+      - name: Backend syntax check
+        run: |
+          cd backend
+          python3 -m py_compile app/main.py
+          echo "Backend OK"
+
+      - name: Deploy naar productie server
+        env:
+          PROD_HOST: ${{ secrets.PROD_HOST }}
+          PROD_USER: ${{ secrets.PROD_USER }}
+          PROD_SSH_KEY: ${{ secrets.PROD_SSH_KEY }}
+        run: |
+          echo "$PROD_SSH_KEY" > /tmp/prod_key
+          chmod 600 /tmp/prod_key
+          ssh -i /tmp/prod_key -o StrictHostKeyChecking=no \
+            ${PROD_USER}@${PROD_HOST} \
+            "cd /opt/scanix && bash scripts/deploy-production.sh"
+          rm /tmp/prod_key
+
+      - name: Health check
+        env:
+          PROD_HOST: ${{ secrets.PROD_HOST }}
+        run: |
+          sleep 30
+          curl -f https://app.scanix.nl/api/health || exit 1
+          echo "Health check geslaagd"

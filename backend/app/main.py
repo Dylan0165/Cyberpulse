@@ -31,6 +31,7 @@ from app.api.endpoints import (
     api_keys,
     teams,
     analytics,
+    demo,
 )
 
 logging.basicConfig(level=logging.INFO)
@@ -121,6 +122,7 @@ app.include_router(findings.router, prefix="/api")
 app.include_router(api_keys.router, prefix="/api")
 app.include_router(teams.router, prefix="/api")
 app.include_router(analytics.router, prefix="/api")
+app.include_router(demo.router, prefix="/api")
 
 # WebSocket Routes
 app.include_router(websocket.router)
@@ -153,4 +155,29 @@ async def agent_source():
 
 @app.get("/api/health")
 async def health_check():
-    return {"status": "ok", "service": "autopentest-ai"}
+    """Liveness + dependency check (DB + Redis). Never raises."""
+    db_ok = False
+    redis_ok = False
+    try:
+        from sqlalchemy import text
+        from app.core.database import async_session
+        async with async_session() as session:
+            await session.execute(text("SELECT 1"))
+        db_ok = True
+    except Exception:
+        db_ok = False
+    try:
+        from app.core.redis import get_redis
+        rc = await get_redis()
+        await rc.ping()
+        redis_ok = True
+    except Exception:
+        redis_ok = False
+
+    return {
+        "status": "healthy" if (db_ok and redis_ok) else "degraded",
+        "service": "autopentest-ai",
+        "database": "ok" if db_ok else "error",
+        "redis": "ok" if redis_ok else "error",
+        "version": "1.0.0",
+    }

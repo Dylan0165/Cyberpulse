@@ -10,7 +10,8 @@
     "contact": "Contact",
     "login": "Login",
     "cta": "Request free scan",
-    "agent": "Scanix Agent"
+    "agent": "Scanix Agent",
+    "demo": "Live demo"
   },
   "hero": {
     "badge": "Automated Security Testing",
@@ -29,7 +30,8 @@
     "mockHigh": "High",
     "mockMedium": "Medium",
     "mockStatus": "Scan completed",
-    "ctaDashboard": "Go to dashboard →"
+    "ctaDashboard": "Go to dashboard →",
+    "ctaDemo": "See live demo"
   },
   "problem": {
     "title": "Why this matters",
@@ -298,5 +300,18 @@
     "windowsSoon": "Coming soon",
     "tokenNote": "Replace YOUR_TOKEN with the token from your dashboard.",
     "ctaDashboard": "Open dashboard"
+  },
+  "demoPage": {
+    "title": "See Scanix in action",
+    "subtitle": "Live scan on scanme.nmap.org — no account needed.",
+    "startButton": "Start free demo scan",
+    "duration": "Takes ~2 minutes",
+    "running": "Scan running…",
+    "findingsTitle": "First findings",
+    "lockedMore": "+{count} findings — create a free account for the full report",
+    "createAccount": "Create free account",
+    "done": "Demo complete",
+    "rateLimit": "Too many demo requests. Try again later or create a free account.",
+    "error": "Could not start the demo. Try again later."
   }
 }

@@ -173,6 +173,48 @@ def _build_pdf(report_data: dict, target: str, scan_type: str,
     story.append(findings_tbl)
     story.append(Spacer(1, 0.5*cm))
 
+    # Top 3 aanbevolen acties (AI, management-vriendelijk)
+    top3 = report_data.get("top_3_actions") or []
+    if top3:
+        story.append(Paragraph("Top 3 aanbevolen acties", styles["h2"]))
+        for i, a in enumerate(top3[:3], start=1):
+            if isinstance(a, dict):
+                line = f"{i}. {a.get('action') or a.get('title', '')}"
+                te = a.get("time_estimate")
+                if te:
+                    line += f" — {te}"
+            else:
+                line = f"{i}. {a}"
+            story.append(Paragraph(line, styles["body"]))
+        story.append(Spacer(1, 0.4*cm))
+
+    # OWASP Top 10 dekking
+    owasp_cov = report_data.get("owasp_coverage") or []
+    if owasp_cov:
+        story.append(Paragraph("OWASP Top 10 dekking", styles["h2"]))
+        owasp_rows = [["Categorie", "Omschrijving", "Bevindingen", "Hoogste ernst"]]
+        for item in owasp_cov:
+            owasp_rows.append([
+                str(item.get("owasp") or item.get("category") or ""),
+                str(item.get("label") or ""),
+                str(item.get("count") or 0),
+                str(item.get("worst") or item.get("max_severity") or ""),
+            ])
+        owasp_tbl = Table(owasp_rows, colWidths=[3*cm, 7*cm, 3*cm, 3*cm])
+        owasp_tbl.setStyle(TableStyle([
+            ("BACKGROUND",    (0,0), (-1,0),  colors.HexColor("#1e3a5f")),
+            ("TEXTCOLOR",     (0,0), (-1,0),  colors.white),
+            ("FONTNAME",      (0,0), (-1,0),  "Helvetica-Bold"),
+            ("FONTSIZE",      (0,0), (-1,-1), 8),
+            ("ALIGN",         (2,0), (3,-1),  "CENTER"),
+            ("ROWBACKGROUNDS",(0,1), (-1,-1), [colors.white, colors.HexColor("#f9fafb")]),
+            ("GRID",          (0,0), (-1,-1), 0.5, colors.HexColor("#e5e7eb")),
+            ("TOPPADDING",    (0,0), (-1,-1), 5),
+            ("BOTTOMPADDING", (0,0), (-1,-1), 5),
+        ]))
+        story.append(owasp_tbl)
+        story.append(Spacer(1, 0.5*cm))
+
     # Management summary
     mgmt = (
         report_data.get("management_summary") or

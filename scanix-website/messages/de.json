@@ -10,7 +10,8 @@
     "contact": "Kontakt",
     "login": "Anmelden",
     "cta": "Kostenlosen Scan anfordern",
-    "agent": "Scanix Agent"
+    "agent": "Scanix Agent",
+    "demo": "Live demo"
   },
   "hero": {
     "badge": "Automatisierte Sicherheitstests",
@@ -29,7 +30,8 @@
     "mockHigh": "Hoch",
     "mockMedium": "Mittel",
     "mockStatus": "Scan abgeschlossen",
-    "ctaDashboard": "Zum Dashboard →"
+    "ctaDashboard": "Zum Dashboard →",
+    "ctaDemo": "Live-Demo ansehen"
   },
   "problem": {
     "title": "Warum das wichtig ist",
@@ -298,5 +300,18 @@
     "windowsSoon": "Demnächst verfügbar",
     "tokenNote": "Ersetzen Sie IHR_TOKEN durch das Token aus Ihrem Dashboard.",
     "ctaDashboard": "Dashboard öffnen"
+  },
+  "demoPage": {
+    "title": "Scanix in Aktion",
+    "subtitle": "Live-Scan auf scanme.nmap.org — kein Konto nötig.",
+    "startButton": "Kostenlosen Demo-Scan starten",
+    "duration": "Dauert ~2 Minuten",
+    "running": "Scan läuft…",
+    "findingsTitle": "Erste Befunde",
+    "lockedMore": "+{count} Befunde — erstellen Sie ein kostenloses Konto für den vollständigen Bericht",
+    "createAccount": "Kostenloses Konto erstellen",
+    "done": "Demo abgeschlossen",
+    "rateLimit": "Zu viele Demo-Anfragen. Versuchen Sie es später oder erstellen Sie ein kostenloses Konto.",
+    "error": "Demo konnte nicht gestartet werden. Versuchen Sie es später."
   }
 }

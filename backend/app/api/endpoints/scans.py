@@ -48,6 +48,41 @@ from app.services.audit import log_action
 
 router = APIRouter(prefix="/scans", tags=["scans"])
 
+# ── Scan templates — pre-built phase/module presets ───────────────────────────
+SCAN_TEMPLATES: dict[str, dict] = {
+    "quick": {
+        "name": "Snelle scan",
+        "description": "Basis kwetsbaarheden in ~10 minuten",
+        "phases": list(QUICK_PHASES),
+        "modules": [],
+        "estimated_minutes": 10,
+        "icon": "⚡",
+    },
+    "full": {
+        "name": "Volledige scan",
+        "description": "Alle fasen, diepgaand onderzoek (~45 min)",
+        "phases": list(FULL_PHASES),
+        "modules": [],
+        "estimated_minutes": 45,
+        "icon": "🔍",
+    },
+    "compliance": {
+        "name": "Compliance scan",
+        "description": "NIS2 en AVG gericht, inclusief rapport",
+        "phases": ["recon", "vulnerability", "auth", "ssl", "osint"],
+        "modules": ["m09", "m10", "m11"],
+        "estimated_minutes": 30,
+        "icon": "📋",
+    },
+}
+
+
+@router.get("/templates")
+async def scan_templates():
+    """Public — pre-built scan presets for the new-scan UI."""
+    return SCAN_TEMPLATES
+
+
 _STUDENT_USER_ID = uuid.UUID("00000000-0000-0000-0000-000000000001")
 
 

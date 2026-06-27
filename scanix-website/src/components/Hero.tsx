@@ -240,6 +240,12 @@ export function Hero() {
               </Link>
             )}
             <Link
+              href="/demo"
+              className="inline-flex items-center gap-2 rounded-xl border border-cyan/40 bg-cyan/5 px-6 py-3.5 text-[15px] font-semibold text-cyan transition-colors hover:border-cyan/60 active:scale-[0.98]"
+            >
+              {t("ctaDemo")}
+            </Link>
+            <Link
               href="/hoe-het-werkt"
               className="inline-flex items-center gap-2 rounded-xl border border-grid bg-card px-6 py-3.5 text-[15px] font-semibold text-ink transition-colors hover:border-cyan/40 active:scale-[0.98]"
             >

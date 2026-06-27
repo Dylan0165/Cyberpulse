@@ -10,7 +10,8 @@
     "contact": "Contact",
     "login": "Connexion",
     "cta": "Demander un scan gratuit",
-    "agent": "Agent Scanix"
+    "agent": "Agent Scanix",
+    "demo": "Démo live"
   },
   "hero": {
     "badge": "Tests de sécurité automatisés",
@@ -29,7 +30,8 @@
     "mockHigh": "Élevé",
     "mockMedium": "Moyen",
     "mockStatus": "Scan terminé",
-    "ctaDashboard": "Accéder au tableau de bord →"
+    "ctaDashboard": "Accéder au tableau de bord →",
+    "ctaDemo": "Voir la démo live"
   },
   "problem": {
     "title": "Pourquoi c'est important",
@@ -298,5 +300,18 @@
     "windowsSoon": "Bientôt disponible",
     "tokenNote": "Remplacez VOTRE_TOKEN par le token de votre tableau de bord.",
     "ctaDashboard": "Ouvrir le tableau de bord"
+  },
+  "demoPage": {
+    "title": "Scanix en action",
+    "subtitle": "Scan en direct sur scanme.nmap.org — sans compte.",
+    "startButton": "Lancer la démo gratuite",
+    "duration": "Environ 2 minutes",
+    "running": "Scan en cours…",
+    "findingsTitle": "Premières découvertes",
+    "lockedMore": "+{count} découvertes — créez un compte gratuit pour le rapport complet",
+    "createAccount": "Créer un compte gratuit",
+    "done": "Démo terminée",
+    "rateLimit": "Trop de demandes de démo. Réessayez plus tard ou créez un compte gratuit.",
+    "error": "Impossible de lancer la démo. Réessayez plus tard."
   }
 }

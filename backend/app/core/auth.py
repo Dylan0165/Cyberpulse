@@ -153,3 +153,77 @@ async def get_client_ip(request: Request) -> str:
     if forwarded:
         return forwarded.split(",")[0].strip()
     return request.client.host if request.client else "unknown"
+
+
+# ── Team roles + permissions (additive) ─────────────────────────────────────
+# A UserContext resolves the acting user to the account whose resources they may
+# touch (their own, or — for an accepted team member — the owner's), plus their
+# role. require_permission() gates an endpoint by action. NOTE: existing
+# endpoints are intentionally left on get_required_user to avoid a breaking
+# change; new/role-aware endpoints can opt in to get_user_context /
+# require_permission and query by ctx.effective_user_id.
+
+from dataclasses import dataclass
+
+
+@dataclass
+class UserContext:
+    user_id: uuid.UUID
+    email: str
+    plan: str
+    role: str
+    effective_user_id: uuid.UUID
+    is_team_member: bool
+
+
+ROLE_PERMISSIONS = {
+    "owner":   ["scan:read", "scan:create", "scan:delete", "report:read",
+                "target:manage", "billing:manage", "settings:manage"],
+    "admin":   ["scan:read", "scan:create", "scan:delete", "report:read", "target:manage"],
+    "analyst": ["scan:read", "scan:create", "report:read"],
+    "viewer":  ["scan:read", "report:read"],
+}
+
+
+def check_permission(ctx: "UserContext", action: str) -> bool:
+    return action in ROLE_PERMISSIONS.get(ctx.role, [])
+
+
+async def get_user_context(
+    user: User = Depends(get_required_user),
+    db: AsyncSession = Depends(get_db),
+) -> UserContext:
+    """Resolve the acting user + role + effective (owner) account."""
+    try:
+        from app.models.team import TeamMember
+        res = await db.execute(
+            select(TeamMember).where(
+                TeamMember.member_id == user.id,
+                TeamMember.accepted_at.isnot(None),
+            ).limit(1)
+        )
+        tm = res.scalar_one_or_none()
+    except Exception:
+        tm = None
+
+    if tm:
+        return UserContext(
+            user_id=user.id, email=user.email, plan=getattr(user, "plan", "trial"),
+            role=tm.role, effective_user_id=tm.owner_id, is_team_member=True,
+        )
+    return UserContext(
+        user_id=user.id, email=user.email, plan=getattr(user, "plan", "trial"),
+        role="owner", effective_user_id=user.id, is_team_member=False,
+    )
+
+
+def require_permission(action: str):
+    """FastAPI dependency factory: 403 unless the role allows `action`."""
+    async def dependency(ctx: UserContext = Depends(get_user_context)) -> UserContext:
+        if not check_permission(ctx, action):
+            raise HTTPException(
+                status_code=403,
+                detail=f"Uw rol '{ctx.role}' heeft geen toegang tot '{action}'",
+            )
+        return ctx
+    return dependency

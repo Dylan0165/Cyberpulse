@@ -516,3 +516,64 @@ async def subdomain_discovery(
         "total_alive": len(alive),
         "sources": sources,
     }
+
+
+# ── Finding verification ──────────────────────────────────────────────────────
+# Re-run the specific check for a single (critical/high) finding to weed out
+# false positives. One-shot, never a full scan. Always returns gracefully.
+
+class VerifyFindingRequest(BaseModel):
+    type: str = ""
+    target: str = ""
+    port: str | int | None = None
+    payload: str = ""
+
+
+@app.post("/verify-finding")
+async def verify_finding(
+    body: VerifyFindingRequest,
+    x_api_key: Optional[str] = Header(default=None),
+):
+    _check_key(x_api_key)
+    ftype = (body.type or "").lower()
+    target = (body.target or "").strip()
+    port = str(body.port or "").strip()
+    confirmed = False
+    evidence = ""
+
+    # Reject obviously unsafe targets (we build argv lists, not a shell, but be strict).
+    if target and not re.match(r"^[A-Za-z0-9_.:\-/]+$", target):
+        return {"confirmed": False, "evidence": "Ongeldig target", "finding_type": ftype, "target": target}
+
+    try:
+        if ftype == "sqli":
+            _, out, err = await _run_cmd(
+                ["sqlmap", "-u", target, "--batch", "--level=1", "--risk=1", "--timeout=30", "--disable-coloring"], 60
+            )
+            combined = (out + err)
+            confirmed = "is vulnerable" in combined.lower() or "injectable" in combined.lower()
+            evidence = combined[-500:]
+        elif ftype == "ssl_weak":
+            _, out, err = await _run_cmd(["nmap", "--script", "ssl-enum-ciphers", "-p", port or "443", target], 90)
+            combined = out + err
+            confirmed = ("SSLv3" in combined) or ("TLSv1.0" in combined) or ("weak" in combined.lower())
+            evidence = combined[-500:]
+        elif ftype in ("open_port", "service_version", "cve"):
+            _, out, err = await _run_cmd(["nmap", "-sV", "-p", port or "1-1024", "--open", target], 60)
+            combined = out + err
+            confirmed = "open" in combined.lower()
+            evidence = combined[-400:]
+        elif ftype == "xss":
+            _, out, err = await _run_cmd(["curl", "-sk", "--max-time", "15", target], 20)
+            combined = out + err
+            confirmed = bool(body.payload) and body.payload in combined
+            evidence = combined[:400] if confirmed else "Payload niet teruggevonden in response"
+        else:
+            _, out, err = await _run_cmd(["curl", "-sk", "-I", "--max-time", "10", target], 15)
+            confirmed = bool(out.strip())
+            evidence = "Automatische verificatie niet beschikbaar voor dit type; basisbereikbaarheid gecontroleerd."
+    except Exception as exc:  # noqa: BLE001 — never crash
+        confirmed = False
+        evidence = f"Verificatie fout: {exc}"
+
+    return {"confirmed": confirmed, "evidence": evidence, "finding_type": ftype, "target": target}

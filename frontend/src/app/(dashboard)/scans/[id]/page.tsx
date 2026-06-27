@@ -1,9 +1,10 @@
 "use client";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { scansApi, reportsApi, findingsApi } from "@/lib/api";
+import { scansApi, reportsApi, findingsApi, analyticsApi } from "@/lib/api";
 import { FindingStatusBadge, STATUS_META } from "@/components/findings/FindingStatusBadge";
 import { FindingMetaBadges } from "@/components/findings/FindingMetaBadges";
+import { ScanDiffView } from "@/components/scan/ScanDiffView";
 import { getToken } from "@/lib/auth";
 import { useParams } from "next/navigation";
 import { useState, useEffect, useRef, useMemo } from "react";
@@ -102,6 +103,7 @@ export default function ScanDetailPage() {
   const [sevFilter, setSevFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [statusOverrides, setStatusOverrides] = useState<Record<string, string>>({});
+  const [compareWith, setCompareWith] = useState<{ id: string; date: string } | null>(null);
   const [findingSort, setFindingSort] = useState<"severity" | "cvss">("severity");
   const [expandedFinding, setExpandedFinding] = useState<number | null>(null);
   const [selectedNode, setSelectedNode] = useState<SurfaceNode | null>(null);
@@ -133,6 +135,17 @@ export default function ScanDetailPage() {
     enabled: scan?.status === "completed",
     retry: false,
   });
+
+  // Sibling completed scans on the same target (for the compare/diff feature).
+  const { data: trendData } = useQuery({
+    queryKey: ["scan-siblings", (scan as any)?.target_id],
+    queryFn: () => analyticsApi.trend((scan as any).target_id).then((r) => r.data),
+    enabled: !!(scan as any)?.target_id && scan?.status === "completed",
+    retry: false,
+  });
+  const siblingScans = ((trendData?.points ?? []) as any[])
+    .filter((p) => p.scan_id !== scanId)
+    .reverse(); // newest first
 
   const scanActive = scan?.status === "running" || scan?.status === "analyzing";
 
@@ -838,6 +851,26 @@ export default function ScanDetailPage() {
               </div>
             )}
 
+            {/* Compare with a previous scan */}
+            {siblingScans.length > 0 && (
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="font-mono text-[12px] text-ink-muted">↔ Vergelijk met:</span>
+                <select
+                  value={compareWith?.id ?? ""}
+                  onChange={(e) => {
+                    const p = siblingScans.find((s) => s.scan_id === e.target.value);
+                    setCompareWith(p ? { id: p.scan_id, date: p.date } : null);
+                  }}
+                  className="rounded-md border border-grid bg-card2 px-3 py-1.5 font-mono text-[12px] text-ink outline-none focus:border-cyan/60"
+                >
+                  <option value="">— kies een vorige scan —</option>
+                  {siblingScans.map((s) => (
+                    <option key={s.scan_id} value={s.scan_id}>{s.date} (score {s.risk_score})</option>
+                  ))}
+                </select>
+              </div>
+            )}
+
             {visibleFindings.length === 0 ? (
               <div className="py-12 text-center font-mono text-[13px] text-ink-muted">
                 {scan.status === "completed"
@@ -951,6 +984,16 @@ export default function ScanDetailPage() {
                   </motion.div>
                 );
               })
+            )}
+
+            {/* Scan diff (rendered onder de bevindingen) */}
+            {compareWith && (
+              <ScanDiffView
+                currentScanId={scanId}
+                previousScanId={compareWith.id}
+                previousDate={compareWith.date}
+                onClose={() => setCompareWith(null)}
+              />
             )}
           </motion.div>
         )}
