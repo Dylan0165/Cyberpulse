@@ -5,7 +5,8 @@ import { useTranslations } from "next-intl";
 import { Play, Loader2, Lock, ArrowRight, ShieldCheck } from "lucide-react";
 
 // App API base — configurable so it works in any environment (no hard-coded domain).
-const API = (process.env.NEXT_PUBLIC_APP_API_URL || "https://app.scanix.nl").replace(/\/$/, "");
+// Domain-free default (test/netlab IP); set NEXT_PUBLIC_APP_API_URL in production.
+const API = (process.env.NEXT_PUBLIC_APP_API_URL || "http://192.168.121.40").replace(/\/$/, "");
 const REGISTER_URL = `${API.replace("/api", "")}/register`;
 
 type DemoState = {

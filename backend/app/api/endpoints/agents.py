@@ -112,11 +112,15 @@ async def register_agent(
     await db.commit()
     await db.refresh(agent)
 
-    base = settings.frontend_url.replace("3000", "8000") if "localhost" in settings.frontend_url else "https://app.scanix.nl"
+    # Public base URL where the agent files are served (the backend behind nginx).
+    # Domain-free by default (test/netlab uses an IP); set APP_PUBLIC_URL in prod.
+    import os as _os
+    base = _os.getenv("APP_PUBLIC_URL", "http://192.168.121.40").rstrip("/")
+    # Pass SCANIX_URL through so install.sh + the agent service call the same host.
     return {
         "agent_id": str(agent.id),
         "agent_token": token,
-        "install_command": f"curl -sSL {base}/agent/install.sh | AGENT_TOKEN={token} bash",
+        "install_command": f"curl -sSL {base}/agent/install.sh | SCANIX_URL={base} AGENT_TOKEN={token} bash",
     }
 
 

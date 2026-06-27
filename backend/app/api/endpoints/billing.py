@@ -28,8 +28,9 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/billing", tags=["billing"])
 
-# App URL for Stripe redirects (kept consistent with the billing portal).
-_APP_URL = os.getenv("APP_PUBLIC_URL", "https://app.scanix.nl")
+# App URL for Stripe redirects. Domain-free default (test/netlab IP); set
+# APP_PUBLIC_URL to the real app URL in production.
+_APP_URL = os.getenv("APP_PUBLIC_URL", "http://192.168.121.40")
 
 # Generic Dutch message shown whenever payments are unavailable / misconfigured.
 _NOT_CONFIGURED = (

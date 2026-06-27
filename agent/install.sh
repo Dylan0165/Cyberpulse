@@ -1,6 +1,7 @@
 #!/bin/bash
 # Scanix Agent installation script
-# Usage: curl -sSL https://app.scanix.nl/agent/install.sh | AGENT_TOKEN=xxx bash
+# Usage: curl -sSL <SCANIX_URL>/agent/install.sh | SCANIX_URL=<SCANIX_URL> AGENT_TOKEN=xxx bash
+# SCANIX_URL defaults to the test/netlab IP; set it to your app URL in production.
 
 set -e
 echo "=== Scanix Agent Installatie ==="
@@ -11,7 +12,7 @@ if [ -z "${AGENT_TOKEN}" ]; then
   exit 1
 fi
 
-SCANIX_URL="${SCANIX_URL:-https://app.scanix.nl}"
+SCANIX_URL="${SCANIX_URL:-http://192.168.121.40}"
 
 # Check Python 3
 python3 --version || { echo "Python 3 vereist"; exit 1; }

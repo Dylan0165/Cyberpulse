@@ -22,7 +22,8 @@ except ImportError:
     print("ERROR: 'requests' is required (pip3 install requests)")
     sys.exit(1)
 
-SCANIX_URL = os.environ.get("SCANIX_URL", "https://app.scanix.nl")
+# Domain-free default (test/netlab). Override with SCANIX_URL in production.
+SCANIX_URL = os.environ.get("SCANIX_URL", "http://192.168.121.40")
 AGENT_TOKEN = os.environ.get("AGENT_TOKEN", "")
 HEARTBEAT_INTERVAL = 30  # seconds
 
