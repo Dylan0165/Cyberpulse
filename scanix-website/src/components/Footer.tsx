@@ -3,8 +3,7 @@
 import { useTranslations } from "next-intl";
 import { ArrowRight } from "lucide-react";
 import { Link } from "@/lib/navigation";
-
-const APP_URL = "https://app.scanix.nl";
+import { APP_URL } from "@/lib/appUrl";
 
 export function Footer() {
   const t = useTranslations("footer");

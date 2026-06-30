@@ -5,8 +5,7 @@ import { useTranslations } from "next-intl";
 import { motion } from "framer-motion";
 import { Eye, EyeOff, Loader2, AlertCircle, ArrowRight } from "lucide-react";
 import { Link } from "@/lib/navigation";
-
-const APP_URL = "https://app.scanix.nl";
+import { APP_URL } from "@/lib/appUrl";
 
 type Status = "idle" | "sending" | "error";
 

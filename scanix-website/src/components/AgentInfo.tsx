@@ -3,10 +3,11 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { ShieldOff, ServerCog, RefreshCw, Copy, Check, ArrowRight } from "lucide-react";
+import { APP_URL } from "@/lib/appUrl";
 
 const INSTALL_CMD =
-  "curl -sSL https://app.scanix.nl/agent/install.sh | AGENT_TOKEN=UW_TOKEN bash";
-const APP_AGENTS = "https://app.scanix.nl/agents";
+  `curl -sSL ${APP_URL}/agent/install.sh | SCANIX_URL=${APP_URL} AGENT_TOKEN=UW_TOKEN bash`;
+const APP_AGENTS = `${APP_URL}/agents`;
 
 export function AgentInfo() {
   const t = useTranslations("agentPage");

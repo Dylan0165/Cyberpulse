@@ -7,8 +7,7 @@ import { Lock, ArrowRight, ArrowDown, Check } from "lucide-react";
 import { Link } from "@/lib/navigation";
 import { useVideoScrub } from "@/hooks/useVideoScrub";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
-
-const APP_URL = "https://app.scanix.nl";
+import { APP_URL } from "@/lib/appUrl";
 
 function useCountUp(target: number, run: boolean, duration = 1400) {
   const [value, setValue] = useState(0);

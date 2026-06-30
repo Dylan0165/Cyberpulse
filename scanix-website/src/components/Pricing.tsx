@@ -9,8 +9,9 @@ import {
 import { Link } from "@/lib/navigation";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { useScrollProgress } from "@/hooks/useScrollProgress";
+import { APP_URL } from "@/lib/appUrl";
 
-const APP_BILLING = "https://app.scanix.nl/billing";
+const APP_BILLING = `${APP_URL}/billing`;
 
 type Pkg = {
   key: string;
