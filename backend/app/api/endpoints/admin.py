@@ -11,7 +11,7 @@ import secrets
 import uuid
 from datetime import datetime, timezone, timedelta
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Header
 from pydantic import BaseModel
 from sqlalchemy import select, func, or_
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -754,3 +754,25 @@ async def init_admin(
         logger.exception("admin.init_admin failed")
         await db.rollback()
         raise HTTPException(500, "Kon admin niet aanmaken")
+
+
+# ── Test account seed (no JWT; gated by the admin-init secret header) ─────────
+
+@router.post("/create-test-account")
+async def create_test_account(
+    x_admin_secret: str | None = Header(default=None, alias="X-Admin-Secret"),
+    db: AsyncSession = Depends(get_db),
+):
+    """Create or reset the ready-to-test account (test@scanix.nl). Idempotent."""
+    if x_admin_secret != os.getenv("ADMIN_INIT_SECRET", "scanix-admin-init"):
+        raise HTTPException(403, "Ongeldige geheime sleutel")
+    try:
+        from app.services.seed import create_or_reset_test_account
+        info = await create_or_reset_test_account(db)
+        return {"ok": True, **info}
+    except HTTPException:
+        raise
+    except Exception:
+        logger.exception("admin.create_test_account failed")
+        await db.rollback()
+        raise HTTPException(500, "Kon testaccount niet aanmaken")
